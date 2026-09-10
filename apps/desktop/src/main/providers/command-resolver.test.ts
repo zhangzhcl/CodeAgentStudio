@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveAgentCommand, withUserBinaryPaths } from './command-resolver.js';
+import { findAgentCommand, resolveAgentCommand, withUserBinaryPaths } from './command-resolver.js';
 
 describe('resolveAgentCommand', () => {
   it('wraps a Windows PowerShell script without changing the script path', () => {
@@ -22,5 +22,9 @@ describe('resolveAgentCommand', () => {
     const env = withUserBinaryPaths({ PATH: 'C:\\Windows\\System32;C:\\Tools', APPDATA: 'C:\\Users\\demo\\AppData\\Roaming' }, { platform: 'win32', home: 'C:\\Users\\demo' });
     expect(env.PATH?.split(';').slice(0, 2)).toEqual(['C:\\Users\\demo\\AppData\\Roaming\\npm', 'C:\\Users\\demo\\.npm-global\\bin']);
     expect(env.PATH).toContain('C:\\Windows\\System32');
+  });
+
+  it('selects the first command confirmed by the platform lookup', () => {
+    expect(findAgentCommand(['agent', 'cursor-agent'], { platform: 'linux', lookup: () => 'cursor-agent' })).toBe('cursor-agent');
   });
 });

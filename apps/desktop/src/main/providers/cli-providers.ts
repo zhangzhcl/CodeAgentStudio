@@ -5,11 +5,12 @@ import { existsSync } from 'node:fs';
 import type { AgentEvent, ProviderId } from '@codeagent-studio/protocol';
 import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contracts.js';
 import { parseCliEvent } from './cli-event-parser.js';
-import { resolveAgentCommand as resolveCommand, withUserBinaryPaths } from './command-resolver.js';
+import { findAgentCommand, resolveAgentCommand as resolveCommand, withUserBinaryPaths } from './command-resolver.js';
 
 type Config = { id: ProviderId; command: string; commandArgs?: string[]; shell?: boolean; versionArgs?: string[]; promptArgs: (text: string) => string[] };
 const cursorWindowsPath = join(homedir(), 'AppData', 'Local', 'cursor-agent', 'agent.ps1');
-const cursorCommand = resolveCommand(process.env.CODEAGENT_CURSOR_AGENT ?? (process.platform === 'win32' && existsSync(cursorWindowsPath) ? cursorWindowsPath : 'agent'));
+const cursorDefault = process.platform === 'win32' && existsSync(cursorWindowsPath) ? cursorWindowsPath : findAgentCommand(['agent', 'cursor-agent']);
+const cursorCommand = resolveCommand(process.env.CODEAGENT_CURSOR_AGENT ?? cursorDefault);
 const config = (id: ProviderId, command: string, promptArgs: Config['promptArgs']): Config => ({ id, ...resolveCommand(command), promptArgs });
 export const CLI_CONFIGS: Config[] = [config('claude', process.env.CODEAGENT_CLAUDE_COMMAND ?? 'claude', (text) => ['-p', text]), { id: 'cursor', ...cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'text', text] }, config('codex', process.env.CODEAGENT_CODEX_COMMAND ?? 'codex', (text) => ['exec', text]), config('opencode', process.env.CODEAGENT_OPENCODE_COMMAND ?? 'opencode', (text) => ['run', text])];
 

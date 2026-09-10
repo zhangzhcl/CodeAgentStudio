@@ -1,8 +1,10 @@
 import { extname, posix, win32 } from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 export type CommandResolution = { command: string; commandArgs: string[]; shell: boolean };
 export type CommandResolutionOptions = { platform?: NodeJS.Platform };
 export type BinaryPathOptions = { platform?: NodeJS.Platform; home?: string };
+export type CommandLookupOptions = { platform?: NodeJS.Platform; lookup?: (command: string) => string | undefined };
 
 /**
  * Converts a user/PATH command into a safe spawn tuple. PATH is intentionally
@@ -37,4 +39,17 @@ export function withUserBinaryPaths(env: NodeJS.ProcessEnv, options: BinaryPathO
     return true;
   });
   return { ...env, [pathKey]: ordered.join(delimiter) };
+}
+
+export function findAgentCommand(candidates: string[], options: CommandLookupOptions = {}): string {
+  const platform = options.platform ?? process.platform;
+  const lookup = options.lookup ?? ((candidate: string) => {
+    try {
+      const tool = platform === 'win32' ? 'where.exe' : 'which';
+      return execFileSync(tool, [candidate], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }).trim() || undefined;
+    } catch {
+      return undefined;
+    }
+  });
+  return candidates.find((candidate) => Boolean(lookup(candidate))) ?? candidates[0]!;
 }
