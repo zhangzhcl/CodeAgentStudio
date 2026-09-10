@@ -12,7 +12,8 @@ const cursorWindowsPath = join(homedir(), 'AppData', 'Local', 'cursor-agent', 'a
 const cursorDefault = process.platform === 'win32' && existsSync(cursorWindowsPath) ? cursorWindowsPath : findAgentCommand(['agent', 'cursor-agent']);
 const cursorCommand = resolveCommand(process.env.CODEAGENT_CURSOR_AGENT ?? cursorDefault);
 const config = (id: ProviderId, command: string, promptArgs: Config['promptArgs']): Config => ({ id, ...resolveCommand(command), promptArgs });
-export const CLI_CONFIGS: Config[] = [config('claude', process.env.CODEAGENT_CLAUDE_COMMAND ?? 'claude', (text) => ['-p', text]), { id: 'cursor', ...cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'text', text] }, config('codex', process.env.CODEAGENT_CODEX_COMMAND ?? 'codex', (text) => ['exec', text]), config('opencode', process.env.CODEAGENT_OPENCODE_COMMAND ?? 'opencode', (text) => ['run', text])];
+const commandFromEnvOrPath = (envKey: string, candidates: string[]) => process.env[envKey] ?? findAgentCommand(candidates);
+export const CLI_CONFIGS: Config[] = [config('claude', commandFromEnvOrPath('CODEAGENT_CLAUDE_COMMAND', ['claude']), (text) => ['-p', text]), { id: 'cursor', ...cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'text', text] }, config('codex', commandFromEnvOrPath('CODEAGENT_CODEX_COMMAND', ['codex']), (text) => ['exec', text]), config('opencode', commandFromEnvOrPath('CODEAGENT_OPENCODE_COMMAND', ['opencode']), (text) => ['run', text])];
 
 export class CliProvider implements AgentProvider {
   readonly capabilities = { maxConcurrentSessions: 1, supportsResume: false, supportsAttachments: false, supportsProjectScope: true, supportsAbort: true };
