@@ -9,3 +9,4 @@
 .tab-kind-icon{margin-right:5px;color:#f5a524}.tab-close{display:inline-grid;place-items:center;margin-left:8px;width:16px;height:16px;border-radius:4px;color:#71869d;font-size:14px;line-height:1}.tab-close:hover{background:#34485e;color:#fff}.codeagent-workbench [role=tab][aria-selected="true"] .tab-close{color:inherit}
 .session-delete-action{color:#f09a9a!important;border-color:#70434a!important}.session-delete-action:hover{background:#542b32!important;color:#ffd4d4!important}
 .tabs-empty{padding:8px 12px;color:#71869d;font-size:12px;font-style:italic}.theme-light .tabs-empty{color:#74869a}
+.codeagent-workbench.theme-dark{color-scheme:dark}.codeagent-workbench.theme-light{color-scheme:light}

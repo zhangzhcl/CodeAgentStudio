@@ -42,4 +42,13 @@ describe('Workbench', () => {
 
     await waitFor(() => expect(screen.getAllByRole('alert').some((element) => element.textContent?.includes('项目选择接口不可用'))).toBe(true));
   });
+
+  it('switches and persists the global color theme', async () => {
+    window.localStorage.removeItem('codeagent-theme');
+    render(<Workbench />);
+    const toggle = await screen.findByRole('button', { name: '切换浅色主题' });
+    fireEvent.click(toggle);
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
+    expect(window.localStorage.getItem('codeagent-theme')).toBe('light');
+  });
 });
