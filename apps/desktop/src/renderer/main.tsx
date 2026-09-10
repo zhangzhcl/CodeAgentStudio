@@ -5,4 +5,5 @@ import './styles.css';
 import './explorer.css';
 import './chat.css';
 import './template-overrides.css';
+import './spec-overrides.css';
 createRoot(document.getElementById('root')!).render(<StrictMode><Workbench /></StrictMode>);
