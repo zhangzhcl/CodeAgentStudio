@@ -1,9 +1,10 @@
-import { ipcMain } from 'electron';
+import { ipcMain, dialog } from 'electron';
 import type { WorkspaceService } from './workspace-service.js';
 
 export function registerWorkspaceIpc(service: WorkspaceService) {
   ipcMain.handle('workspace:projects', () => service.listProjects());
   ipcMain.handle('workspace:register-project', (_event, rootPath: string) => service.registerProject(rootPath));
+  ipcMain.handle('workspace:choose-project', async () => { const result = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] }); if (result.canceled || !result.filePaths[0]) return undefined; return service.registerProject(result.filePaths[0]); });
   ipcMain.handle('workspace:list', (_event, projectId: string, relativePath = '.') => service.listProjectFiles(projectId, relativePath));
   ipcMain.handle('workspace:read', (_event, projectId: string, relativePath: string) => service.readTextFile(projectId, relativePath));
   ipcMain.handle('workspace:write', (_event, projectId: string, relativePath: string, content: string) => service.saveTextFile(projectId, relativePath, content));
