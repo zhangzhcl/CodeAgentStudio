@@ -2,7 +2,7 @@ import type { AgentEvent, ProviderId, SessionScope } from '@codeagent-studio/pro
 
 export type SessionRecord = { id: string; provider: ProviderId; scope: SessionScope; title?: string; projectId?: string; projectRoot?: string; projectName?: string; nativeId?: string; nativeSessionFile?: string; status: 'active' | 'done' | 'aborted' | 'error'; createdAt: number; updatedAt: number };
 export type MessageRecord = { id: string; sessionId: string; role: 'user' | 'agent' | 'tool'; content: unknown; sequence: number; createdAt: number };
-type SessionStore = { save(session: SessionRecord): unknown; get?(id: string): SessionRecord | undefined; list?(): SessionRecord[]; saveMessage?(message: MessageRecord): unknown; listMessages?(sessionId: string): MessageRecord[] };
+type SessionStore = { save(session: SessionRecord): unknown; get?(id: string): SessionRecord | undefined; list?(): SessionRecord[]; saveMessage?(message: MessageRecord): unknown; listMessages?(sessionId: string): MessageRecord[]; delete?(id: string): unknown };
 
 export class SessionService {
   private readonly sessions = new Map<string, SessionRecord>();
@@ -34,6 +34,7 @@ export class SessionService {
   ensureTitle(sessionId: string, content: string): void { this.setTitleIfMissing(sessionId, content); }
   listMessages(sessionId: string): MessageRecord[] { const stored = this.store?.listMessages?.(sessionId); if (stored?.length) return stored; return [...this.messages.values()].filter((message) => message.sessionId === sessionId).sort((a, b) => a.sequence - b.sequence || a.createdAt - b.createdAt); }
   list(): SessionRecord[] { return [...this.sessions.values()].sort((a, b) => b.updatedAt - a.updatedAt); }
+  delete(sessionId: string): boolean { const existed = this.sessions.delete(sessionId); for (const key of this.messages.keys()) if (key.startsWith(`${sessionId}:`)) this.messages.delete(key); this.store?.delete?.(sessionId); return existed; }
   replayTranscript(sessionId: string): MessageRecord[] { return this.listMessages(sessionId).map((message) => ({ ...message })); }
   markStatus(sessionId: string, status: SessionRecord['status']): SessionRecord { const updated = { ...this.get(sessionId), status, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
   updateNative(sessionId: string, native: Pick<SessionRecord, 'nativeId' | 'nativeSessionFile'>): SessionRecord { const updated = { ...this.get(sessionId), ...native, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
