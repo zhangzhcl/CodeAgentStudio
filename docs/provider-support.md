@@ -10,6 +10,13 @@
 
 本机探测记录（2026-09-10）：Claude Code 2.1.267、Codex CLI 0.153.4、Pi 0.85.1、opencode 1.18.30；Cursor CLI 未安装。
 
+Cursor Windows 原生安装（官方）：
+
+```powershell
+irm 'https://cursor.com/install?win32=true' | iex
+agent --version
+```
+
 ## 联调命令模板
 
 - Claude：`claude -p "<prompt>" --add-dir <projectRoot>`；继续会话使用 `--resume <session-id>`。
