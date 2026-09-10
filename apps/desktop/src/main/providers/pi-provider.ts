@@ -1,0 +1,18 @@
+import { mkdir, realpath } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import type { AgentEvent } from '@codeagent-studio/protocol';
+import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contracts.js';
+
+export type PiTransport = { createSession(input: CreateSessionInput & { sessionFile: string }): Promise<{ nativeId: string }>; resumeSession(nativeId: string, sessionFile: string): Promise<void>; prompt(nativeId: string, text: string): Promise<void>; abort(nativeId: string): Promise<boolean>; subscribe(listener: (event: AgentEvent) => void): () => void; detect(): Promise<ProviderStatus> };
+
+export class PiProvider implements AgentProvider {
+  readonly id = 'pi' as const;
+  readonly capabilities = { maxConcurrentSessions: 4, supportsResume: true, supportsAttachments: false, supportsProjectScope: true, supportsAbort: true };
+  constructor(private readonly transport: PiTransport, private readonly sessionsDir = join(process.cwd(), '.codeagent', 'sessions')) {}
+  detect() { return this.transport.detect(); }
+  async createSession(input: CreateSessionInput) { await mkdir(this.sessionsDir, { recursive: true }); const sessionFile = resolve(this.sessionsDir, `${crypto.randomUUID()}.jsonl`); return { ...(await this.transport.createSession({ ...input, sessionFile })), nativeSessionFile: sessionFile }; }
+  async resumeSession(nativeId: string, nativeSessionFile?: string) { if (!nativeSessionFile) throw new Error('Pi resume requires native session file'); const allowed = await realpath(this.sessionsDir); const file = resolve(nativeSessionFile); const relative = file.slice(allowed.length); if (!relative.startsWith('/') && !relative.startsWith('\\')) throw new Error('Pi session file is outside the project session directory'); await this.transport.resumeSession(nativeId, file); }
+  prompt(sessionId: string, text: string) { return this.transport.prompt(sessionId, text); }
+  abort(sessionId: string) { return this.transport.abort(sessionId); }
+  subscribe(listener: (event: AgentEvent) => void) { return this.transport.subscribe(listener); }
+}
