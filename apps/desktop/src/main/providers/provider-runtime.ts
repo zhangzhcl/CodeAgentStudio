@@ -12,7 +12,7 @@ export class ProviderRuntime {
     const count = [...this.active.values()].filter((item) => item.provider === providerId && (item.state === 'starting' || item.state === 'running')).length;
     if (count >= provider.capabilities.maxConcurrentSessions) throw new Error(`Provider ${providerId} concurrency limit reached`);
     this.active.set(sessionId, { sessionId, provider: providerId, state: 'starting' });
-    try { await provider.createSession({ ...input, sessionId }); this.active.set(sessionId, { sessionId, provider: providerId, state: 'running' }); } catch (error) { this.active.set(sessionId, { sessionId, provider: providerId, state: 'error' }); throw error; }
+    try { const created = await provider.createSession({ ...input, sessionId }); this.active.set(sessionId, { sessionId, provider: providerId, state: 'running' }); return created; } catch (error) { this.active.set(sessionId, { sessionId, provider: providerId, state: 'error' }); throw error; }
   }
   async stop(sessionId: string) { const current = this.active.get(sessionId); if (!current) return false; const provider = this.providers.get(current.provider); if (!provider) return false; this.active.set(sessionId, { ...current, state: 'stopping' }); const stopped = await provider.abort(sessionId); this.active.set(sessionId, { ...current, state: 'stopped' }); return stopped; }
 }
