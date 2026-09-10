@@ -80,6 +80,7 @@ export function Workbench() {
   return (
     <div className={`codeagent-workbench theme-${theme}`}>
       <aside aria-label="活动栏">
+        <div className="agent-brand"><span className="agent-brand-mark">✦</span><span><strong>AGENT-01</strong><small>对话控制台</small></span></div>
         <div role="tablist" aria-label="工作区入口">
           <button role="tab" aria-selected={activity === 'files'} onClick={() => setActivity('files')}>文件</button>
           <button role="tab" aria-selected={activity === 'sessions'} onClick={() => setActivity('sessions')}>Agent 会话</button>
@@ -100,6 +101,7 @@ export function Workbench() {
             </div>
           )}
         </section>
+        <div className="sidebar-status-card"><div><span className="status-pulse" /> 在线</div><span>本地工作区 · {providerLabel(activeProvider)}</span></div>
       </aside>
       <main>
         <div role="tablist" aria-label="打开的标签">
