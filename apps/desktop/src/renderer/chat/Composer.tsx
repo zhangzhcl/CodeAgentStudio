@@ -20,7 +20,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
   const attachmentInput = useRef<HTMLInputElement>(null);
   const [hint, setHint] = useState('支持 Markdown、代码和多行输入');
   const [notice, setNotice] = useState('');
-  const [attachments, setAttachments] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<Array<{ name: string; size: number; type: string }>>([]);
   const [showCommandMenu, setShowCommandMenu] = useState(false);
   const [commandIndex, setCommandIndex] = useState(0);
   const [deepThink, setDeepThink] = useState(false);
@@ -82,7 +82,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
         <input ref={attachmentInput} type="file" multiple hidden onChange={(event) => {
           const files = Array.from(event.target.files ?? []);
           if (files.length) {
-            setAttachments((current) => [...current, ...files.map((file) => file.name)]);
+            setAttachments((current) => [...current, ...files.map((file) => ({ name: file.name, size: file.size, type: file.type }))]);
             setNotice(`已选择 ${files.length} 个附件`);
           }
           event.target.value = '';
@@ -110,7 +110,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
         {sending && !draft.trim() && attachments.length === 0 ? <button type="button" className="stop-action" aria-label="停止" onClick={onStop}>停止</button> : <button type="submit" className="send-action" aria-label="发送" disabled={!draft.trim() && attachments.length === 0}>➤</button>}
       </div>
     </div>
-    {attachments.length > 0 && <div className="composer-attachments">{attachments.map((attachment, index) => <span className="attachment-chip" key={`${attachment}-${index}`}>附件 · {attachment}<button type="button" aria-label={`移除附件 ${attachment}`} onClick={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))}>×</button></span>)}</div>}
+    {attachments.length > 0 && <div className="composer-attachments">{attachments.map((attachment, index) => <span className="attachment-chip" key={`${attachment.name}-${index}`}><span className="attachment-kind">{attachment.type.startsWith('image/') ? 'IMG' : 'FILE'}</span><span title={attachment.name}>{attachment.name}</span><small>{attachment.size >= 1024 * 1024 ? `${(attachment.size / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(attachment.size / 1024))} KB`}</small><button type="button" aria-label={`移除附件 ${attachment.name}`} onClick={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))}>×</button></span>)}</div>}
     {showCommandMenu && <div className="command-menu" role="listbox">
       {commands.map((command, index) => <button key={command.value} type="button" className={index === commandIndex ? 'is-active' : ''} onClick={() => { const element = document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea'); applyDraft(`${command.value} `, element); setShowCommandMenu(false); }}>{command.value} <span>{command.label}</span></button>)}
     </div>}
