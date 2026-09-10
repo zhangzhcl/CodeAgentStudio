@@ -5,7 +5,7 @@ import { applyAgentEvent, type ChatMessage } from './chat-state.js';
 
 type Props = { sessionId: string; providerName?: string; providers?: string[]; subscribe?: (listener: (event: AgentEvent) => void) => () => void; onPrompt?: (text: string, provider: string) => Promise<void> | void };
 
-export function ChatPanel({ sessionId, providerName = 'Agent', providers = ['Claude', 'Cursor', 'Codex', 'Pi'], subscribe, onPrompt }: Props) {
+export function ChatPanel({ sessionId, providerName = 'Agent', providers = ['Claude', 'Cursor', 'Codex', 'Pi', 'OpenCode'], subscribe, onPrompt }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [provider, setProvider] = useState(providerName);
   const [draft, setDraft] = useState('');
