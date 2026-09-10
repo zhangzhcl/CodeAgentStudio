@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { WorkbenchTab } from '@codeagent-studio/protocol';
 import { FileExplorer } from '../files/FileExplorer.js';
 import { ChatPanel } from '../chat/ChatPanel.js';
@@ -10,6 +10,8 @@ export function Workbench() {
   const [tabs, setTabs] = useState<WorkbenchTab[]>([{ kind: 'chat', sessionId: 'new-chat' }]);
   const [activeTab, setActiveTab] = useState<WorkbenchTab>(tabs[0]);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
+  const [projectId, setProjectId] = useState('example-project');
+  useEffect(() => { const api = (window as Window & { codeagent?: { workspace?: { projects: () => Promise<Array<{ id: string }>> } } }).codeagent?.workspace; if (api) void api.projects().then((projects) => { if (projects[0]) setProjectId(projects[0].id); }); }, []);
 
   const openExampleFile = async (path = 'README.md') => {
     const fileTab: WorkbenchTab = { kind: 'file', projectId: 'example-project', path, dirty: false };
@@ -32,7 +34,7 @@ export function Workbench() {
           {activity === 'files' ? (
             <div>
               <h2>文件资源管理器</h2>
-              <FileExplorer onOpenFile={(path) => void openExampleFile(path)} />
+              <FileExplorer projectId={projectId} onOpenFile={(path) => void openExampleFile(path)} />
             </div>
           ) : (
             <div>
