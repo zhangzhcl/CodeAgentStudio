@@ -55,8 +55,8 @@ export function Workbench() {
       <main>
         <div role="tablist" aria-label="打开的标签">
           {tabs.map((tab) => (
-            <button key={tab.kind === 'chat' ? tab.sessionId : `${tab.projectId}:${tab.path}`} role="tab" aria-selected={activeTab === tab} onClick={() => setActiveTab(tab)}>
-              {tabName(tab)}{tab.kind === 'file' && <span aria-hidden="true" onClick={(event) => { event.stopPropagation(); setTabs((items) => items.filter((item) => item !== tab)); if (activeTab === tab) setActiveTab({ kind: 'chat', sessionId: 'new-chat' }); }}>×</span>}
+            <button key={tab.kind === 'chat' ? tab.sessionId : `${tab.projectId}:${tab.path}`} role="tab" aria-label={tabName(tab)} aria-selected={activeTab === tab} onClick={() => setActiveTab(tab)}>
+              {tabName(tab)}{tab.kind === 'file' && <span role="button" tabIndex={0} aria-label={`关闭 ${tabName(tab)}`} onClick={(event) => { event.stopPropagation(); setTabs((items) => items.filter((item) => item !== tab)); if (activeTab === tab) setActiveTab({ kind: 'chat', sessionId: 'new-chat' }); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); setTabs((items) => items.filter((item) => item !== tab)); if (activeTab === tab) setActiveTab({ kind: 'chat', sessionId: 'new-chat' }); } }}>×</span>}
             </button>
           ))}
         </div>
