@@ -7,6 +7,7 @@ import { EditorTab } from '../editor/EditorTab.js';
 type Activity = 'files' | 'sessions';
 export function Workbench() {
   const [activity, setActivity] = useState<Activity>('sessions');
+  const [sessionView, setSessionView] = useState<'sessions' | 'projects'>('sessions');
   const [tabs, setTabs] = useState<WorkbenchTab[]>([{ kind: 'chat', sessionId: 'new-chat', scope: 'personal' }]);
   const [activeTab, setActiveTab] = useState<WorkbenchTab>(tabs[0]);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
@@ -53,7 +54,7 @@ export function Workbench() {
       <aside aria-label="活动栏">
         <div role="tablist" aria-label="工作区入口">
           <button role="tab" aria-selected={activity === 'files'} onClick={() => setActivity('files')}>文件</button>
-          <button role="tab" aria-selected={activity === 'sessions'} onClick={() => setActivity('sessions')}>会话</button>
+          <button role="tab" aria-selected={activity === 'sessions'} onClick={() => setActivity('sessions')}>Agent 会话</button>
         </div>
         <section aria-label="侧栏">
           {activity === 'files' ? (
@@ -65,12 +66,9 @@ export function Workbench() {
             </div>
           ) : (
             <div>
-              <div className="session-sidebar-heading"><h2>个人会话</h2><select aria-label="侧栏 Agent" value={selectedProvider} onChange={(event) => changeProvider(event.target.value)}>{['claude', 'cursor', 'codex', 'pi', 'opencode'].map((id) => <option key={id} value={id}>{providerLabel(id)}</option>)}</select></div>
-              <button type="button" onClick={() => newSession('personal')}>新建个人会话</button>
-              {visiblePersonalSessions.length === 0 ? <p>暂无 {providerLabel(selectedProvider)} 个人会话</p> : visiblePersonalSessions.map(({ id, provider, projectId: sessionProjectId, nativeId }) => <button type="button" key={id} onClick={() => openSession(id, 'personal', provider, sessionProjectId)}>{providerLabel(provider)} · {sessionTitle(id, nativeId)}</button>)}
-              <div className="session-sidebar-heading"><h2>项目会话</h2><span className="session-provider-filter">{providerLabel(selectedProvider)}</span></div>
-              <button type="button" onClick={() => newSession('project')}>新建项目会话</button>
-              {visibleProjectSessions.length === 0 ? <p>暂无 {providerLabel(selectedProvider)} 项目会话</p> : [...projectGroups.entries()].map(([key, group]) => <div className="session-project-group" key={key}><h3 title={group.root}>{group.name}</h3>{group.sessions.map(({ id, provider, projectId: sessionProjectId, projectName, projectRoot, nativeId }) => <button type="button" title={projectRoot ?? projectName ?? '未关联项目'} key={id} onClick={() => openSession(id, 'project', provider, sessionProjectId)}>{providerLabel(provider)} · {sessionTitle(id, nativeId)}</button>)}</div>)}
+              <div className="nested-sidebar-tabs" role="tablist" aria-label="Agent 会话视图"><button role="tab" aria-selected={sessionView === 'sessions'} onClick={() => setSessionView('sessions')}>会话</button><button role="tab" aria-selected={sessionView === 'projects'} onClick={() => setSessionView('projects')}>项目</button></div>
+              <div className="session-sidebar-heading"><h2>{sessionView === 'sessions' ? '会话' : '项目'}</h2><select aria-label="侧栏 Agent" value={selectedProvider} onChange={(event) => changeProvider(event.target.value)}>{['claude', 'cursor', 'codex', 'pi', 'opencode'].map((id) => <option key={id} value={id}>{providerLabel(id)}</option>)}</select></div>
+              {sessionView === 'sessions' ? <><h3 className="session-section-label">个人会话</h3><button type="button" onClick={() => newSession('personal')}>＋ 新建个人会话</button>{visiblePersonalSessions.length === 0 ? <p>暂无 {providerLabel(selectedProvider)} 个人会话</p> : visiblePersonalSessions.map(({ id, provider, projectId: sessionProjectId, nativeId }) => <button type="button" key={id} onClick={() => openSession(id, 'personal', provider, sessionProjectId)}>{providerLabel(provider)} · {sessionTitle(id, nativeId)}</button>)}<h3 className="session-section-label">最近项目会话</h3>{visibleProjectSessions.slice(0, 20).map(({ id, provider, projectId: sessionProjectId, projectName, projectRoot, nativeId }) => <button type="button" title={projectRoot ?? projectName ?? '未关联项目'} key={id} onClick={() => openSession(id, 'project', provider, sessionProjectId)}>{projectName ? `${projectName} · ` : ''}{providerLabel(provider)} · {sessionTitle(id, nativeId)}</button>)}</> : <>{projectGroups.size === 0 ? <p>暂无 {providerLabel(selectedProvider)} 项目</p> : [...projectGroups.entries()].map(([key, group]) => <div className="session-project-group" key={key}><div className="project-group-header"><h3 title={group.root}>{group.name}</h3><button type="button" aria-label={`在 ${group.name} 中新建会话`} onClick={() => { if (group.sessions[0]?.projectId) setProjectId(group.sessions[0].projectId); newSession('project'); }}>＋</button></div>{group.sessions.map(({ id, provider, projectId: sessionProjectId, projectName, projectRoot, nativeId }) => <button type="button" title={projectRoot ?? projectName ?? '未关联项目'} key={id} onClick={() => openSession(id, 'project', provider, sessionProjectId)}>{providerLabel(provider)} · {sessionTitle(id, nativeId)}</button>)}</div>)}</>}
             </div>
           )}
         </section>
