@@ -6,7 +6,7 @@ type Props = { path: string; content: string; projectId?: string; useMonaco?: bo
 export function EditorTab({ path, content: initialContent, projectId = 'default', useMonaco = false, onDirtyChange, onSave }: Props) {
   const [content, setContent] = useState(initialContent);
   const dirty = content !== initialContent;
-  useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
+  useEffect(() => { onDirtyChange?.(dirty); }, [dirty]);
   return (
     <section aria-label={path}>
       <header><span>{path}</span>{dirty && <span>未保存</span>}<button type="button" aria-label="保存" onClick={() => onSave(content)}>保存</button></header>
