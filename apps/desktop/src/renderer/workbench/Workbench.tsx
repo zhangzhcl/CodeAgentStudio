@@ -7,7 +7,7 @@ import { EditorTab } from '../editor/EditorTab.js';
 type Activity = 'files' | 'sessions';
 export function Workbench() {
   const [activity, setActivity] = useState<Activity>('files');
-  const [tabs, setTabs] = useState<WorkbenchTab[]>([{ kind: 'chat', sessionId: 'new-chat' }]);
+  const [tabs, setTabs] = useState<WorkbenchTab[]>([{ kind: 'chat', sessionId: 'new-chat', scope: 'project' }]);
   const [activeTab, setActiveTab] = useState<WorkbenchTab>(tabs[0]);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [projectId, setProjectId] = useState('example-project');
@@ -30,7 +30,7 @@ export function Workbench() {
   };
 
   const tabName = (tab: WorkbenchTab) => tab.kind === 'chat' ? '聊天' : tab.path.split('/').pop() ?? tab.path;
-  const newSession = (scope: 'personal' | 'project') => { const id = `${scope}-${crypto.randomUUID()}`; scope === 'personal' ? setPersonalSessions((items) => [...items, id]) : setProjectSessions((items) => [...items, id]); const tab = { kind: 'chat' as const, sessionId: id }; setTabs((items) => [...items, tab]); setActiveTab(tab); };
+  const newSession = (scope: 'personal' | 'project') => { const id = `${scope}-${crypto.randomUUID()}`; scope === 'personal' ? setPersonalSessions((items) => [...items, id]) : setProjectSessions((items) => [...items, id]); const tab = { kind: 'chat' as const, sessionId: id, scope }; setTabs((items) => [...items, tab]); setActiveTab(tab); };
 
   return (
     <div className="codeagent-workbench">
@@ -63,12 +63,12 @@ export function Workbench() {
         <div role="tablist" aria-label="打开的标签">
           {tabs.map((tab) => (
             <button key={tab.kind === 'chat' ? tab.sessionId : `${tab.projectId}:${tab.path}`} role="tab" aria-label={tabName(tab)} aria-selected={activeTab === tab} onClick={() => setActiveTab(tab)}>
-              {tabName(tab)}{tab.kind === 'file' && <span role="button" tabIndex={0} aria-label={`关闭 ${tabName(tab)}`} onClick={(event) => { event.stopPropagation(); setTabs((items) => items.filter((item) => item !== tab)); if (activeTab === tab) setActiveTab({ kind: 'chat', sessionId: 'new-chat' }); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); setTabs((items) => items.filter((item) => item !== tab)); if (activeTab === tab) setActiveTab({ kind: 'chat', sessionId: 'new-chat' }); } }}>×</span>}
+              {tabName(tab)}{tab.kind === 'file' && <span role="button" tabIndex={0} aria-label={`关闭 ${tabName(tab)}`} onClick={(event) => { event.stopPropagation(); setTabs((items) => items.filter((item) => item !== tab)); if (activeTab === tab) setActiveTab({ kind: 'chat', sessionId: 'new-chat', scope: 'project' }); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); setTabs((items) => items.filter((item) => item !== tab)); if (activeTab === tab) setActiveTab({ kind: 'chat', sessionId: 'new-chat', scope: 'project' }); } }}>×</span>}
             </button>
           ))}
         </div>
         {activeTab.kind === 'chat' ? (
-          <section role="tabpanel" aria-label="聊天"><ChatPanel sessionId={activeTab.sessionId} subscribe={(listener) => (window as Window & { codeagentAgent?: { subscribe: (handler: (event: unknown) => void) => () => void } }).codeagentAgent?.subscribe((event) => listener(event as never))} onPrompt={(text, provider) => { const id = provider.toLowerCase() as 'claude' | 'cursor' | 'codex' | 'pi' | 'opencode'; return (window as Window & { codeagentAgent?: { prompt: (input: unknown) => Promise<void> } }).codeagentAgent?.prompt({ sessionId: activeTab.sessionId, provider: id, scope: 'project', projectId, projectRoot, text }); }} /><button type="button" aria-label="打开示例文件" onClick={() => void openExampleFile()}>打开示例文件</button></section>
+          <section role="tabpanel" aria-label="聊天"><ChatPanel sessionId={activeTab.sessionId} subscribe={(listener) => (window as Window & { codeagentAgent?: { subscribe: (handler: (event: unknown) => void) => () => void } }).codeagentAgent?.subscribe((event) => listener(event as never))} onPrompt={(text, provider) => { const id = provider.toLowerCase() as 'claude' | 'cursor' | 'codex' | 'pi' | 'opencode'; const scope = activeTab.scope; return (window as Window & { codeagentAgent?: { prompt: (input: unknown) => Promise<void> } }).codeagentAgent?.prompt({ sessionId: activeTab.sessionId, provider: id, scope, ...(scope === 'project' ? { projectId, projectRoot } : {}), text }); }} /><button type="button" aria-label="打开示例文件" onClick={() => void openExampleFile()}>打开示例文件</button></section>
         ) : (
           <section role="tabpanel" aria-label={tabName(activeTab)}>
             <EditorTab projectId={activeTab.projectId} path={activeTab.path} content={fileContents[activeTab.path] ?? '# CodeAgent Studio\n'} useMonaco={typeof window.matchMedia === 'function'} onSave={(content) => { setFileContents((current) => ({ ...current, [activeTab.path]: content })); const write = (window as Window & { codeagent?: { workspace?: { write: (projectId: string, path: string, value: string) => Promise<unknown> } } }).codeagent?.workspace?.write; if (write) void write(activeTab.projectId, activeTab.path, content).catch((error: unknown) => console.error('Failed to save file', error)); }} />
