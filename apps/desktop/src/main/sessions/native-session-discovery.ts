@@ -1,0 +1,34 @@
+import { readdir, readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { homedir } from 'node:os';
+import { join, basename } from 'node:path';
+import type { ProviderId } from '@codeagent-studio/protocol';
+import type { SessionService } from './session-service.js';
+
+type DiscoveredMessage = { role: 'user' | 'agent'; content: string; sequence: number };
+const textOf = (value: unknown): string => { if (typeof value === 'string') return value; if (!Array.isArray(value)) return ''; return value.map((part) => typeof part === 'string' ? part : (part && typeof part === 'object' && 'text' in part ? String((part as { text?: unknown }).text ?? '') : '')).filter(Boolean).join('\n'); };
+const stableId = (provider: ProviderId, nativeId: string) => `${provider}-native-${createHash('sha1').update(`${provider}:${nativeId}`).digest('hex').slice(0, 20)}`;
+async function files(root: string, suffix: string, depth = 0): Promise<string[]> { if (depth > 4) return []; try { const entries = await readdir(root, { withFileTypes: true }); const result: string[] = []; for (const entry of entries) { const path = join(root, entry.name); if (entry.isFile() && entry.name.endsWith(suffix)) result.push(path); else if (entry.isDirectory() && !entry.name.startsWith('.')) result.push(...await files(path, suffix, depth + 1)); if (result.length >= 120) break; } return result; } catch { return []; } }
+async function parseJsonl(path: string): Promise<DiscoveredMessage[]> { try { const lines = (await readFile(path, 'utf8')).split(/\r?\n/); const result: DiscoveredMessage[] = []; for (const line of lines) { try { const entry = JSON.parse(line) as Record<string, unknown>; const payload = entry.payload && typeof entry.payload === 'object' ? entry.payload as Record<string, unknown> : undefined; const message = (entry.message && typeof entry.message === 'object' ? entry.message : payload?.type === 'message' ? payload : entry) as Record<string, unknown>; const role = message.role === 'user' ? 'user' : message.role === 'assistant' ? 'agent' : undefined; const content = textOf(message.content ?? message.text ?? entry.text); if (role && content.trim()) result.push({ role, content: content.trim(), sequence: result.length }); } catch { /* skip partial native rows */ } } return result; } catch { return []; } }
+async function parseCursorHistory(path: string): Promise<DiscoveredMessage[]> { try { const value = JSON.parse(await readFile(path, 'utf8')) as unknown; const items = Array.isArray(value) ? value : []; return items.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((content, sequence) => ({ role: 'user' as const, content: content.trim(), sequence })); } catch { return []; } }
+export async function discoverNativeSessions(service: SessionService): Promise<number> {
+  let imported = 0;
+  const roots: Array<[ProviderId, string]> = [
+    ['claude', join(homedir(), '.claude', 'projects')],
+    ['codex', join(homedir(), '.codex', 'sessions')],
+    ['pi', process.env.CODEAGENT_PI_SESSION_DIR ?? join(homedir(), '.codeagent-studio', 'pi-sessions')],
+  ];
+  for (const [provider, root] of roots) for (const path of await files(root, '.jsonl')) { const messages = await parseJsonl(path); if (!messages.length) continue; const nativeId = basename(path, '.jsonl'); const id = stableId(provider, nativeId); if (!service.list().some((session) => session.id === id)) { service.create({ id, provider, scope: 'project', nativeId, nativeSessionFile: path }); for (const message of messages) service.importMessage({ id: `${id}:native:${message.sequence}`, sessionId: id, role: message.role, content: message.content, sequence: message.sequence, createdAt: Date.now() + message.sequence }); imported++; } }
+  const cursorFiles = await files(join(homedir(), '.cursor', 'chats'), 'prompt_history.json');
+  for (const path of cursorFiles) { const messages = await parseCursorHistory(path); if (!messages.length) continue; const nativeId = basename(join(path, '..')); const id = stableId('cursor', nativeId); if (!service.list().some((session) => session.id === id)) { service.create({ id, provider: 'cursor', scope: 'project', nativeId, nativeSessionFile: path }); for (const message of messages) service.importMessage({ id: `${id}:native:${message.sequence}`, sessionId: id, role: message.role, content: message.content, sequence: message.sequence, createdAt: Date.now() + message.sequence }); imported++; } }
+  try {
+    const { default: Database } = await import('better-sqlite3');
+    const opencodePath = join(homedir(), '.local', 'share', 'opencode', 'opencode.db');
+    const db = new Database(opencodePath, { readonly: true, fileMustExist: true });
+    const sessions = db.prepare('SELECT id, title, directory, time_created FROM session ORDER BY time_updated DESC LIMIT 120').all() as Array<{ id: string; title?: string; directory?: string; time_created: number }>;
+    const parts = db.prepare('SELECT m.session_id as sessionId, m.data as messageData, p.data as partData, p.time_created as createdAt FROM message m JOIN part p ON p.message_id = m.id ORDER BY p.time_created').all() as Array<{ sessionId: string; messageData: string; partData: string; createdAt: number }>;
+    for (const item of sessions) { const id = stableId('opencode', item.id); if (service.list().some((session) => session.id === id)) continue; const rows = parts.filter((part) => part.sessionId === item.id); let sequence = 0; service.create({ id, provider: 'opencode', scope: 'project', nativeId: item.id }); for (const row of rows) { try { const message = JSON.parse(row.messageData) as { role?: string }; const part = JSON.parse(row.partData) as { type?: string; text?: string }; if ((message.role === 'user' || message.role === 'assistant') && part.type === 'text' && part.text?.trim()) service.importMessage({ id: `${id}:native:${sequence}`, sessionId: id, role: message.role === 'user' ? 'user' : 'agent', content: part.text.trim(), sequence, createdAt: row.createdAt }); sequence++; } catch { /* skip malformed OpenCode rows */ } } if (sequence > 0) imported++; }
+    db.close();
+  } catch { /* OpenCode is optional and may not have a local database */ }
+  return imported;
+}
