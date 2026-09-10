@@ -9,9 +9,9 @@ export class SessionService {
   private readonly messages = new Map<string, MessageRecord>();
   constructor(private readonly store?: SessionStore) { for (const session of store?.list?.() ?? []) this.sessions.set(session.id, session); }
 
-  create(input: Omit<SessionRecord, 'id' | 'createdAt' | 'updatedAt' | 'status'>): SessionRecord {
+  create(input: Omit<SessionRecord, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { id?: string }): SessionRecord {
     const now = Date.now();
-    const record: SessionRecord = { ...input, id: crypto.randomUUID(), status: 'active', createdAt: now, updatedAt: now };
+    const record: SessionRecord = { ...input, id: input.id ?? crypto.randomUUID(), status: 'active', createdAt: now, updatedAt: now };
     this.sessions.set(record.id, record);
     this.store?.save(record);
     return record;
