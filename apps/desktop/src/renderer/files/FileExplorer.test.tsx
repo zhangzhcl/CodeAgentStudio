@@ -17,9 +17,13 @@ describe('FileExplorer', () => {
     const list = vi.fn().mockResolvedValue([]);
     render(<FileExplorer listEntries={list} onOpenFile={vi.fn()} initialEntries={[
       { name: '.git', path: '.git', isDirectory: true, mtime: 1, size: 0 },
+      { name: 'dist', path: 'dist', isDirectory: true, mtime: 1, size: 0 },
+      { name: 'reference-claudecodeui', path: 'reference-claudecodeui', isDirectory: true, mtime: 1, size: 0 },
       { name: 'README.md', path: 'README.md', isDirectory: false, mtime: 1, size: 10 },
     ]} />);
     expect(screen.queryByRole('button', { name: '.git' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'dist' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'reference-claudecodeui' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'README.md' })).toBeInTheDocument();
   });
 });
