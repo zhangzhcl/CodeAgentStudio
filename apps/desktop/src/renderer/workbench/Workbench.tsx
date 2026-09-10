@@ -1,0 +1,65 @@
+import { useState } from 'react';
+import type { WorkbenchTab } from '@codeagent-studio/protocol';
+
+type Activity = 'files' | 'sessions';
+
+export function Workbench() {
+  const [activity, setActivity] = useState<Activity>('files');
+  const [tabs, setTabs] = useState<WorkbenchTab[]>([{ kind: 'chat', sessionId: 'new-chat' }]);
+  const [activeTab, setActiveTab] = useState<WorkbenchTab>(tabs[0]);
+
+  const openExampleFile = () => {
+    const fileTab: WorkbenchTab = { kind: 'file', projectId: 'example-project', path: 'README.md', dirty: false };
+    setTabs((current) => current.some((tab) => tab.kind === 'file' && tab.path === fileTab.path) ? current : [...current, fileTab]);
+    setActiveTab(fileTab);
+  };
+
+  const tabName = (tab: WorkbenchTab) => tab.kind === 'chat' ? '聊天' : tab.path.split('/').pop() ?? tab.path;
+
+  return (
+    <div className="codeagent-workbench">
+      <aside aria-label="活动栏">
+        <div role="tablist" aria-label="工作区入口">
+          <button role="tab" aria-selected={activity === 'files'} onClick={() => setActivity('files')}>文件</button>
+          <button role="tab" aria-selected={activity === 'sessions'} onClick={() => setActivity('sessions')}>会话</button>
+        </div>
+        <section aria-label="侧栏">
+          {activity === 'files' ? (
+            <div>
+              <h2>文件资源管理器</h2>
+              <p>请选择一个项目开始浏览文件。</p>
+            </div>
+          ) : (
+            <div>
+              <h2>个人会话</h2>
+              <p>暂无个人会话</p>
+              <h2>项目会话</h2>
+              <p>暂无项目会话</p>
+            </div>
+          )}
+        </section>
+      </aside>
+      <main>
+        <div role="tablist" aria-label="打开的标签">
+          {tabs.map((tab) => (
+            <button key={tab.kind === 'chat' ? tab.sessionId : `${tab.projectId}:${tab.path}`} role="tab" aria-selected={activeTab === tab} onClick={() => setActiveTab(tab)}>
+              {tabName(tab)}
+            </button>
+          ))}
+        </div>
+        {activeTab.kind === 'chat' ? (
+          <section role="tabpanel" aria-label="聊天">
+            <h1>聊天</h1>
+            <p>选择 Agent 后开始对话。</p>
+            <button type="button" aria-label="打开示例文件" onClick={openExampleFile}>打开示例文件</button>
+          </section>
+        ) : (
+          <section role="tabpanel" aria-label={tabName(activeTab)}>
+            <h1>{activeTab.path}</h1>
+            <p>Monaco 编辑器将在这里加载文件。</p>
+          </section>
+        )}
+      </main>
+    </div>
+  );
+}
