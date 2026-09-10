@@ -1,25 +1,18 @@
 {
-  "name": "@codeagent-studio/protocol",
+  "name": "@codeagent-studio/desktop",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "types": "src/index.ts",
-  "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    }
-  },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "zod": "^3.25.76"
+    "@codeagent-studio/protocol": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.7"
   }
 }
