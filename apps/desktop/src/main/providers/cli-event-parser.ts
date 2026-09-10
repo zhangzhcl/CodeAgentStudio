@@ -3,6 +3,7 @@ import type { AgentEvent, ProviderId } from '@codeagent-studio/protocol';
 type RawEvent = { type?: string; event?: string; message?: string; text?: string; delta?: string; toolName?: string; input?: unknown; output?: unknown; code?: string };
 
 export function parseCliEvent(line: string, provider: ProviderId, sessionId: string, sequence: number): AgentEvent | undefined {
+  if (/no api key|not logged in|authentication required/i.test(line)) return base(provider, sessionId, sequence, 'error', { code: 'auth', message: line.trim() });
   let raw: RawEvent;
   try { raw = JSON.parse(line) as RawEvent; } catch { return line.trim() ? base(provider, sessionId, sequence, 'text_delta', { text: line }) : undefined; }
   const kind = raw.type ?? raw.event;
