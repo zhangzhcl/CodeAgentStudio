@@ -13,9 +13,6 @@ importers:
       '@codeagent-studio/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
-      electron:
-        specifier: ^38.8.6
-        version: 38.8.6
       monaco-editor:
         specifier: ^0.52.2
         version: 0.52.2
@@ -50,6 +47,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.1
         version: 18.3.7(@types/react@18.3.31)
+      electron:
+        specifier: ^38.8.6
+        version: 38.8.6
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
