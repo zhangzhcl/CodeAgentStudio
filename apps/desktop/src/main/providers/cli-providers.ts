@@ -6,6 +6,8 @@ import type { AgentEvent, ProviderId } from '@codeagent-studio/protocol';
 import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contracts.js';
 import { parseCliEvent } from './cli-event-parser.js';
 import { findAgentCommand, resolveAgentCommand as resolveCommand, withUserBinaryPaths } from './command-resolver.js';
+import { PiProvider } from './pi-provider.js';
+import { PiCliTransport } from './pi-cli-transport.js';
 
 type Config = { id: ProviderId; command: string; commandArgs?: string[]; shell?: boolean; versionArgs?: string[]; promptArgs: (text: string) => string[] };
 const cursorWindowsPath = join(homedir(), 'AppData', 'Local', 'cursor-agent', 'agent.ps1');
@@ -37,4 +39,4 @@ export class CliProvider implements AgentProvider {
   async abort(sessionId: string) { const child = this.processes.get(sessionId); if (!child) return false; child.kill(); this.processes.delete(sessionId); return true; }
   subscribe(listener: (event: AgentEvent) => void) { this.listeners.add(listener); return () => this.listeners.delete(listener); }
 }
-export const createCliProviders = () => CLI_CONFIGS.map((config) => new CliProvider(config));
+export const createCliProviders = () => [...CLI_CONFIGS.map((config) => new CliProvider(config)), new PiProvider(new PiCliTransport())];
