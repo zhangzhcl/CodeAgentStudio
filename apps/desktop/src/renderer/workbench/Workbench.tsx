@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { WorkbenchTab } from '@codeagent-studio/protocol';
 import { FileExplorer } from '../files/FileExplorer.js';
+import { ChatPanel } from '../chat/ChatPanel.js';
 
 type Activity = 'files' | 'sessions';
 const EMPTY_LIST = async () => [];
@@ -50,11 +51,7 @@ export function Workbench() {
           ))}
         </div>
         {activeTab.kind === 'chat' ? (
-          <section role="tabpanel" aria-label="聊天">
-            <h1>聊天</h1>
-            <p>选择 Agent 后开始对话。</p>
-            <button type="button" aria-label="打开示例文件" onClick={openExampleFile}>打开示例文件</button>
-          </section>
+          <section role="tabpanel" aria-label="聊天"><ChatPanel sessionId={activeTab.sessionId} /><button type="button" aria-label="打开示例文件" onClick={openExampleFile}>打开示例文件</button></section>
         ) : (
           <section role="tabpanel" aria-label={tabName(activeTab)}>
             <h1>{activeTab.path}</h1>
