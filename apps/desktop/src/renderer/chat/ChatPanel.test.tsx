@@ -20,4 +20,17 @@ describe('ChatPanel composer keyboard behavior', () => {
     render(<ChatPanel sessionId="empty" onPrompt={vi.fn()} />);
     expect(screen.getByRole('button', { name: '发送' })).toBeDisabled();
   });
+
+  it('unlocks the composer when a streamed run emits done', async () => {
+    const listeners: Array<(event: any) => void> = [];
+    const subscribe = vi.fn((listener: (event: any) => void) => { listeners.push(listener); return () => undefined; });
+    const onPrompt = vi.fn(() => new Promise<void>(() => undefined));
+    render(<ChatPanel sessionId="stream" onPrompt={onPrompt} subscribe={subscribe} />);
+    const input = screen.getByLabelText('消息');
+    fireEvent.change(input, { target: { value: '流式测试' } });
+    fireEvent.click(screen.getByRole('button', { name: '发送' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: '停止' })).toBeInTheDocument());
+    act(() => listeners[0]?.({ protocolVersion: 1, type: 'done', sessionId: 'stream', messageId: 'm', provider: 'claude', sequence: 1, occurredAt: new Date().toISOString(), payload: {} }));
+    await waitFor(() => expect(screen.getByRole('button', { name: '发送' })).toBeInTheDocument());
+  });
 });

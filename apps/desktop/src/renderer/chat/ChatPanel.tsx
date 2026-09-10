@@ -21,7 +21,11 @@ export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Cl
   const transcriptRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   useEffect(() => { setProvider(providerName); }, [providerName]);
-  useEffect(() => subscribe?.((event) => { if (event.sessionId === sessionId && sequencer.current.accept(event)) setMessages((current) => applyAgentEvent(current, event)); }), [sessionId, subscribe]);
+  useEffect(() => subscribe?.((event) => {
+    if (event.sessionId !== sessionId || !sequencer.current.accept(event)) return;
+    setMessages((current) => applyAgentEvent(current, event));
+    if (event.type === 'done' || event.type === 'error') setSending(false);
+  }), [sessionId, subscribe]);
   useEffect(() => { let active = true; sequencer.current = new EventSequencer(); setMessages([]); if (loadMessages) void loadMessages().then((loaded) => { if (active) setMessages(loaded); }).catch(() => { if (active) setError('会话记录加载失败'); }); return () => { active = false; }; }, [sessionId]);
   useEffect(() => { const element = transcriptRef.current; if (!element || !stickToBottom.current) return; element.scrollTop = element.scrollHeight; }, [messages]);
   const scrollToBottom = () => { const element = transcriptRef.current; if (!element) return; element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' }); stickToBottom.current = true; setShowScrollButton(false); };
