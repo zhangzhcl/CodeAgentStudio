@@ -15,7 +15,8 @@ export function Workbench() {
   const [projectSessions, setProjectSessions] = useState<string[]>([]);
   const [providerStatuses, setProviderStatuses] = useState<Array<{ provider: string; command?: string; installed: boolean; version?: string }>>([]);
   useEffect(() => { const api = (window as Window & { codeagent?: { workspace?: { projects: () => Promise<Array<{ id: string }>> } } }).codeagent?.workspace; if (api) void api.projects().then((projects) => { if (projects[0]) setProjectId(projects[0].id); }); }, []);
-  useEffect(() => { const detect = (window as Window & { codeagent?: { providers?: { detect: () => Promise<Array<{ provider: string; installed: boolean; version?: string }>> } } }).codeagent?.providers?.detect; if (detect) void detect().then(setProviderStatuses); }, []);
+  const detectProviders = () => { const detect = (window as Window & { codeagent?: { providers?: { detect: () => Promise<Array<{ provider: string; installed: boolean; version?: string; command?: string }>> } } }).codeagent?.providers?.detect; if (detect) void detect().then(setProviderStatuses); };
+  useEffect(() => { detectProviders(); }, []);
 
   const openExampleFile = async (path = 'README.md') => {
     const fileTab: WorkbenchTab = { kind: 'file', projectId: 'example-project', path, dirty: false };
@@ -41,7 +42,7 @@ export function Workbench() {
               <h2>文件资源管理器</h2>
               <button type="button" onClick={() => { const choose = (window as Window & { codeagent?: { workspace?: { chooseProject: () => Promise<{ id: string } | undefined> } } }).codeagent?.workspace?.chooseProject; if (choose) void choose().then((project) => { if (project) setProjectId(project.id); }); }}>选择项目</button>
               <FileExplorer projectId={projectId} onOpenFile={(path) => void openExampleFile(path)} />
-              {providerStatuses.length > 0 && <div aria-label="Agent 状态"><h3>Agent 状态</h3>{providerStatuses.map((status) => <p key={status.provider}>{status.provider}: {status.installed ? `已安装${status.version ? ` (${status.version})` : ''}` : '未安装'}{status.command ? ` · ${status.command}` : ''}</p>)}</div>}
+              {providerStatuses.length > 0 && <div aria-label="Agent 状态"><h3>Agent 状态</h3><button type="button" onClick={detectProviders}>重新检测</button>{providerStatuses.map((status) => <p key={status.provider}>{status.provider}: {status.installed ? `已安装${status.version ? ` (${status.version})` : ''}` : '未安装'}{status.command ? ` · ${status.command}` : ''}</p>)}</div>}
             </div>
           ) : (
             <div>
