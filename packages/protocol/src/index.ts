@@ -40,7 +40,7 @@ export const MessageDeltaSchema = BaseEventSchema.pick({ sessionId: true, messag
 export type MessageDelta = z.infer<typeof MessageDeltaSchema>;
 
 export const WorkbenchTabSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('chat'), sessionId: z.string().min(1), scope: SessionScopeSchema.default('project'), provider: ProviderIdSchema.default('claude') }),
+  z.object({ kind: z.literal('chat'), sessionId: z.string().min(1), scope: SessionScopeSchema.default('project'), provider: ProviderIdSchema.default('claude'), projectId: z.string().min(1).optional() }),
   z.object({ kind: z.literal('file'), projectId: z.string().min(1), path: z.string().min(1), dirty: z.boolean() }),
 ]);
 export type WorkbenchTab = z.infer<typeof WorkbenchTabSchema>;
