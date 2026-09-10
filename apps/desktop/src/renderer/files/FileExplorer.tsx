@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import type { WorkspaceEntry } from '@codeagent-studio/protocol';
 
 type Props = {
-  listEntries: (relativePath: string) => Promise<WorkspaceEntry[]>;
+  listEntries?: (relativePath: string) => Promise<WorkspaceEntry[]>;
   onOpenFile: (relativePath: string) => void;
   initialEntries?: WorkspaceEntry[];
 };
 
 const IGNORED = new Set(['.git', 'node_modules']);
 
-export function FileExplorer({ listEntries, onOpenFile, initialEntries = [] }: Props) {
+export function FileExplorer({ listEntries = async () => [], onOpenFile, initialEntries = [] }: Props) {
   const [entries, setEntries] = useState<WorkspaceEntry[]>(initialEntries);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [children, setChildren] = useState<Record<string, WorkspaceEntry[]>>({});

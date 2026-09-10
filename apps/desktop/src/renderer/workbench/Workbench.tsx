@@ -5,15 +5,16 @@ import { ChatPanel } from '../chat/ChatPanel.js';
 import { EditorTab } from '../editor/EditorTab.js';
 
 type Activity = 'files' | 'sessions';
-const EMPTY_LIST = async () => [];
-
 export function Workbench() {
   const [activity, setActivity] = useState<Activity>('files');
   const [tabs, setTabs] = useState<WorkbenchTab[]>([{ kind: 'chat', sessionId: 'new-chat' }]);
   const [activeTab, setActiveTab] = useState<WorkbenchTab>(tabs[0]);
+  const [fileContents, setFileContents] = useState<Record<string, string>>({});
 
-  const openExampleFile = () => {
-    const fileTab: WorkbenchTab = { kind: 'file', projectId: 'example-project', path: 'README.md', dirty: false };
+  const openExampleFile = async (path = 'README.md') => {
+    const fileTab: WorkbenchTab = { kind: 'file', projectId: 'example-project', path, dirty: false };
+    const api = (window as Window & { codeagent?: { workspace?: { read: (projectId: string, path: string) => Promise<string> } } }).codeagent?.workspace;
+    if (api) setFileContents((current) => ({ ...current, [path]: current[path] ?? '' }));
     setTabs((current) => current.some((tab) => tab.kind === 'file' && tab.path === fileTab.path) ? current : [...current, fileTab]);
     setActiveTab(fileTab);
   };
@@ -31,7 +32,7 @@ export function Workbench() {
           {activity === 'files' ? (
             <div>
               <h2>文件资源管理器</h2>
-              <FileExplorer listEntries={EMPTY_LIST} onOpenFile={openExampleFile} />
+              <FileExplorer onOpenFile={(path) => void openExampleFile(path)} />
             </div>
           ) : (
             <div>
@@ -52,10 +53,10 @@ export function Workbench() {
           ))}
         </div>
         {activeTab.kind === 'chat' ? (
-          <section role="tabpanel" aria-label="聊天"><ChatPanel sessionId={activeTab.sessionId} /><button type="button" aria-label="打开示例文件" onClick={openExampleFile}>打开示例文件</button></section>
+          <section role="tabpanel" aria-label="聊天"><ChatPanel sessionId={activeTab.sessionId} /><button type="button" aria-label="打开示例文件" onClick={() => void openExampleFile()}>打开示例文件</button></section>
         ) : (
           <section role="tabpanel" aria-label={tabName(activeTab)}>
-            <EditorTab projectId={activeTab.projectId} path={activeTab.path} content="# CodeAgent Studio\n" useMonaco={typeof window.matchMedia === 'function'} onSave={() => undefined} />
+            <EditorTab projectId={activeTab.projectId} path={activeTab.path} content={fileContents[activeTab.path] ?? '# CodeAgent Studio\n'} useMonaco={typeof window.matchMedia === 'function'} onSave={(content) => setFileContents((current) => ({ ...current, [activeTab.path]: content }))} />
           </section>
         )}
       </main>
