@@ -28,6 +28,7 @@ export class WorkspaceService {
   constructor(private readonly store?: ProjectStore) { for (const project of store?.list() ?? []) this.projects.set(project.id, project); }
 
   listProjects(): RegisteredProject[] { return [...this.projects.values()]; }
+  async ensureProject(rootPath: string): Promise<RegisteredProject> { const canonicalRoot = await realpath(rootPath).catch(() => rootPath); const existing = [...this.projects.values()].find((project) => resolve(project.rootPath) === resolve(canonicalRoot)); return existing ?? this.registerProject(canonicalRoot); }
   browseWorkspace(projectId: string, relativePath = '') { return this.listProjectFiles(projectId, relativePath); }
   async openFileStream(projectId: string, relativePath: string) { const { path } = await this.resolvePath(projectId, relativePath); return createReadStream(path); }
 

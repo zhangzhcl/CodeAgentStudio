@@ -35,5 +35,5 @@ export class SessionService {
   replayTranscript(sessionId: string): MessageRecord[] { return this.listMessages(sessionId).map((message) => ({ ...message })); }
   markStatus(sessionId: string, status: SessionRecord['status']): SessionRecord { const updated = { ...this.get(sessionId), status, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
   updateNative(sessionId: string, native: Pick<SessionRecord, 'nativeId' | 'nativeSessionFile'>): SessionRecord { const updated = { ...this.get(sessionId), ...native, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
-  updateProject(sessionId: string, project: Pick<SessionRecord, 'projectRoot' | 'projectName'>): SessionRecord { const updated = { ...this.get(sessionId), ...project, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
+  updateProject(sessionId: string, project: Pick<SessionRecord, 'projectId' | 'projectRoot' | 'projectName'>): SessionRecord { const updated = { ...this.get(sessionId), ...project, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
 }
