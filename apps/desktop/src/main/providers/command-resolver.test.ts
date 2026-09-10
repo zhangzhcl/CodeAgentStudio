@@ -25,6 +25,6 @@ describe('resolveAgentCommand', () => {
   });
 
   it('selects the first command confirmed by the platform lookup', () => {
-    expect(findAgentCommand(['agent', 'cursor-agent'], { platform: 'linux', lookup: () => 'cursor-agent' })).toBe('cursor-agent');
+    expect(findAgentCommand(['agent', 'cursor-agent'], { platform: 'linux', lookup: (command) => command === 'cursor-agent' ? command : undefined })).toBe('cursor-agent');
   });
 });
