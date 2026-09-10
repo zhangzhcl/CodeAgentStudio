@@ -1,12 +1,14 @@
 import { spawn } from 'node:child_process';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import type { AgentEvent, ProviderId } from '@codeagent-studio/protocol';
 import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contracts.js';
 import { parseCliEvent } from './cli-event-parser.js';
 
 type Config = { id: ProviderId; command: string; versionArgs?: string[]; promptArgs: (text: string) => string[] };
-const cursorCommand = process.env.CODEAGENT_CURSOR_AGENT ?? (process.platform === 'win32' ? join(homedir(), 'AppData', 'Local', 'cursor-agent', 'agent.ps1') : 'agent');
+const cursorWindowsPath = join(homedir(), 'AppData', 'Local', 'cursor-agent', 'agent.ps1');
+const cursorCommand = process.env.CODEAGENT_CURSOR_AGENT ?? (process.platform === 'win32' && existsSync(cursorWindowsPath) ? cursorWindowsPath : 'agent');
 export const CLI_CONFIGS: Config[] = [{ id: 'claude', command: 'claude', promptArgs: (text) => ['-p', text] }, { id: 'cursor', command: cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'text', text] }, { id: 'codex', command: 'codex', promptArgs: (text) => ['exec', text] }, { id: 'opencode', command: 'opencode', promptArgs: (text) => ['run', text] }];
 
 export class CliProvider implements AgentProvider {
