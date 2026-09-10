@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { EventSequencer } from '@codeagent-studio/protocol';
 import type { AgentEvent } from '@codeagent-studio/protocol';
 import { applyAgentEvent, type ChatMessage } from './chat-state.js';
 
@@ -9,7 +10,8 @@ export function ChatPanel({ sessionId, providerName = 'Agent', providers = ['Cla
   const [provider, setProvider] = useState(providerName);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
-  useEffect(() => subscribe?.((event) => { if (event.sessionId === sessionId) setMessages((current) => applyAgentEvent(current, event)); }), [sessionId, subscribe]);
+  const sequencer = useRef(new EventSequencer());
+  useEffect(() => subscribe?.((event) => { if (event.sessionId === sessionId && sequencer.current.accept(event)) setMessages((current) => applyAgentEvent(current, event)); }), [sessionId, subscribe]);
   const send = async () => { const text = draft.trim(); if (!text || sending) return; setDraft(''); setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'user', content: text, status: 'done' }]); setSending(true); try { await onPrompt?.(text, provider); } finally { setSending(false); } };
   return <section className="chat-panel" aria-label="Agent 对话">
     <header><h1>{provider} 对话</h1><label>Provider <select aria-label="选择 Provider" value={provider} onChange={(event) => setProvider(event.target.value)}>{providers.map((item) => <option key={item}>{item}</option>)}</select></label><span>会话 {sessionId}</span></header>
