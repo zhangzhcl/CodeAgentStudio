@@ -12,7 +12,8 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "npm run test --workspace @codeagent-studio/protocol",
-    "typecheck": "npm run typecheck --workspace @codeagent-studio/protocol"
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "verify": "pnpm test && pnpm typecheck"
   }
 }

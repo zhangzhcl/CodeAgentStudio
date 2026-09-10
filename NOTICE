@@ -1,0 +1,15 @@
+CodeAgent Studio
+
+This product is an independent implementation. CloudCLI/claudecodeui is used
+only as a behavioral reference; no CloudCLI source code is included.
+
+Third-party notices
+-------------------
+At the time of this MVP, no third-party source files are copied into the
+runtime packages. If a VS Code MIT file is later copied, its original
+copyright header and MIT license must be retained here with the source URL,
+fixed commit SHA, copy date, and local wrapper path.
+
+Reference repositories (not runtime dependencies):
+- https://github.com/siteboon/claudecodeui (AGPL-3.0-or-later; reference only)
+- https://github.com/coder/code-server (MIT; reference only)
