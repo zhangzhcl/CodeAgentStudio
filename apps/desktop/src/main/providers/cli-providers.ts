@@ -6,11 +6,12 @@ import type { AgentEvent, ProviderId } from '@codeagent-studio/protocol';
 import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contracts.js';
 import { parseCliEvent } from './cli-event-parser.js';
 
-type Config = { id: ProviderId; command: string; versionArgs?: string[]; promptArgs: (text: string) => string[] };
+type Config = { id: ProviderId; command: string; commandArgs?: string[]; versionArgs?: string[]; promptArgs: (text: string) => string[] };
 const cursorWindowsPath = join(homedir(), 'AppData', 'Local', 'cursor-agent', 'agent.ps1');
-const cursorCommand = process.env.CODEAGENT_CURSOR_AGENT ?? (process.platform === 'win32' && existsSync(cursorWindowsPath) ? cursorWindowsPath : 'agent');
 const resolveAgentCommand = (envKey: string, fallback: string) => process.env[envKey] ?? fallback;
-export const CLI_CONFIGS: Config[] = [{ id: 'claude', command: resolveAgentCommand('CODEAGENT_CLAUDE_COMMAND', 'claude'), promptArgs: (text) => ['-p', text] }, { id: 'cursor', command: cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'text', text] }, { id: 'codex', command: resolveAgentCommand('CODEAGENT_CODEX_COMMAND', 'codex'), promptArgs: (text) => ['exec', text] }, { id: 'opencode', command: resolveAgentCommand('CODEAGENT_OPENCODE_COMMAND', 'opencode'), promptArgs: (text) => ['run', text] }];
+const wrapWindowsPowerShell = (command: string): Pick<Config, 'command' | 'commandArgs'> => process.platform === 'win32' && command.toLowerCase().endsWith('.ps1') ? { command: 'powershell.exe', commandArgs: ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', command] } : { command };
+const cursorCommand = wrapWindowsPowerShell(resolveAgentCommand('CODEAGENT_CURSOR_AGENT', process.platform === 'win32' && existsSync(cursorWindowsPath) ? cursorWindowsPath : 'agent'));
+export const CLI_CONFIGS: Config[] = [{ id: 'claude', ...wrapWindowsPowerShell(resolveAgentCommand('CODEAGENT_CLAUDE_COMMAND', 'claude')), promptArgs: (text) => ['-p', text] }, { id: 'cursor', ...cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'text', text] }, { id: 'codex', ...wrapWindowsPowerShell(resolveAgentCommand('CODEAGENT_CODEX_COMMAND', 'codex')), promptArgs: (text) => ['exec', text] }, { id: 'opencode', ...wrapWindowsPowerShell(resolveAgentCommand('CODEAGENT_OPENCODE_COMMAND', 'opencode')), promptArgs: (text) => ['run', text] }];
 
 export class CliProvider implements AgentProvider {
   readonly capabilities = { maxConcurrentSessions: 1, supportsResume: false, supportsAttachments: false, supportsProjectScope: true, supportsAbort: true };
@@ -19,12 +20,12 @@ export class CliProvider implements AgentProvider {
   constructor(private readonly config: Config) {}
   get id() { return this.config.id; }
   async detect(): Promise<ProviderStatus> {
-    return new Promise((resolve) => { const child = spawn(this.config.command, this.config.versionArgs ?? ['--version'], { shell: process.platform === 'win32' }); let output = ''; child.stdout?.on('data', (data) => { output += data.toString(); }); child.once('error', () => resolve({ provider: this.id, installed: false, authenticated: false, errorCode: 'not_installed' })); child.once('close', (code) => resolve({ provider: this.id, installed: code === 0, authenticated: code === 0, version: output.trim() || undefined, errorCode: code === 0 ? undefined : 'unknown' })); });
+    return new Promise((resolve) => { const child = spawn(this.config.command, [...(this.config.commandArgs ?? []), ...(this.config.versionArgs ?? ['--version'])], { shell: process.platform === 'win32' && this.config.command !== 'powershell.exe' }); let output = ''; child.stdout?.on('data', (data) => { output += data.toString(); }); child.once('error', () => resolve({ provider: this.id, installed: false, authenticated: false, errorCode: 'not_installed' })); child.once('close', (code) => resolve({ provider: this.id, installed: code === 0, authenticated: code === 0, version: output.trim() || undefined, errorCode: code === 0 ? undefined : 'unknown' })); });
   }
   async createSession(_input: CreateSessionInput) { return {}; }
   async resumeSession(_nativeId: string) { throw new Error(`${this.id} does not support resume`); }
   async prompt(sessionId: string, text: string) {
-    const child = spawn(this.config.command, this.config.promptArgs(text), { shell: process.platform === 'win32', stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0;
+    const child = spawn(this.config.command, [...(this.config.commandArgs ?? []), ...this.config.promptArgs(text)], { shell: process.platform === 'win32' && this.config.command !== 'powershell.exe', stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0;
     const consume = (data: Buffer) => data.toString().split(/\r?\n/).forEach((line) => { const event = parseCliEvent(line, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); });
     child.stdout?.on('data', consume); child.stderr?.on('data', consume); child.once('close', () => { this.processes.delete(sessionId); });
   }
