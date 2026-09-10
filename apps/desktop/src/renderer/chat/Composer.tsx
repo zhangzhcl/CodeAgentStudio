@@ -24,7 +24,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
     element.style.height = `${Math.min(element.scrollHeight, 240)}px`;
   };
 
-  return <form className="chat-composer" onSubmit={(event) => { event.preventDefault(); onSend(); }}>
+  return <form className="chat-composer" aria-busy={sending} data-sending={sending ? 'true' : 'false'} onSubmit={(event) => { event.preventDefault(); onSend(); }}>
     <textarea
       aria-label="消息"
       placeholder="输入 / 调用命令，@ 选择文件，或向 Agent 提问…"
@@ -72,6 +72,6 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
       <button type="button" onClick={() => { onDraftChange('/help ', document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea')); setShowCommandMenu(false); }}>/help <span>查看可用命令</span></button>
       <button type="button" onClick={() => { onDraftChange('/clear ', document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea')); setShowCommandMenu(false); }}>/clear <span>清空当前会话</span></button>
     </div>}
-    <span className="composer-hint">{externalNotice || notice || hint}</span>
+    <span className="composer-hint">{sending ? 'Agent 正在生成，可点击“停止”中断' : externalNotice || notice || hint}</span>
   </form>;
 }

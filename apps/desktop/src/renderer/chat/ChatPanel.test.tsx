@@ -33,4 +33,15 @@ describe('ChatPanel composer keyboard behavior', () => {
     act(() => listeners[0]?.({ protocolVersion: 1, type: 'done', sessionId: 'stream', messageId: 'm', provider: 'claude', sequence: 1, occurredAt: new Date().toISOString(), payload: {} }));
     await waitFor(() => expect(screen.getByRole('button', { name: '发送' })).toBeInTheDocument());
   });
+
+  it('exposes a busy state while the agent is generating', async () => {
+    const onPrompt = vi.fn(() => new Promise<void>(() => undefined));
+    render(<ChatPanel sessionId="busy" onPrompt={onPrompt} />);
+    fireEvent.change(screen.getByLabelText('消息'), { target: { value: '请处理' } });
+    fireEvent.click(screen.getByRole('button', { name: '发送' }));
+    await waitFor(() => {
+      expect(document.querySelector('.chat-composer')).toHaveAttribute('aria-busy', 'true');
+      expect(screen.getByText('Agent 正在生成，可点击“停止”中断')).toBeInTheDocument();
+    });
+  });
 });
