@@ -15,7 +15,7 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
   ipcMain.handle('agent:prompt', async (_event, input: PromptInput) => {
     if (sessions) { try { sessions.get(input.sessionId); } catch { sessions.create({ id: input.sessionId, provider: input.provider, scope: input.scope, projectId: input.projectId }); } }
     sessions?.appendUserMessage(input.sessionId, input.text);
-    if (!runtime.get(input.sessionId)) { const created = await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId, projectRoot: input.projectRoot }); if (created.nativeId || created.nativeSessionFile) sessions?.updateNative(input.sessionId, { nativeId: created.nativeId, nativeSessionFile: created.nativeSessionFile }); }
+    if (!runtime.get(input.sessionId)) { const record = sessions?.get(input.sessionId); const provider = providers.get(input.provider); if (record?.nativeId && provider?.capabilities.supportsResume) await provider.resumeSession(record.nativeId, record.nativeSessionFile, input.sessionId); else { const created = await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId, projectRoot: input.projectRoot }); if (created.nativeId || created.nativeSessionFile) sessions?.updateNative(input.sessionId, { nativeId: created.nativeId, nativeSessionFile: created.nativeSessionFile }); } }
     const provider = providers.get(input.provider);
     if (!provider) throw new Error(`Unknown provider: ${input.provider}`);
     await provider.prompt(input.sessionId, input.text);

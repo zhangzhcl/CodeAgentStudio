@@ -29,7 +29,7 @@ export type AgentProvider = {
   readonly capabilities: ProviderCapabilities;
   detect(): Promise<ProviderStatus>;
   createSession(input: CreateSessionInput): Promise<{ nativeId?: string; nativeSessionFile?: string }>;
-  resumeSession(nativeId: string, nativeSessionFile?: string): Promise<void>;
+  resumeSession(nativeId: string, nativeSessionFile?: string, appSessionId?: string): Promise<void>;
   prompt(sessionId: string, text: string): Promise<void>;
   abort(sessionId: string): Promise<boolean>;
   subscribe(listener: (event: AgentEvent) => void): () => void;
