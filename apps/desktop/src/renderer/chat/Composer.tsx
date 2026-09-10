@@ -16,6 +16,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
   const attachmentInput = useRef<HTMLInputElement>(null);
   const [hint, setHint] = useState('支持 Markdown、代码和多行输入');
   const [notice, setNotice] = useState('');
+  const [attachment, setAttachment] = useState<string>();
   const [showCommandMenu, setShowCommandMenu] = useState(false);
 
   const resize = (element: HTMLTextAreaElement) => {
@@ -46,7 +47,10 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
       <div className="composer-tools">
         <input ref={attachmentInput} type="file" hidden onChange={(event) => {
           const file = event.target.files?.[0];
-          if (file) setNotice(`已选择附件：${file.name}`);
+          if (file) {
+            setAttachment(file.name);
+            setNotice(`已选择附件：${file.name}`);
+          }
           event.target.value = '';
         }} />
         <button type="button" aria-label="添加附件" className="toolbar-icon" onClick={() => attachmentInput.current?.click()}>⌕</button>
@@ -63,6 +67,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
         {sending ? <button type="button" className="stop-action" onClick={onStop}>停止</button> : <button type="submit" className="send-action" aria-label="发送" disabled={!draft.trim()}>➤</button>}
       </div>
     </div>
+    {attachment && <div className="composer-attachments"><span className="attachment-chip">附件 · {attachment}<button type="button" aria-label="移除附件" onClick={() => setAttachment(undefined)}>×</button></span></div>}
     {showCommandMenu && <div className="command-menu" role="listbox">
       <button type="button" onClick={() => { onDraftChange('/help ', document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea')); setShowCommandMenu(false); }}>/help <span>查看可用命令</span></button>
       <button type="button" onClick={() => { onDraftChange('/clear ', document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea')); setShowCommandMenu(false); }}>/clear <span>清空当前会话</span></button>
