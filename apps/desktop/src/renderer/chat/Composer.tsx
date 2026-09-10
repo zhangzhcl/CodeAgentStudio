@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ChatMessage } from './chat-state.js';
 
 type Props = {
@@ -27,9 +27,16 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
   const [webSearch, setWebSearch] = useState(false);
   const [model, setModel] = useState('GLM-4.7');
   const [modelOpen, setModelOpen] = useState(false);
+  const modelRef = useRef<HTMLDivElement>(null);
   const history = useRef<string[]>([]);
   const historyIndex = useRef(-1);
   const commands = [{ value: '/help', label: '查看可用命令' }, { value: '/clear', label: '清空当前会话' }];
+  useEffect(() => {
+    if (!modelOpen) return;
+    const close = (event: MouseEvent) => { if (modelRef.current && !modelRef.current.contains(event.target as Node)) setModelOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [modelOpen]);
 
   const resize = (element: HTMLTextAreaElement) => {
     element.style.height = 'auto';
@@ -92,7 +99,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
         <button type="button" className={`composer-toggle${webSearch ? ' is-on' : ''}`} aria-pressed={webSearch} onClick={() => { setWebSearch((value) => !value); setNotice(webSearch ? '已关闭联网搜索' : '已开启联网搜索'); }} title="联网搜索模式">⌁ 联网</button>
       </div>
       <div className="composer-actions">
-        <div className="composer-model-wrap">
+        <div className="composer-model-wrap" ref={modelRef}>
           <button type="button" className={`composer-model${modelOpen ? ' is-open' : ''}`} aria-haspopup="listbox" aria-expanded={modelOpen} onClick={() => setModelOpen((open) => !open)} title={`当前模型：${model}`}>
             {model}<span aria-hidden="true">⌄</span>
           </button>
