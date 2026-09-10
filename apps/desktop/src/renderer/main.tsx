@@ -4,4 +4,5 @@ import { Workbench } from './workbench/Workbench.js';
 import './styles.css';
 import './explorer.css';
 import './chat.css';
+import './template-overrides.css';
 createRoot(document.getElementById('root')!).render(<StrictMode><Workbench /></StrictMode>);

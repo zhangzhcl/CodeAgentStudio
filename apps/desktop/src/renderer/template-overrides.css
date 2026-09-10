@@ -1,0 +1,4 @@
+.markdown-lite { min-width: 0; }
+.markdown-lite p { white-space: pre-wrap; margin: 5px 0; }
+.md-code-block { margin: 10px 0; padding: 12px 14px; overflow: auto; border: 1px solid #39485a; border-radius: 10px; background: #0a0c10; color: #d8dce4; font-family: "Cascadia Code", "SFMono-Regular", monospace; font-size: 12px; line-height: 1.7; }
+.md-code-block code::before { content: attr(data-language); display: block; margin-bottom: 6px; color: #f5a524; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; }
