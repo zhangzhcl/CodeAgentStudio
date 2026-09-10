@@ -2,13 +2,14 @@ import { BrowserWindow, ipcMain } from 'electron';
 import type { AgentEvent, ProviderId, SessionScope } from '@codeagent-studio/protocol';
 import { ProviderRegistry } from './provider-registry.js';
 import { ProviderRuntime } from './provider-runtime.js';
+import type { SessionService } from '../sessions/session-service.js';
 
 type PromptInput = { sessionId: string; provider: ProviderId; scope: SessionScope; projectId?: string; projectRoot?: string; text: string };
 
-export function registerAgentIpc(registry: ProviderRegistry): void {
+export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionService): void {
   const providers = new Map(registry.list().map((provider) => [provider.id, provider]));
   const runtime = new ProviderRuntime(providers);
-  for (const provider of registry.list()) provider.subscribe((event: AgentEvent) => { for (const window of BrowserWindow.getAllWindows()) window.webContents.send('agent:event', event); });
+  for (const provider of registry.list()) provider.subscribe((event: AgentEvent) => { sessions?.appendEvent(event); for (const window of BrowserWindow.getAllWindows()) window.webContents.send('agent:event', event); });
   ipcMain.removeHandler('agent:prompt');
   ipcMain.removeHandler('agent:abort');
   ipcMain.handle('agent:prompt', async (_event, input: PromptInput) => {
