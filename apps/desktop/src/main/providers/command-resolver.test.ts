@@ -20,6 +20,7 @@ describe('resolveAgentCommand', () => {
 
   it('prioritizes user npm binaries without dropping the existing PATH', () => {
     const env = withUserBinaryPaths({ PATH: 'C:\\Windows\\System32;C:\\Tools', APPDATA: 'C:\\Users\\demo\\AppData\\Roaming' }, { platform: 'win32', home: 'C:\\Users\\demo' });
-    expect(env.PATH?.split(';').slice(0, 2)).toEqual(['C:\\Users\\demo\\AppData\\Roaming\\npm', 'C:\\Windows\\System32']);
+    expect(env.PATH?.split(';').slice(0, 2)).toEqual(['C:\\Users\\demo\\AppData\\Roaming\\npm', 'C:\\Users\\demo\\.npm-global\\bin']);
+    expect(env.PATH).toContain('C:\\Windows\\System32');
   });
 });
