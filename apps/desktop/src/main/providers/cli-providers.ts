@@ -28,9 +28,11 @@ export class CliProvider implements AgentProvider {
   async createSession(input: CreateSessionInput) { if (input.projectRoot && input.sessionId) this.sessionCwds.set(input.sessionId, input.projectRoot); return {}; }
   async resumeSession(_nativeId: string) { throw new Error(`${this.id} does not support resume`); }
   async prompt(sessionId: string, text: string) {
-    const child = spawn(this.config.command, [...(this.config.commandArgs ?? []), ...this.config.promptArgs(text)], { shell: this.config.shell, windowsHide: true, cwd: this.sessionCwds.get(sessionId), env: withUserBinaryPaths(process.env), stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0;
-    const consume = (data: Buffer) => data.toString().split(/\r?\n/).forEach((line) => { const event = parseCliEvent(line, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); });
-    child.stdout?.on('data', consume); child.stderr?.on('data', consume); child.once('close', () => { this.processes.delete(sessionId); });
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn(this.config.command, [...(this.config.commandArgs ?? []), ...this.config.promptArgs(text)], { shell: this.config.shell, windowsHide: true, cwd: this.sessionCwds.get(sessionId), env: withUserBinaryPaths(process.env), stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0;
+      const consume = (data: Buffer) => data.toString().split(/\r?\n/).forEach((line) => { const event = parseCliEvent(line, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); });
+      child.stdout?.on('data', consume); child.stderr?.on('data', consume); child.once('error', reject); child.once('close', () => { this.processes.delete(sessionId); resolve(); });
+    });
   }
   async abort(sessionId: string) { const child = this.processes.get(sessionId); if (!child) return false; child.kill(); this.processes.delete(sessionId); return true; }
   subscribe(listener: (event: AgentEvent) => void) { this.listeners.add(listener); return () => this.listeners.delete(listener); }
