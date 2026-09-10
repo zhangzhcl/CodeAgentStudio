@@ -11,9 +11,9 @@ describe('MarkdownLite', () => {
     expect(screen.getByText('packages').tagName).toBe('STRONG');
   });
   it('renders fenced code and collapsible thinking', () => {
-    render(<MarkdownLite content={'<think>先检查目录</think>\n\n```ts\nconst ok = true\n```'} />);
+    const { container } = render(<MarkdownLite content={'<think>先检查目录</think>\n\n```ts\nconst ok = true\n```'} />);
     expect(screen.getByText('思考过程')).toBeInTheDocument();
     expect(screen.getByText('const ok = true')).toBeInTheDocument();
-    expect(screen.getByText('ts')).toBeInTheDocument();
+    expect(container.querySelector('code[data-language="ts"]')).toBeInTheDocument();
   });
 });
