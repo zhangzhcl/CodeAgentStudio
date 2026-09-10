@@ -3,5 +3,5 @@ export default {
   packagerConfig: { asar: true, appBundleId: 'com.codeagent.studio' },
   rebuildConfig: {},
   plugins: [{ name: '@electron-forge/plugin-vite', config: { build: [{ entry: 'src/main/main.ts', config: 'vite.main.config.ts' }, { entry: 'src/main/preload.ts', config: 'vite.preload.config.ts' }], renderer: [{ name: 'main_window', config: 'vite.config.ts' }] } }],
-  makers: [{ name: '@electron-forge/maker-zip', platforms: ['win32'] }],
+  makers: [{ name: '@electron-forge/maker-zip', platforms: ['win32', 'darwin', 'linux'] }],
 };
