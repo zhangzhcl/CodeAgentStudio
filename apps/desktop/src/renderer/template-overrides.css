@@ -4,3 +4,4 @@
 .md-code-block code::before { content: attr(data-language); display: block; margin-bottom: 6px; color: #f5a524; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; }
 .markdown-lite h2,.markdown-lite h3,.markdown-lite h4{margin:14px 0 6px;color:#e8edf4}.markdown-lite h2{font-size:18px}.markdown-lite h3{font-size:15px}.markdown-lite h4{font-size:13px}.md-list{margin:7px 0;padding-left:20px;color:#c1cedc}.md-list li{margin:4px 0;line-height:1.65}
 .thinking-block{margin:8px 0;padding:8px 10px;border:1px solid #465466;border-radius:9px;background:#151c25;color:#9aabbd}.thinking-block summary{cursor:pointer;color:#f0b34a;font-size:12px}.thinking-block p{margin:8px 0 0;color:#9aabbd;font-size:12px;white-space:pre-wrap}
+.inline-code{padding:2px 5px;border:1px solid #3d4b5c;border-radius:4px;background:#0d141d;color:#f5c36d;font-family:"Cascadia Code","SFMono-Regular",monospace;font-size:.9em}
