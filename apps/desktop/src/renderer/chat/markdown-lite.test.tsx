@@ -22,4 +22,12 @@ describe('MarkdownLite', () => {
     expect(container.querySelector('ol')).toBeInTheDocument();
     expect(container.querySelector('blockquote')).toHaveTextContent('这是引用');
   });
+  it('renders checklist plans as a task block', () => {
+    const { container } = render(<MarkdownLite content={'- [x] 已完成准备\n- [>] 正在执行\n- [ ] 待处理'} />);
+    expect(container.querySelector('.task-list-block')).toBeInTheDocument();
+    expect(screen.getByText('执行计划')).toBeInTheDocument();
+    expect(container.querySelectorAll('.task-list-item')).toHaveLength(3);
+    expect(container.querySelector('.task-done')).toHaveTextContent('已完成准备');
+    expect(container.querySelector('.task-running')).toHaveTextContent('正在执行');
+  });
 });
