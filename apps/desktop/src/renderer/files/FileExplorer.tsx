@@ -17,7 +17,10 @@ export function FileExplorer({ projectId, listEntries, onOpenFile, initialEntrie
   const [children, setChildren] = useState<Record<string, WorkspaceEntry[]>>({});
 
   useEffect(() => {
+    setExpanded(new Set());
+    setChildren({});
     if (initialEntries.length === 0) void resolvedList('').then(setEntries);
+    else setEntries(initialEntries);
   }, [initialEntries.length, projectId]);
 
   const toggle = async (entry: WorkspaceEntry) => {
