@@ -13,7 +13,7 @@ export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Cl
   const [error, setError] = useState<string>();
   const sequencer = useRef(new EventSequencer());
   useEffect(() => subscribe?.((event) => { if (event.sessionId === sessionId && sequencer.current.accept(event)) setMessages((current) => applyAgentEvent(current, event)); }), [sessionId, subscribe]);
-  useEffect(() => { sequencer.current = new EventSequencer(); setMessages([]); if (loadMessages) void loadMessages().then(setMessages); }, [sessionId]);
+  useEffect(() => { let active = true; sequencer.current = new EventSequencer(); setMessages([]); if (loadMessages) void loadMessages().then((loaded) => { if (active) setMessages(loaded); }); return () => { active = false; }; }, [sessionId]);
   const send = async () => { const text = draft.trim(); if (!text || sending) return; setDraft(''); setError(undefined); setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'user', content: text, status: 'done' }]); setSending(true); try { await onPrompt?.(text, provider); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Agent 请求失败'); } finally { setSending(false); } };
   return <section className="chat-panel" aria-label="Agent 对话">
     <header><h1>{provider} 对话</h1><label>Provider <select aria-label="选择 Provider" value={provider} onChange={(event) => setProvider(event.target.value)}>{providers.map((item) => <option key={item} disabled={disabledProviders.includes(item)}>{item}{disabledProviders.includes(item) ? '（未安装）' : ''}</option>)}</select></label><span>会话 {sessionId}</span></header>
