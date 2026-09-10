@@ -14,7 +14,7 @@ export function Workbench() {
   const openExampleFile = async (path = 'README.md') => {
     const fileTab: WorkbenchTab = { kind: 'file', projectId: 'example-project', path, dirty: false };
     const api = (window as Window & { codeagent?: { workspace?: { read: (projectId: string, path: string) => Promise<string> } } }).codeagent?.workspace;
-    if (api) setFileContents((current) => ({ ...current, [path]: current[path] ?? '' }));
+    if (api) { try { const content = await api.read('example-project', path); setFileContents((current) => ({ ...current, [path]: content })); } catch { setFileContents((current) => ({ ...current, [path]: current[path] ?? '' })); } }
     setTabs((current) => current.some((tab) => tab.kind === 'file' && tab.path === fileTab.path) ? current : [...current, fileTab]);
     setActiveTab(fileTab);
   };
@@ -56,7 +56,7 @@ export function Workbench() {
           <section role="tabpanel" aria-label="聊天"><ChatPanel sessionId={activeTab.sessionId} /><button type="button" aria-label="打开示例文件" onClick={() => void openExampleFile()}>打开示例文件</button></section>
         ) : (
           <section role="tabpanel" aria-label={tabName(activeTab)}>
-            <EditorTab projectId={activeTab.projectId} path={activeTab.path} content={fileContents[activeTab.path] ?? '# CodeAgent Studio\n'} useMonaco={typeof window.matchMedia === 'function'} onSave={(content) => setFileContents((current) => ({ ...current, [activeTab.path]: content }))} />
+            <EditorTab projectId={activeTab.projectId} path={activeTab.path} content={fileContents[activeTab.path] ?? '# CodeAgent Studio\n'} useMonaco={typeof window.matchMedia === 'function'} onSave={(content) => { setFileContents((current) => ({ ...current, [activeTab.path]: content })); const write = (window as Window & { codeagent?: { workspace?: { write: (projectId: string, path: string, value: string) => Promise<unknown> } } }).codeagent?.workspace?.write; if (write) void write(activeTab.projectId, activeTab.path, content).catch((error: unknown) => console.error('Failed to save file', error)); }} />
           </section>
         )}
       </main>
