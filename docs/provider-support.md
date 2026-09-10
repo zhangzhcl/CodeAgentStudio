@@ -3,12 +3,12 @@
 | Provider | 检测命令 | 未安装行为 | 当前状态 |
 |---|---|---|---|
 | Claude Code | `claude --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成，需本机联调 |
-| Cursor CLI | `agent --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成，需本机安装 |
+| Cursor CLI | `agent --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成；支持 Windows `agent.ps1` |
 | Codex | `codex --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成，需本机联调 |
 | Pi Coding Agent | SDK/RPC transport 探针 | 显示“未就绪”，不阻塞应用启动 | Transport 已完成，SDK 版本待锁定 |
 | opencode | `opencode --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已加入；本机 1.18.30 |
 
-本机探测记录（2026-09-10）：Claude Code 2.1.267、Codex CLI 0.153.4、Pi 0.85.1、opencode 1.18.30；Cursor CLI 未安装。
+本机探测记录（2026-09-11）：Claude Code 2.1.267、Cursor Agent 2026.09.08-6caf4ff、Codex CLI 0.153.4、Pi 0.85.1、opencode 1.18.30。
 
 Cursor Windows 原生安装（官方）：
 
