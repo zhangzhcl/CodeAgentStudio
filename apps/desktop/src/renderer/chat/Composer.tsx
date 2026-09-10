@@ -25,6 +25,8 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
   const [commandIndex, setCommandIndex] = useState(0);
   const [deepThink, setDeepThink] = useState(false);
   const [webSearch, setWebSearch] = useState(false);
+  const [model, setModel] = useState('GLM-4.7');
+  const [modelOpen, setModelOpen] = useState(false);
   const history = useRef<string[]>([]);
   const historyIndex = useRef(-1);
   const commands = [{ value: '/help', label: '查看可用命令' }, { value: '/clear', label: '清空当前会话' }];
@@ -43,7 +45,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
     {queued.length > 0 && <div className="composer-queue"><div className="composer-queue-head">排队中 · {queued.length} 条<span>当前回复结束后自动发送</span></div>{queued.map((item, index) => <div className="composer-queue-item" key={`${item}-${index}`}><b>{String(index + 1).padStart(2, '0')}</b><span title={item}>{item}</span><button type="button" aria-label={`立即发送 ${index + 1}`} onClick={() => onPromoteQueued(index)}>↑</button><button type="button" aria-label={`编辑排队消息 ${index + 1}`} onClick={() => onEditQueued(index)}>✎</button><button type="button" aria-label={`取消排队消息 ${index + 1}`} onClick={() => onCancelQueued(index)}>×</button></div>)}</div>}
     <textarea
       aria-label="消息"
-      placeholder="输入 / 调用命令，@ 选择文件，或向 Agent 提问…"
+      placeholder="给 AGENT-01 下达指令，输入 / 唤起命令面板"
       value={draft}
       onFocus={() => setHint('Enter 发送 · Shift + Enter 换行')}
       onChange={(event) => {
@@ -90,7 +92,14 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
         <button type="button" className={`composer-toggle${webSearch ? ' is-on' : ''}`} aria-pressed={webSearch} onClick={() => { setWebSearch((value) => !value); setNotice(webSearch ? '已关闭联网搜索' : '已开启联网搜索'); }} title="联网搜索模式">⌁ 联网</button>
       </div>
       <div className="composer-actions">
-        <span className="composer-model" title={`当前 Agent：${provider}`}>Agent · {provider}</span>
+        <div className="composer-model-wrap">
+          <button type="button" className={`composer-model${modelOpen ? ' is-open' : ''}`} aria-haspopup="listbox" aria-expanded={modelOpen} onClick={() => setModelOpen((open) => !open)} title={`当前模型：${model}`}>
+            {model}<span aria-hidden="true">⌄</span>
+          </button>
+          {modelOpen && <div className="composer-model-menu" role="listbox" aria-label="选择模型">
+            {['GLM-4.7', 'Claude Sonnet', 'GPT-5.5', 'DeepSeek V4'].map((item) => <button key={item} type="button" role="option" aria-selected={item === model} onClick={() => { setModel(item); setModelOpen(false); setNotice(`已切换模型：${item}`); }}>{item}{item === model ? ' ✓' : ''}</button>)}
+          </div>}
+        </div>
         {sending && !draft.trim() && attachments.length === 0 ? <button type="button" className="stop-action" aria-label="停止" onClick={onStop}>停止</button> : <button type="submit" className="send-action" aria-label="发送" disabled={!draft.trim() && attachments.length === 0}>➤</button>}
       </div>
     </div>
