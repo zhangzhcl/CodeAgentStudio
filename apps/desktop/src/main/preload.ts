@@ -11,5 +11,5 @@ const workspace = {
   rename: (projectId: string, path: string, nextName: string) => ipcRenderer.invoke('workspace:rename', projectId, path, nextName),
   delete: (projectId: string, path: string) => ipcRenderer.invoke('workspace:delete', projectId, path),
 };
-contextBridge.exposeInMainWorld('codeagent', { protocolVersion: 1, ready: true, workspace });
+contextBridge.exposeInMainWorld('codeagent', { protocolVersion: 1, ready: true, workspace, providers: { detect: () => ipcRenderer.invoke('providers:detect') } });
 contextBridge.exposeInMainWorld('codeagentSessions', { create: (input: unknown) => ipcRenderer.invoke('session:create', input), get: (id: string) => ipcRenderer.invoke('session:get', id), messages: (id: string) => ipcRenderer.invoke('session:messages', id) });
