@@ -6,7 +6,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json",
-    "start": "electron ."
+    "start": "electron .",
+    "build:renderer": "vite build"
   },
   "dependencies": {
     "@codeagent-studio/protocol": "workspace:*",
