@@ -104,7 +104,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
             {model}<span aria-hidden="true">⌄</span>
           </button>
           {modelOpen && <div className="composer-model-menu" role="listbox" aria-label="选择模型">
-            {['GLM-4.7', 'Claude Sonnet', 'GPT-5.5', 'DeepSeek V4'].map((item) => <button key={item} type="button" role="option" aria-selected={item === model} onClick={() => { setModel(item); setModelOpen(false); setNotice(`已切换模型：${item}`); }}>{item}{item === model ? ' ✓' : ''}</button>)}
+            {[['GLM-4.7', '通用', 3], ['Claude Sonnet', '代码', 2], ['GPT-5.5', '推理', 2], ['DeepSeek V4', '长上下文', 1]].map(([item, tag, speed]) => <button key={String(item)} type="button" role="option" aria-selected={item === model} onClick={() => { setModel(String(item)); setModelOpen(false); setNotice(`已切换模型：${item}`); }}><span className="model-option-main"><strong>{String(item)}</strong><small>{String(tag)}</small></span><span className="model-speed" aria-label={`速度 ${speed}/3`}>{[0, 1, 2].map((bar) => <i key={bar} className={bar < Number(speed) ? 'is-on' : ''} />)}</span>{item === model && <span className="model-check" aria-hidden="true">✓</span>}</button>)}
           </div>}
         </div>
         {sending && !draft.trim() && attachments.length === 0 ? <button type="button" className="stop-action" aria-label="停止" onClick={onStop}>停止</button> : <button type="submit" className="send-action" aria-label="发送" disabled={!draft.trim() && attachments.length === 0}>➤</button>}
