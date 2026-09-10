@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import { MonacoService } from './monaco-service.js';
 
 const service = new MonacoService();

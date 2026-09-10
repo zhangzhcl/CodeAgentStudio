@@ -1,14 +1,15 @@
 import { useState } from 'react';
+import { MonacoEditor } from './MonacoEditor.js';
 
-type Props = { path: string; content: string; onSave: (content: string) => void };
+type Props = { path: string; content: string; projectId?: string; useMonaco?: boolean; onSave: (content: string) => void };
 
-export function EditorTab({ path, content: initialContent, onSave }: Props) {
+export function EditorTab({ path, content: initialContent, projectId = 'default', useMonaco = false, onSave }: Props) {
   const [content, setContent] = useState(initialContent);
   const dirty = content !== initialContent;
   return (
     <section aria-label={path}>
       <header><span>{path}</span>{dirty && <span>未保存</span>}<button type="button" aria-label="保存" onClick={() => onSave(content)}>保存</button></header>
-      <textarea aria-label={path} value={content} onChange={(event) => setContent(event.target.value)} />
+      {useMonaco ? <MonacoEditor projectId={projectId} path={path} value={content} onChange={setContent} /> : <textarea aria-label={path} value={content} onChange={(event) => setContent(event.target.value)} />}
     </section>
   );
 }
