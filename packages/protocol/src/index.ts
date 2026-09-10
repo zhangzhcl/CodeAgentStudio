@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const PROTOCOL_VERSION = 1 as const;
 
-export const ProviderIdSchema = z.enum(['claude', 'cursor', 'codex', 'pi']);
+export const ProviderIdSchema = z.enum(['claude', 'cursor', 'codex', 'pi', 'opencode']);
 export type ProviderId = z.infer<typeof ProviderIdSchema>;
 
 export const SessionScopeSchema = z.enum(['project', 'personal']);
