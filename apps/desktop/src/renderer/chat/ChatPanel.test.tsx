@@ -85,3 +85,16 @@ describe('ChatPanel local commands', () => {
     expect(onPrompt).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('ChatPanel composer controls', () => {
+  it('toggles deep thinking and web search controls with visible state', () => {
+    render(<ChatPanel sessionId="controls" onPrompt={vi.fn()} />);
+    const thinking = screen.getByRole('button', { name: /深度思考/ });
+    const search = screen.getByRole('button', { name: /联网/ });
+    expect(thinking).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(thinking);
+    fireEvent.click(search);
+    expect(thinking).toHaveAttribute('aria-pressed', 'true');
+    expect(search).toHaveAttribute('aria-pressed', 'true');
+  });
+});

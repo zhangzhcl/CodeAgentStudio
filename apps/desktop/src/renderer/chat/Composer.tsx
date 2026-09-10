@@ -19,6 +19,8 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
   const [attachments, setAttachments] = useState<string[]>([]);
   const [showCommandMenu, setShowCommandMenu] = useState(false);
   const [commandIndex, setCommandIndex] = useState(0);
+  const [deepThink, setDeepThink] = useState(false);
+  const [webSearch, setWebSearch] = useState(false);
   const history = useRef<string[]>([]);
   const historyIndex = useRef(-1);
   const commands = [{ value: '/help', label: '查看可用命令' }, { value: '/clear', label: '清空当前会话' }];
@@ -61,8 +63,8 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
       }}
       disabled={sending}
     />
-    <div className="composer-toolbar">
-      <div className="composer-tools">
+      <div className="composer-toolbar">
+        <div className="composer-tools">
         <input ref={attachmentInput} type="file" multiple hidden onChange={(event) => {
           const files = Array.from(event.target.files ?? []);
           if (files.length) {
@@ -79,9 +81,11 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
           setNotice('请在左侧文件资源管理器点击文件，即可打开并引用。');
           onDraftChange(draft || '@', document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea'));
         }}>▢</button>
+        <button type="button" className={`composer-toggle${deepThink ? ' is-on' : ''}`} aria-pressed={deepThink} onClick={() => { setDeepThink((value) => !value); setNotice(deepThink ? '已关闭深度思考' : '已开启深度思考'); }} title="深度思考模式">✦ 深度思考</button>
+        <button type="button" className={`composer-toggle${webSearch ? ' is-on' : ''}`} aria-pressed={webSearch} onClick={() => { setWebSearch((value) => !value); setNotice(webSearch ? '已关闭联网搜索' : '已开启联网搜索'); }} title="联网搜索模式">⌁ 联网</button>
       </div>
       <div className="composer-actions">
-        <span className="composer-model" title={`当前 Agent：${provider}`}>{provider}</span>
+        <span className="composer-model" title={`当前 Agent：${provider}`}>Agent · {provider}</span>
         {sending ? <button type="button" className="stop-action" onClick={onStop}>停止</button> : <button type="submit" className="send-action" aria-label="发送" disabled={!draft.trim() && attachments.length === 0}>➤</button>}
       </div>
     </div>
