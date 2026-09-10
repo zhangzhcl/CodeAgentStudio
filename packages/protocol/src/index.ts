@@ -44,3 +44,5 @@ export const WorkbenchTabSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('file'), projectId: z.string().min(1), path: z.string().min(1), dirty: z.boolean() }),
 ]);
 export type WorkbenchTab = z.infer<typeof WorkbenchTabSchema>;
+
+export * from './handshake.js';
