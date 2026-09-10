@@ -1,0 +1,3 @@
+import { describe, expect, it } from 'vitest';
+import { mkdtemp, rm } from 'node:fs/promises'; import { join } from 'node:path'; import { tmpdir } from 'node:os'; import { openDatabase } from './database.js';
+describe('database', () => { it('creates project and session tables', async () => { const dir = await mkdtemp(join(tmpdir(), 'cas-db-')); const db = openDatabase(join(dir, 'app.db')); const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as Array<{ name: string }>; expect(tables.map((item) => item.name)).toEqual(expect.arrayContaining(['projects', 'sessions'])); db.close(); await rm(dir, { recursive: true, force: true }); }); });
