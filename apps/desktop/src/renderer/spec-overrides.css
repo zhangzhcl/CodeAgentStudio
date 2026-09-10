@@ -2,6 +2,7 @@
 :root{--bg-0:#08090c;--bg-1:#0d0f14;--bg-2:#13161d;--bg-3:#1a1e27;--line:#22262f;--line-strong:#2e333e;--text-1:#e9e6dc;--text-2:#9ba1ad;--text-3:#646b78;--amber:#f5a524;--green:#3ddc84}
 body{font-family:'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;background-color:#08090c;background-image:linear-gradient(rgba(255,255,255,.014) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px);background-size:40px 40px;-webkit-font-smoothing:antialiased}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");z-index:999}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#2e333e;border-radius:4px}::-webkit-scrollbar-thumb:hover{background:#3a404d}::-webkit-scrollbar-track{background:transparent}
 .codeagent-workbench{grid-template-columns:248px minmax(0,1fr);background:#08090c;color:#e9e6dc;font-family:'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif}
 .codeagent-workbench aside{background:rgba(13,15,20,.92);border-right:1px solid #22262f;padding:20px 14px 14px}
 .codeagent-workbench main{background:radial-gradient(900px 320px at 60% -80px,rgba(245,165,36,.055),transparent 70%),#08090c}
