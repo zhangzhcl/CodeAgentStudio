@@ -23,3 +23,6 @@
 .theme-light .chat-composer{background:rgba(255,255,255,.94);border-color:#cfd9e8}
 .theme-light .chat-composer:focus-within{border-color:#c38a1d;box-shadow:0 0 0 3px rgba(195,138,29,.14),0 10px 28px rgba(40,65,95,.12)}
 .theme-light .send-action{background:#d38b16!important;border-color:#d38b16!important;color:#fff!important}
+@keyframes agent-panel-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.chat-transcript{scrollbar-gutter:stable}.chat-message{animation:agent-panel-in .38s cubic-bezier(.2,.8,.2,1) both}.chat-composer{animation:agent-panel-in .55s cubic-bezier(.2,.8,.2,1) .1s both}.chat-composer textarea{line-height:1.7}.agent-status-summary{white-space:nowrap}
+@media (max-width:920px){.codeagent-workbench{grid-template-columns:minmax(0,1fr)}.codeagent-workbench>aside{display:none}.chat-transcript,.chat-composer{width:min(100%,872px)}}
