@@ -31,6 +31,7 @@ export function Workbench() {
   };
 
   const tabName = (tab: WorkbenchTab) => tab.kind === 'chat' ? '聊天' : tab.path.split('/').pop() ?? tab.path;
+  const openSession = (id: string, scope: 'personal' | 'project') => { const existing = tabs.find((tab) => tab.kind === 'chat' && tab.sessionId === id); const tab: WorkbenchTab = existing ?? { kind: 'chat', sessionId: id, scope }; if (!existing) setTabs((items) => [...items, tab]); setActiveTab(tab); };
   const newSession = (scope: 'personal' | 'project') => { const id = `${scope}-${crypto.randomUUID()}`; scope === 'personal' ? setPersonalSessions((items) => [...items, id]) : setProjectSessions((items) => [...items, id]); const tab = { kind: 'chat' as const, sessionId: id, scope }; setTabs((items) => [...items, tab]); setActiveTab(tab); };
 
   return (
@@ -52,10 +53,10 @@ export function Workbench() {
             <div>
               <h2>个人会话</h2>
               <button type="button" onClick={() => newSession('personal')}>新建个人会话</button>
-              {personalSessions.length === 0 ? <p>暂无个人会话</p> : personalSessions.map((id) => <p key={id}>{id}</p>)}
+              {personalSessions.length === 0 ? <p>暂无个人会话</p> : personalSessions.map((id) => <button type="button" key={id} onClick={() => openSession(id, 'personal')}>{id}</button>)}
               <h2>项目会话</h2>
               <button type="button" onClick={() => newSession('project')}>新建项目会话</button>
-              {projectSessions.length === 0 ? <p>暂无项目会话</p> : projectSessions.map((id) => <p key={id}>{id}</p>)}
+              {projectSessions.length === 0 ? <p>暂无项目会话</p> : projectSessions.map((id) => <button type="button" key={id} onClick={() => openSession(id, 'project')}>{id}</button>)}
             </div>
           )}
         </section>
