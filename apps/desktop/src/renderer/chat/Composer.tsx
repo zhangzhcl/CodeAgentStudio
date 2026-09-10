@@ -27,6 +27,10 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
     element.style.height = 'auto';
     element.style.height = `${Math.min(element.scrollHeight, 240)}px`;
   };
+  const applyDraft = (value: string, element: HTMLTextAreaElement) => {
+    onDraftChange(value, element);
+    requestAnimationFrame(() => resize(element));
+  };
 
   const submit = () => { if (!draft.trim() && attachments.length === 0) return; if (draft.trim() && history.current.at(-1) !== draft.trim()) history.current.push(draft.trim()); historyIndex.current = -1; onSend(); setAttachments([]); };
   return <form className="chat-composer" aria-busy={sending} data-sending={sending ? 'true' : 'false'} onSubmit={(event) => { event.preventDefault(); submit(); }}>
@@ -46,14 +50,14 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
         const matches = slashActive ? commands.filter((command) => command.value.startsWith(draft)) : [];
         if (matches.length > 0) {
           if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setCommandIndex((index) => event.key === 'ArrowDown' ? (index + 1) % matches.length : (index - 1 + matches.length) % matches.length); return; }
-          if ((event.key === 'Enter' && !event.shiftKey) || event.key === 'Tab') { event.preventDefault(); onDraftChange(`${matches[commandIndex]?.value ?? matches[0]!.value} `, event.currentTarget); setShowCommandMenu(false); return; }
-          if (event.key === 'Escape') { event.preventDefault(); onDraftChange('', event.currentTarget); setShowCommandMenu(false); return; }
+          if ((event.key === 'Enter' && !event.shiftKey) || event.key === 'Tab') { event.preventDefault(); applyDraft(`${matches[commandIndex]?.value ?? matches[0]!.value} `, event.currentTarget); setShowCommandMenu(false); return; }
+          if (event.key === 'Escape') { event.preventDefault(); applyDraft('', event.currentTarget); setShowCommandMenu(false); return; }
         }
         if (event.key === 'Enter' && !event.shiftKey) {
           event.preventDefault();
           submit();
         }
-        if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && !slashActive && history.current.length > 0 && (draft === '' || historyIndex.current >= 0)) { event.preventDefault(); historyIndex.current = event.key === 'ArrowUp' ? Math.min(historyIndex.current + 1, history.current.length - 1) : Math.max(historyIndex.current - 1, -1); onDraftChange(historyIndex.current < 0 ? '' : history.current[history.current.length - 1 - historyIndex.current]!, event.currentTarget); }
+        if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && !slashActive && history.current.length > 0 && (draft === '' || historyIndex.current >= 0)) { event.preventDefault(); historyIndex.current = event.key === 'ArrowUp' ? Math.min(historyIndex.current + 1, history.current.length - 1) : Math.max(historyIndex.current - 1, -1); applyDraft(historyIndex.current < 0 ? '' : history.current[history.current.length - 1 - historyIndex.current]!, event.currentTarget); }
       }}
       disabled={sending}
     />
@@ -83,7 +87,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
     </div>
     {attachments.length > 0 && <div className="composer-attachments">{attachments.map((attachment, index) => <span className="attachment-chip" key={`${attachment}-${index}`}>附件 · {attachment}<button type="button" aria-label={`移除附件 ${attachment}`} onClick={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))}>×</button></span>)}</div>}
     {showCommandMenu && <div className="command-menu" role="listbox">
-      {commands.map((command, index) => <button key={command.value} type="button" className={index === commandIndex ? 'is-active' : ''} onClick={() => { onDraftChange(`${command.value} `, document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea')); setShowCommandMenu(false); }}>{command.value} <span>{command.label}</span></button>)}
+      {commands.map((command, index) => <button key={command.value} type="button" className={index === commandIndex ? 'is-active' : ''} onClick={() => { const element = document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea'); applyDraft(`${command.value} `, element); setShowCommandMenu(false); }}>{command.value} <span>{command.label}</span></button>)}
     </div>}
     <span className="composer-hint">{sending ? 'Agent 正在生成，可点击“停止”中断' : externalNotice || notice || hint}</span>
   </form>;
