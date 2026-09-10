@@ -1,5 +1,6 @@
 import { mkdir, realpath } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { homedir } from 'node:os';
 import type { AgentEvent } from '@codeagent-studio/protocol';
 import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contracts.js';
 
@@ -8,7 +9,7 @@ export type PiTransport = { createSession(input: CreateSessionInput & { sessionF
 export class PiProvider implements AgentProvider {
   readonly id = 'pi' as const;
   readonly capabilities = { maxConcurrentSessions: 4, supportsResume: true, supportsAttachments: false, supportsProjectScope: true, supportsAbort: true };
-  constructor(private readonly transport: PiTransport, private readonly sessionsDir = join(process.cwd(), '.codeagent', 'sessions')) {}
+  constructor(private readonly transport: PiTransport, private readonly sessionsDir = process.env.CODEAGENT_PI_SESSION_DIR ?? join(homedir(), '.codeagent-studio', 'pi-sessions')) {}
   detect() { return this.transport.detect(); }
   async createSession(input: CreateSessionInput) { await mkdir(this.sessionsDir, { recursive: true }); const sessionFile = resolve(this.sessionsDir, `${crypto.randomUUID()}.jsonl`); return { ...(await this.transport.createSession({ ...input, sessionFile })), nativeSessionFile: sessionFile }; }
   async resumeSession(nativeId: string, nativeSessionFile?: string) { if (!nativeSessionFile) throw new Error('Pi resume requires native session file'); const allowed = await realpath(this.sessionsDir); const file = resolve(nativeSessionFile); const relative = file.slice(allowed.length); if (!relative.startsWith('/') && !relative.startsWith('\\')) throw new Error('Pi session file is outside the project session directory'); await this.transport.resumeSession(nativeId, file); }
