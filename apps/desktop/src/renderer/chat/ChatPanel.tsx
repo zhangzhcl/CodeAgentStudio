@@ -13,6 +13,7 @@ export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Cl
   const [provider, setProvider] = useState(providerName);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [queued, setQueued] = useState<string[]>([]);
   const [error, setError] = useState<string>();
   const [composerNotice, setComposerNotice] = useState('');
   const [copiedMessage, setCopiedMessage] = useState<string>();
@@ -29,13 +30,15 @@ export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Cl
   }), [sessionId, subscribe]);
   useEffect(() => { let active = true; sequencer.current = new EventSequencer(); setMessages([]); if (loadMessages) void loadMessages().then((loaded) => { if (active) setMessages(loaded); }).catch(() => { if (active) setError('会话记录加载失败'); }); return () => { active = false; }; }, [sessionId]);
   useEffect(() => { const element = transcriptRef.current; if (!element || !stickToBottom.current) return; element.scrollTop = element.scrollHeight; }, [messages]);
+  useEffect(() => { if (sending || queued.length === 0) return; const [next, ...rest] = queued; setQueued(rest); void runPrompt(next!, provider); }, [sending, queued, provider]);
   const scrollToBottom = () => { const element = transcriptRef.current; if (!element) return; element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' }); stickToBottom.current = true; setShowScrollButton(false); };
   const useQuickPrompt = (text: string) => { setDraft(text); setComposerNotice('已填入快捷任务，按 Enter 发送'); requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.chat-composer textarea')?.focus()); };
   const runPrompt = async (text: string, selectedProvider: string, optimistic = true) => { lastPrompt.current = { text, provider: selectedProvider }; setError(undefined); if (optimistic) { setMessages((current) => { if (!current.some((message) => message.role === 'user')) { onTitleChange?.(text); window.dispatchEvent(new CustomEvent('codeagent:session-title', { detail: { sessionId, title: text } })); } return [...current, { id: crypto.randomUUID(), role: 'user', content: text, status: 'done', createdAt: Date.now() }]; }); } setSending(true); try { if (!onPrompt) throw new Error('Agent 接口不可用，请重启应用'); await onPrompt(text, selectedProvider); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Agent 请求失败'); } finally { setSending(false); } };
   const send = async () => {
     const text = draft.trim();
-    if (!text || sending) return;
+    if (!text) return;
     setDraft('');
+    if (sending) { setQueued((current) => [...current, text]); setComposerNotice('消息已加入队列'); return; }
     if (text === '/clear') {
       setMessages([]);
       setComposerNotice('当前会话已清空');
@@ -56,6 +59,6 @@ export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Cl
     {error && <div className="chat-error" role="alert"><span>{error}</span><button type="button" onClick={() => void retry()} disabled={sending}>重试</button></div>}
     <div ref={transcriptRef} className="chat-transcript" role="log" aria-live="polite" onScroll={(event) => { const element = event.currentTarget; const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 48; stickToBottom.current = atBottom; setShowScrollButton(!atBottom && element.scrollHeight > element.clientHeight + 80); }}>{messages.length === 0 ? <div className="chat-empty"><div className="empty-mark">✦</div><span className="welcome-status">SYSTEM READY</span><h2>今天想让 Agent 做什么？</h2><p>从一个快捷任务开始，或直接描述你的代码问题。</p><div className="quick-prompts"><button type="button" onClick={() => useQuickPrompt('帮我快速了解这个项目的目录结构和主要技术栈')}>了解项目</button><button type="button" onClick={() => useQuickPrompt('检查当前项目中最值得优先修复的问题，并给出修复计划')}>检查问题</button><button type="button" onClick={() => useQuickPrompt('帮我实现一个小功能，并先说明你准备修改哪些文件')}>实现功能</button><button type="button" onClick={() => useQuickPrompt('阅读当前代码，找出潜在的性能或安全风险')}>代码审查</button></div></div> : messages.map((message) => <MessageItem key={message.id} message={message} provider={provider} copied={copiedMessage === message.id} sending={sending} onCopy={(id, content) => void copyMessage(id, content)} onRegenerate={() => void regenerate()} onFeedback={() => setComposerNotice('已记录反馈')} onSuggestion={useQuickPrompt} />)}</div>
     {showScrollButton && <button type="button" className="scroll-bottom" onClick={scrollToBottom}>↓ 回到底部</button>}
-    <Composer draft={draft} messages={messages} provider={provider} sending={sending} notice={composerNotice} onDraftChange={(value) => setDraft(value)} onSend={() => void send()} onStop={() => { setSending(false); void onAbort?.(sessionId); }} />
+    <Composer draft={draft} messages={messages} provider={provider} sending={sending} queued={queued} notice={composerNotice} onDraftChange={(value) => setDraft(value)} onSend={() => void send()} onStop={() => { setSending(false); void onAbort?.(sessionId); }} onCancelQueued={(index) => setQueued((current) => current.filter((_, itemIndex) => itemIndex !== index))} onEditQueued={(index) => { const item = queued[index]; if (!item) return; setDraft(item); setQueued((current) => current.filter((_, itemIndex) => itemIndex !== index)); }} onPromoteQueued={(index) => { const item = queued[index]; if (!item) return; setQueued((current) => [item, ...current.filter((_, itemIndex) => itemIndex !== index)]); void onAbort?.(sessionId); setSending(false); }} />
   </section>;
 }

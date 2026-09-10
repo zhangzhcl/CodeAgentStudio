@@ -10,9 +10,13 @@ type Props = {
   onSend: () => void;
   onStop: () => void;
   notice?: string;
+  queued: string[];
+  onCancelQueued: (index: number) => void;
+  onEditQueued: (index: number) => void;
+  onPromoteQueued: (index: number) => void;
 };
 
-export function Composer({ draft, messages, provider, sending, onDraftChange, onSend, onStop, notice: externalNotice }: Props) {
+export function Composer({ draft, messages, provider, sending, onDraftChange, onSend, onStop, notice: externalNotice, queued, onCancelQueued, onEditQueued, onPromoteQueued }: Props) {
   const attachmentInput = useRef<HTMLInputElement>(null);
   const [hint, setHint] = useState('支持 Markdown、代码和多行输入');
   const [notice, setNotice] = useState('');
@@ -36,6 +40,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
 
   const submit = () => { if (!draft.trim() && attachments.length === 0) return; if (draft.trim() && history.current.at(-1) !== draft.trim()) history.current.push(draft.trim()); historyIndex.current = -1; onSend(); setAttachments([]); };
   return <form className="chat-composer" aria-busy={sending} data-sending={sending ? 'true' : 'false'} onSubmit={(event) => { event.preventDefault(); submit(); }}>
+    {queued.length > 0 && <div className="composer-queue"><div className="composer-queue-head">排队中 · {queued.length} 条<span>当前回复结束后自动发送</span></div>{queued.map((item, index) => <div className="composer-queue-item" key={`${item}-${index}`}><b>{String(index + 1).padStart(2, '0')}</b><span title={item}>{item}</span><button type="button" aria-label={`立即发送 ${index + 1}`} onClick={() => onPromoteQueued(index)}>↑</button><button type="button" aria-label={`编辑排队消息 ${index + 1}`} onClick={() => onEditQueued(index)}>✎</button><button type="button" aria-label={`取消排队消息 ${index + 1}`} onClick={() => onCancelQueued(index)}>×</button></div>)}</div>}
     <textarea
       aria-label="消息"
       placeholder="输入 / 调用命令，@ 选择文件，或向 Agent 提问…"
@@ -61,7 +66,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
         }
         if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && !slashActive && history.current.length > 0 && (draft === '' || historyIndex.current >= 0)) { event.preventDefault(); historyIndex.current = event.key === 'ArrowUp' ? Math.min(historyIndex.current + 1, history.current.length - 1) : Math.max(historyIndex.current - 1, -1); applyDraft(historyIndex.current < 0 ? '' : history.current[history.current.length - 1 - historyIndex.current]!, event.currentTarget); }
       }}
-      disabled={sending}
+      disabled={false}
     />
       <div className="composer-toolbar">
         <div className="composer-tools">
@@ -86,7 +91,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
       </div>
       <div className="composer-actions">
         <span className="composer-model" title={`当前 Agent：${provider}`}>Agent · {provider}</span>
-        {sending ? <button type="button" className="stop-action" onClick={onStop}>停止</button> : <button type="submit" className="send-action" aria-label="发送" disabled={!draft.trim() && attachments.length === 0}>➤</button>}
+        {sending && !draft.trim() && attachments.length === 0 ? <button type="button" className="stop-action" aria-label="停止" onClick={onStop}>停止</button> : <button type="submit" className="send-action" aria-label="发送" disabled={!draft.trim() && attachments.length === 0}>➤</button>}
       </div>
     </div>
     {attachments.length > 0 && <div className="composer-attachments">{attachments.map((attachment, index) => <span className="attachment-chip" key={`${attachment}-${index}`}>附件 · {attachment}<button type="button" aria-label={`移除附件 ${attachment}`} onClick={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))}>×</button></span>)}</div>}
