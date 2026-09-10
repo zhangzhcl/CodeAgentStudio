@@ -6,12 +6,12 @@ import { EditorTab } from '../editor/EditorTab.js';
 
 type Activity = 'files' | 'sessions';
 export function Workbench() {
-  const [activity, setActivity] = useState<Activity>('files');
-  const [tabs, setTabs] = useState<WorkbenchTab[]>([{ kind: 'chat', sessionId: 'new-chat', scope: 'project' }]);
+  const [activity, setActivity] = useState<Activity>('sessions');
+  const [tabs, setTabs] = useState<WorkbenchTab[]>([{ kind: 'chat', sessionId: 'new-chat', scope: 'personal' }]);
   const [activeTab, setActiveTab] = useState<WorkbenchTab>(tabs[0]);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
-  const [projectId, setProjectId] = useState('example-project');
-  const [projectName, setProjectName] = useState('codeagent-studio');
+  const [projectId, setProjectId] = useState<string>();
+  const [projectName, setProjectName] = useState('未选择项目');
   const [projectRoot, setProjectRoot] = useState<string | undefined>();
   const [personalSessions, setPersonalSessions] = useState<Array<{ id: string; provider: string }>>([]);
   const [projectSessions, setProjectSessions] = useState<Array<{ id: string; provider: string }>>([]);
@@ -25,6 +25,7 @@ export function Workbench() {
   useEffect(() => { detectProviders(); }, []);
 
   const openFile = async (path: string) => {
+    if (!projectId) return;
     const fileTab: WorkbenchTab = { kind: 'file', projectId, path, dirty: false };
     const api = (window as Window & { codeagent?: { workspace?: { read: (projectId: string, path: string) => Promise<string> } } }).codeagent?.workspace;
     if (api) { try { const content = await api.read(projectId, path); setFileContents((current) => ({ ...current, [`${projectId}:${path}`]: content })); } catch { setFileContents((current) => ({ ...current, [`${projectId}:${path}`]: current[`${projectId}:${path}`] ?? '' })); } }
@@ -68,7 +69,7 @@ export function Workbench() {
         <div role="tablist" aria-label="打开的标签">
           {tabs.map((tab) => (
             <button key={tab.kind === 'chat' ? tab.sessionId : `${tab.projectId}:${tab.path}`} role="tab" aria-label={tabName(tab)} aria-selected={isSameTab(activeTab, tab)} onClick={() => setActiveTab(tab)}>
-              {tabName(tab)}{tab.kind === 'file' && <span role="button" tabIndex={0} aria-label={`关闭 ${tabName(tab)}`} onClick={(event) => { event.stopPropagation(); setTabs((items) => items.filter((item) => !isSameTab(item, tab))); if (isSameTab(activeTab, tab)) setActiveTab({ kind: 'chat', sessionId: 'new-chat', scope: 'project' }); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); setTabs((items) => items.filter((item) => !isSameTab(item, tab))); if (isSameTab(activeTab, tab)) setActiveTab({ kind: 'chat', sessionId: 'new-chat', scope: 'project' }); } }}>×</span>}
+              {tabName(tab)}{tab.kind === 'file' && <span role="button" tabIndex={0} aria-label={`关闭 ${tabName(tab)}`} onClick={(event) => { event.stopPropagation(); setTabs((items) => items.filter((item) => !isSameTab(item, tab))); if (isSameTab(activeTab, tab)) setActiveTab({ kind: 'chat', sessionId: 'new-chat', scope: 'personal' }); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); setTabs((items) => items.filter((item) => !isSameTab(item, tab))); if (isSameTab(activeTab, tab)) setActiveTab({ kind: 'chat', sessionId: 'new-chat', scope: 'personal' }); } }}>×</span>}
             </button>
           ))}
           <div className="agent-status-summary" aria-label="Agent 状态"><span>{detectingProviders ? 'Agent 检测中…' : providerStatuses.filter((status) => status.installed).length ? `${providerStatuses.filter((status) => status.installed).length} 个 Agent 就绪` : 'Agent 未就绪'}</span><button type="button" onClick={detectProviders} disabled={detectingProviders}>{detectingProviders ? '检测中…' : '检测 Agent'}</button></div>
@@ -84,3 +85,4 @@ export function Workbench() {
     </div>
   );
 }
+
