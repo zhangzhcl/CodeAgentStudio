@@ -4,7 +4,7 @@ import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contra
 import { parseCliEvent } from './cli-event-parser.js';
 
 type Config = { id: ProviderId; command: string; versionArgs?: string[]; promptArgs: (text: string) => string[] };
-const CONFIGS: Config[] = [{ id: 'claude', command: 'claude', promptArgs: (text) => ['-p', text] }, { id: 'cursor', command: 'cursor', promptArgs: (text) => [text] }, { id: 'codex', command: 'codex', promptArgs: (text) => ['exec', text] }, { id: 'opencode', command: 'opencode', promptArgs: (text) => ['run', text] }];
+const CONFIGS: Config[] = [{ id: 'claude', command: 'claude', promptArgs: (text) => ['-p', text] }, { id: 'cursor', command: 'agent', promptArgs: (text) => ['-p', '--output-format', 'text', text] }, { id: 'codex', command: 'codex', promptArgs: (text) => ['exec', text] }, { id: 'opencode', command: 'opencode', promptArgs: (text) => ['run', text] }];
 
 export class CliProvider implements AgentProvider {
   readonly capabilities = { maxConcurrentSessions: 1, supportsResume: false, supportsAttachments: false, supportsProjectScope: true, supportsAbort: true };

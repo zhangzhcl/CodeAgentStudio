@@ -3,7 +3,7 @@
 | Provider | 检测命令 | 未安装行为 | 当前状态 |
 |---|---|---|---|
 | Claude Code | `claude --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成，需本机联调 |
-| Cursor CLI | `cursor --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成，需本机联调 |
+| Cursor CLI | `agent --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成，需本机安装 |
 | Codex | `codex --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成，需本机联调 |
 | Pi Coding Agent | SDK/RPC transport 探针 | 显示“未就绪”，不阻塞应用启动 | Transport 已完成，SDK 版本待锁定 |
 | opencode | `opencode --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已加入；本机 1.18.30 |
