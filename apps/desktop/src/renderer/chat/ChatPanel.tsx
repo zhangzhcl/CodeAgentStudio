@@ -12,6 +12,7 @@ export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Cl
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string>();
   const sequencer = useRef(new EventSequencer());
+  useEffect(() => { setProvider(providerName); }, [providerName]);
   useEffect(() => subscribe?.((event) => { if (event.sessionId === sessionId && sequencer.current.accept(event)) setMessages((current) => applyAgentEvent(current, event)); }), [sessionId, subscribe]);
   useEffect(() => { let active = true; sequencer.current = new EventSequencer(); setMessages([]); if (loadMessages && sessionId !== 'new-chat') void loadMessages().then((loaded) => { if (active) setMessages(loaded); }); return () => { active = false; }; }, [sessionId]);
   const send = async () => { const text = draft.trim(); if (!text || sending) return; setDraft(''); setError(undefined); setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'user', content: text, status: 'done' }]); setSending(true); try { await onPrompt?.(text, provider); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Agent 请求失败'); } finally { setSending(false); } };
