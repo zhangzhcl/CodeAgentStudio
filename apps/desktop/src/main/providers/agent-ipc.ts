@@ -14,6 +14,7 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
   ipcMain.removeHandler('agent:abort');
   ipcMain.handle('agent:prompt', async (_event, input: PromptInput) => {
     if (sessions) { try { sessions.get(input.sessionId); } catch { sessions.create({ id: input.sessionId, provider: input.provider, scope: input.scope, projectId: input.projectId }); } }
+    sessions?.appendUserMessage(input.sessionId, input.text);
     if (!runtime.get(input.sessionId)) await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId, projectRoot: input.projectRoot });
     const provider = providers.get(input.provider);
     if (!provider) throw new Error(`Unknown provider: ${input.provider}`);

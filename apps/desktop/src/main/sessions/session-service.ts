@@ -28,7 +28,8 @@ export class SessionService {
     this.store?.saveMessage?.(message);
     return message;
   }
-  listMessages(sessionId: string): MessageRecord[] { const stored = this.store?.listMessages?.(sessionId); if (stored?.length) return stored; return [...this.messages.values()].filter((message) => message.sessionId === sessionId).sort((a, b) => a.sequence - b.sequence); }
+  appendUserMessage(sessionId: string, content: string): MessageRecord { const message: MessageRecord = { id: `${sessionId}:user:${crypto.randomUUID()}`, sessionId, role: 'user', content, sequence: -1, createdAt: Date.now() }; this.messages.set(message.id, message); this.store?.saveMessage?.(message); return message; }
+  listMessages(sessionId: string): MessageRecord[] { const stored = this.store?.listMessages?.(sessionId); if (stored?.length) return stored; return [...this.messages.values()].filter((message) => message.sessionId === sessionId).sort((a, b) => a.sequence - b.sequence || a.createdAt - b.createdAt); }
   list(): SessionRecord[] { return [...this.sessions.values()].sort((a, b) => b.updatedAt - a.updatedAt); }
   replayTranscript(sessionId: string): MessageRecord[] { return this.listMessages(sessionId).map((message) => ({ ...message })); }
   markStatus(sessionId: string, status: SessionRecord['status']): SessionRecord { const updated = { ...this.get(sessionId), status, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
