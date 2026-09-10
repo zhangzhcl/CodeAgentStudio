@@ -1,11 +1,11 @@
 import type { AgentEvent } from '@codeagent-studio/protocol';
 
-export type ChatMessage = { id: string; role: 'user' | 'agent' | 'tool'; content: string; status?: 'streaming' | 'done' | 'error' };
+export type ChatMessage = { id: string; role: 'user' | 'agent' | 'tool'; content: string; status?: 'streaming' | 'done' | 'error'; createdAt?: number };
 
 export function applyAgentEvent(messages: ChatMessage[], event: AgentEvent): ChatMessage[] {
   if (event.type === 'text_delta') {
     const index = messages.findIndex((message) => message.id === event.messageId);
-    if (index < 0) return [...messages, { id: event.messageId, role: 'agent', content: event.payload.text, status: 'streaming' }];
+    if (index < 0) return [...messages, { id: event.messageId, role: 'agent', content: event.payload.text, status: 'streaming', createdAt: Date.now() }];
     const next = messages.slice();
     next[index] = { ...next[index], content: next[index].content + event.payload.text, status: 'streaming' };
     return next;
