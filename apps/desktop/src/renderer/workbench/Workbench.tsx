@@ -38,7 +38,8 @@ export function Workbench() {
     setActiveTab(fileTab);
   };
 
-  const tabName = (tab: WorkbenchTab) => tab.kind === 'chat' ? '聊天' : tab.path.split('/').pop() ?? tab.path;
+  const sessionTitle = (id: string) => { const raw = id.replace(/^(personal|project)-/, ''); return raw === 'new-chat' ? '新聊天' : raw.length > 12 ? `${raw.slice(0, 8)}…${raw.slice(-4)}` : raw; };
+  const tabName = (tab: WorkbenchTab) => tab.kind === 'chat' ? `${providerLabel(tab.provider)} · ${sessionTitle(tab.sessionId)}` : tab.path.split('/').pop() ?? tab.path;
   const isSameTab = (left: WorkbenchTab, right: WorkbenchTab) => left.kind === right.kind && (left.kind === 'chat' && right.kind === 'chat' ? left.sessionId === right.sessionId : left.kind === 'file' && right.kind === 'file' && left.projectId === right.projectId && left.path === right.path);
   const openSession = (id: string, scope: 'personal' | 'project', provider: string, sessionProjectId?: string) => { if (sessionProjectId) setProjectId(sessionProjectId); const existing = tabs.find((tab) => tab.kind === 'chat' && tab.sessionId === id); const tab: WorkbenchTab = existing ?? { kind: 'chat', sessionId: id, scope, provider: provider as 'claude' | 'cursor' | 'codex' | 'pi' | 'opencode', projectId: sessionProjectId }; if (!existing) setTabs((items) => [...items, tab]); setActiveTab(tab); };
   const newSession = (scope: 'personal' | 'project') => { const id = `${scope}-${crypto.randomUUID()}`; const provider = activeProvider; scope === 'personal' ? setPersonalSessions((items) => [...items, { id, provider }]) : setProjectSessions((items) => [...items, { id, provider, projectId }]); const tab = { kind: 'chat' as const, sessionId: id, scope, provider, ...(scope === 'project' && projectId ? { projectId } : {}) }; setTabs((items) => [...items, tab]); setActiveTab(tab); };
@@ -63,10 +64,10 @@ export function Workbench() {
             <div>
               <h2>个人会话</h2>
               <button type="button" onClick={() => newSession('personal')}>新建个人会话</button>
-              {visiblePersonalSessions.length === 0 ? <p>暂无 {providerLabel(activeProvider)} 个人会话</p> : visiblePersonalSessions.map(({ id, provider, projectId: sessionProjectId }) => <button type="button" key={id} onClick={() => openSession(id, 'personal', provider, sessionProjectId)}>{id}</button>)}
+              {visiblePersonalSessions.length === 0 ? <p>暂无 {providerLabel(activeProvider)} 个人会话</p> : visiblePersonalSessions.map(({ id, provider, projectId: sessionProjectId }) => <button type="button" key={id} onClick={() => openSession(id, 'personal', provider, sessionProjectId)}>{providerLabel(provider)} · {sessionTitle(id)}</button>)}
               <h2>项目会话</h2>
               <button type="button" onClick={() => newSession('project')}>新建项目会话</button>
-              {visibleProjectSessions.length === 0 ? <p>暂无 {providerLabel(activeProvider)} 项目会话</p> : visibleProjectSessions.map(({ id, provider, projectId: sessionProjectId }) => <button type="button" key={id} onClick={() => openSession(id, 'project', provider, sessionProjectId)}>{id}</button>)}
+              {visibleProjectSessions.length === 0 ? <p>暂无 {providerLabel(activeProvider)} 项目会话</p> : visibleProjectSessions.map(({ id, provider, projectId: sessionProjectId }) => <button type="button" key={id} onClick={() => openSession(id, 'project', provider, sessionProjectId)}>{providerLabel(provider)} · {sessionTitle(id)}</button>)}
             </div>
           )}
         </section>
