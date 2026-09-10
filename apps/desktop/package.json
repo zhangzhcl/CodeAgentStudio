@@ -5,21 +5,23 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "start": "electron ."
   },
   "dependencies": {
     "@codeagent-studio/protocol": "workspace:*",
+    "electron": "^38.8.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/node": "^22.15.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
+    "@types/node": "^22.20.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "jsdom": "^25.0.1",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.7",
-    "jsdom": "^25.0.1"
+    "vitest": "^3.2.7"
   }
 }
