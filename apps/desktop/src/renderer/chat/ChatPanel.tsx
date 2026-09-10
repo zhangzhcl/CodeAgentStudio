@@ -22,7 +22,7 @@ export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Cl
   const resizeComposer = (element: HTMLTextAreaElement) => { element.style.height = 'auto'; element.style.height = `${Math.min(element.scrollHeight, 240)}px`; };
   useEffect(() => { setProvider(providerName); }, [providerName]);
   useEffect(() => subscribe?.((event) => { if (event.sessionId === sessionId && sequencer.current.accept(event)) setMessages((current) => applyAgentEvent(current, event)); }), [sessionId, subscribe]);
-  useEffect(() => { let active = true; sequencer.current = new EventSequencer(); setMessages([]); if (loadMessages && sessionId !== 'new-chat') void loadMessages().then((loaded) => { if (active) setMessages(loaded); }); return () => { active = false; }; }, [sessionId]);
+  useEffect(() => { let active = true; sequencer.current = new EventSequencer(); setMessages([]); if (loadMessages) void loadMessages().then((loaded) => { if (active) setMessages(loaded); }).catch(() => { if (active) setError('会话记录加载失败'); }); return () => { active = false; }; }, [sessionId]);
   useEffect(() => { const element = transcriptRef.current; if (!element || !stickToBottom.current) return; element.scrollTop = element.scrollHeight; }, [messages]);
   const scrollToBottom = () => { const element = transcriptRef.current; if (!element) return; element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' }); stickToBottom.current = true; setShowScrollButton(false); };
   const useQuickPrompt = (text: string) => { setDraft(text); setComposerNotice('已填入快捷任务，按 Enter 发送'); requestAnimationFrame(() => { const input = document.querySelector<HTMLTextAreaElement>('.chat-composer textarea'); input?.focus(); resizeComposer(input); }); };
