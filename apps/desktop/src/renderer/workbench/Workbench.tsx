@@ -18,6 +18,7 @@ export function Workbench() {
   const [detectingProviders, setDetectingProviders] = useState(false);
   const [providerDetectionError, setProviderDetectionError] = useState<string | undefined>();
   useEffect(() => { const api = (window as Window & { codeagent?: { workspace?: { projects: () => Promise<Array<{ id: string; rootPath?: string }>> } } }).codeagent?.workspace; if (api) void api.projects().then((projects) => { if (projects[0]) { setProjectId(projects[0].id); setProjectRoot(projects[0].rootPath); } }); }, []);
+  useEffect(() => { const list = (window as Window & { codeagentSessions?: { list: () => Promise<Array<{ id: string; scope: 'personal' | 'project' }>> } }).codeagentSessions?.list; if (list) void list().then((sessions) => { setPersonalSessions(sessions.filter((session) => session.scope === 'personal').map((session) => session.id)); setProjectSessions(sessions.filter((session) => session.scope === 'project').map((session) => session.id)); }); }, []);
   const detectProviders = () => { const detect = (window as Window & { codeagent?: { providers?: { detect: () => Promise<Array<{ provider: string; installed: boolean; version?: string; command?: string }>> } } }).codeagent?.providers?.detect; if (!detect || detectingProviders) return; setDetectingProviders(true); setProviderDetectionError(undefined); void detect().then(setProviderStatuses).catch(() => setProviderDetectionError('Agent 检测失败，请检查系统权限和 PATH。')).finally(() => setDetectingProviders(false)); };
   useEffect(() => { detectProviders(); }, []);
 
