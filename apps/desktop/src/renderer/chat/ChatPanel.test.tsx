@@ -67,6 +67,7 @@ describe('ChatPanel local commands', () => {
     render(<ChatPanel sessionId="commands" onPrompt={onPrompt} />);
     fireEvent.change(screen.getByLabelText('消息'), { target: { value: '/help' } });
     fireEvent.keyDown(screen.getByLabelText('消息'), { key: 'Enter' });
+    fireEvent.keyDown(screen.getByLabelText('消息'), { key: 'Enter' });
     expect(onPrompt).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.getByRole('log')).toHaveTextContent('可用命令：'));
   });
@@ -78,6 +79,7 @@ describe('ChatPanel local commands', () => {
     fireEvent.click(screen.getByRole('button', { name: '发送' }));
     expect(await screen.findByText('保留消息')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('消息'), { target: { value: '/clear' } });
+    fireEvent.keyDown(screen.getByLabelText('消息'), { key: 'Enter' });
     fireEvent.keyDown(screen.getByLabelText('消息'), { key: 'Enter' });
     await waitFor(() => expect(screen.queryByText('保留消息')).not.toBeInTheDocument());
     expect(onPrompt).toHaveBeenCalledTimes(1);

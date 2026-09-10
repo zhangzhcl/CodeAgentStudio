@@ -18,13 +18,18 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
   const [notice, setNotice] = useState('');
   const [attachment, setAttachment] = useState<string>();
   const [showCommandMenu, setShowCommandMenu] = useState(false);
+  const [commandIndex, setCommandIndex] = useState(0);
+  const history = useRef<string[]>([]);
+  const historyIndex = useRef(-1);
+  const commands = [{ value: '/help', label: '查看可用命令' }, { value: '/clear', label: '清空当前会话' }];
 
   const resize = (element: HTMLTextAreaElement) => {
     element.style.height = 'auto';
     element.style.height = `${Math.min(element.scrollHeight, 240)}px`;
   };
 
-  return <form className="chat-composer" aria-busy={sending} data-sending={sending ? 'true' : 'false'} onSubmit={(event) => { event.preventDefault(); onSend(); }}>
+  const submit = () => { if (draft.trim() && history.current.at(-1) !== draft.trim()) history.current.push(draft.trim()); historyIndex.current = -1; onSend(); };
+  return <form className="chat-composer" aria-busy={sending} data-sending={sending ? 'true' : 'false'} onSubmit={(event) => { event.preventDefault(); submit(); }}>
     <textarea
       aria-label="消息"
       placeholder="输入 / 调用命令，@ 选择文件，或向 Agent 提问…"
@@ -32,14 +37,23 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
       onFocus={() => setHint('Enter 发送 · Shift + Enter 换行')}
       onChange={(event) => {
         onDraftChange(event.target.value, event.currentTarget);
-        setShowCommandMenu(event.target.value.startsWith('/'));
+        setShowCommandMenu(event.target.value.startsWith('/') && !event.target.value.includes(' '));
+        setCommandIndex(0);
         resize(event.currentTarget);
       }}
       onKeyDown={(event) => {
+        const slashActive = draft.startsWith('/') && !draft.includes(' ');
+        const matches = slashActive ? commands.filter((command) => command.value.startsWith(draft)) : [];
+        if (matches.length > 0) {
+          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setCommandIndex((index) => event.key === 'ArrowDown' ? (index + 1) % matches.length : (index - 1 + matches.length) % matches.length); return; }
+          if ((event.key === 'Enter' && !event.shiftKey) || event.key === 'Tab') { event.preventDefault(); onDraftChange(`${matches[commandIndex]?.value ?? matches[0]!.value} `, event.currentTarget); setShowCommandMenu(false); return; }
+          if (event.key === 'Escape') { event.preventDefault(); onDraftChange('', event.currentTarget); setShowCommandMenu(false); return; }
+        }
         if (event.key === 'Enter' && !event.shiftKey) {
           event.preventDefault();
-          onSend();
+          submit();
         }
+        if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && !slashActive && history.current.length > 0 && (draft === '' || historyIndex.current >= 0)) { event.preventDefault(); historyIndex.current = event.key === 'ArrowUp' ? Math.min(historyIndex.current + 1, history.current.length - 1) : Math.max(historyIndex.current - 1, -1); onDraftChange(historyIndex.current < 0 ? '' : history.current[history.current.length - 1 - historyIndex.current]!, event.currentTarget); }
       }}
       disabled={sending}
     />
@@ -69,8 +83,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
     </div>
     {attachment && <div className="composer-attachments"><span className="attachment-chip">附件 · {attachment}<button type="button" aria-label="移除附件" onClick={() => setAttachment(undefined)}>×</button></span></div>}
     {showCommandMenu && <div className="command-menu" role="listbox">
-      <button type="button" onClick={() => { onDraftChange('/help ', document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea')); setShowCommandMenu(false); }}>/help <span>查看可用命令</span></button>
-      <button type="button" onClick={() => { onDraftChange('/clear ', document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea')); setShowCommandMenu(false); }}>/clear <span>清空当前会话</span></button>
+      {commands.map((command, index) => <button key={command.value} type="button" className={index === commandIndex ? 'is-active' : ''} onClick={() => { onDraftChange(`${command.value} `, document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea')); setShowCommandMenu(false); }}>{command.value} <span>{command.label}</span></button>)}
     </div>}
     <span className="composer-hint">{sending ? 'Agent 正在生成，可点击“停止”中断' : externalNotice || notice || hint}</span>
   </form>;
