@@ -3,8 +3,8 @@ import type { AgentEvent, ProviderId } from '@codeagent-studio/protocol';
 import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contracts.js';
 import { parseCliEvent } from './cli-event-parser.js';
 
-type Config = { id: ProviderId; command: string; versionArgs?: string[] };
-const CONFIGS: Config[] = [{ id: 'claude', command: 'claude' }, { id: 'cursor', command: 'cursor' }, { id: 'codex', command: 'codex' }, { id: 'opencode', command: 'opencode' }];
+type Config = { id: ProviderId; command: string; versionArgs?: string[]; promptArgs: (text: string) => string[] };
+const CONFIGS: Config[] = [{ id: 'claude', command: 'claude', promptArgs: (text) => ['-p', text] }, { id: 'cursor', command: 'cursor', promptArgs: (text) => [text] }, { id: 'codex', command: 'codex', promptArgs: (text) => ['exec', text] }, { id: 'opencode', command: 'opencode', promptArgs: (text) => ['run', text] }];
 
 export class CliProvider implements AgentProvider {
   readonly capabilities = { maxConcurrentSessions: 1, supportsResume: false, supportsAttachments: false, supportsProjectScope: true, supportsAbort: true };
@@ -18,7 +18,7 @@ export class CliProvider implements AgentProvider {
   async createSession(_input: CreateSessionInput) { return {}; }
   async resumeSession(_nativeId: string) { throw new Error(`${this.id} does not support resume`); }
   async prompt(sessionId: string, text: string) {
-    const child = spawn(this.config.command, [text], { shell: process.platform === 'win32', stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0;
+    const child = spawn(this.config.command, this.config.promptArgs(text), { shell: process.platform === 'win32', stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0;
     const consume = (data: Buffer) => data.toString().split(/\r?\n/).forEach((line) => { const event = parseCliEvent(line, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); });
     child.stdout?.on('data', consume); child.stderr?.on('data', consume); child.once('close', () => { this.processes.delete(sessionId); });
   }
