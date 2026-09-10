@@ -13,7 +13,9 @@ export function registerAgentIpc(registry: ProviderRegistry): void {
   ipcMain.removeHandler('agent:abort');
   ipcMain.handle('agent:prompt', async (_event, input: PromptInput) => {
     if (!runtime.get(input.sessionId)) await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId });
-    await providers.get(input.provider)?.prompt(input.sessionId, input.text);
+    const provider = providers.get(input.provider);
+    if (!provider) throw new Error(`Unknown provider: ${input.provider}`);
+    await provider.prompt(input.sessionId, input.text);
   });
   ipcMain.handle('agent:abort', (_event, sessionId: string) => runtime.stop(sessionId));
 }
