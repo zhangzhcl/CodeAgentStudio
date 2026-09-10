@@ -10,7 +10,7 @@ describe('FileExplorer', () => {
     render(<FileExplorer listEntries={list} onOpenFile={onOpenFile} />);
     await waitFor(() => expect(screen.getByRole('button', { name: 'src' })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'src' }));
-    expect(list).toHaveBeenCalledWith('');
+    await waitFor(() => expect(list).toHaveBeenCalledWith('src'));
   });
 
   it('filters default ignored directories', () => {
