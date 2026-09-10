@@ -16,5 +16,8 @@
     "typecheck": "pnpm -r typecheck",
     "build": "pnpm --filter @codeagent-studio/desktop build:renderer",
     "verify": "pnpm test && pnpm typecheck && pnpm build"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["electron", "better-sqlite3"]
   }
 }

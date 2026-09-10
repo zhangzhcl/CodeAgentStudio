@@ -1,5 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import { join } from 'node:path';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { WorkspaceService } from './workspace/workspace-service.js';
 import { registerWorkspaceIpc } from './workspace/workspace-ipc.js';
 import { SessionService } from './sessions/session-service.js';
@@ -12,8 +14,10 @@ import { ProviderRegistry } from './providers/provider-registry.js';
 import { createCliProviders } from './providers/cli-providers.js';
 import { registerProviderIpc } from './providers/provider-ipc.js';
 import { registerAgentIpc } from './providers/agent-ipc.js';
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
+const mainDir = dirname(fileURLToPath(import.meta.url));
 let database: Database.Database | undefined;
-function createWindow() { const window = new BrowserWindow({ width: 1440, height: 900, minWidth: 960, minHeight: 640, webPreferences: { preload: join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false } }); if (process.env.CODEAGENT_DEV_URL) void window.loadURL(process.env.CODEAGENT_DEV_URL); else void window.loadFile(join(__dirname, '../renderer/index.html')); }
+function createWindow() { const window = new BrowserWindow({ width: 1440, height: 900, minWidth: 960, minHeight: 640, webPreferences: { preload: join(mainDir, 'preload.js'), contextIsolation: true, nodeIntegration: false } }); const devUrl = (typeof MAIN_WINDOW_VITE_DEV_SERVER_URL !== 'undefined' && MAIN_WINDOW_VITE_DEV_SERVER_URL) || process.env.MAIN_WINDOW_VITE_DEV_SERVER_URL || process.env.CODEAGENT_DEV_URL; if (devUrl) void window.loadURL(devUrl); else void window.loadFile(join(mainDir, '../renderer/index.html')); }
 app.whenReady().then(() => { const registry = new ProviderRegistry(createCliProviders()); registerProviderIpc(registry); try { database = openDatabase(join(app.getPath('userData'), 'codeagent-studio.db')); registerWorkspaceIpc(new WorkspaceService(new ProjectRepository(database))); const sessions = new SessionService(new SessionRepository(database)); registerSessionIpc(sessions); registerAgentIpc(registry, sessions); } catch { registerWorkspaceIpc(new WorkspaceService()); const sessions = new SessionService(); registerSessionIpc(sessions); registerAgentIpc(registry, sessions); } createWindow(); app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); }); });
 app.on('before-quit', () => { database?.close(); database = undefined; });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

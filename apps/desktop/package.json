@@ -7,7 +7,7 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json",
-    "start": "electron .",
+    "start": "electron-forge start",
     "build:renderer": "vite build",
     "package": "electron-forge make"
   },
