@@ -31,9 +31,9 @@ export class CliProvider implements AgentProvider {
   async resumeSession(_nativeId: string) { throw new Error(`${this.id} does not support resume`); }
   async prompt(sessionId: string, text: string) {
     await new Promise<void>((resolve, reject) => {
-      const child = spawn(this.config.command, [...(this.config.commandArgs ?? []), ...this.config.promptArgs(text)], { shell: this.config.shell, windowsHide: true, cwd: this.sessionCwds.get(sessionId), env: withUserBinaryPaths(process.env), stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0;
-      const consume = (data: Buffer) => data.toString().split(/\r?\n/).forEach((line) => { const event = parseCliEvent(line, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); });
-      child.stdout?.on('data', consume); child.stderr?.on('data', consume); child.once('error', reject); child.once('close', () => { this.processes.delete(sessionId); const done = parseCliEvent(JSON.stringify({ type: 'done' }), this.id, sessionId, sequence++); if (done) this.listeners.forEach((listener) => listener(done)); resolve(); });
+      const child = spawn(this.config.command, [...(this.config.commandArgs ?? []), ...this.config.promptArgs(text)], { shell: this.config.shell, windowsHide: true, cwd: this.sessionCwds.get(sessionId), env: withUserBinaryPaths(process.env), stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0; let pending = '';
+      const consume = (data: Buffer) => { pending += data.toString(); const lines = pending.split(/\r?\n/); pending = lines.pop() ?? ''; lines.forEach((line) => { const event = parseCliEvent(line, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); }); };
+      child.stdout?.on('data', consume); child.stderr?.on('data', consume); child.once('error', reject); child.once('close', () => { if (pending.trim()) { const event = parseCliEvent(pending, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); } this.processes.delete(sessionId); const done = parseCliEvent(JSON.stringify({ type: 'done' }), this.id, sessionId, sequence++); if (done) this.listeners.forEach((listener) => listener(done)); resolve(); });
     });
   }
   async abort(sessionId: string) { const child = this.processes.get(sessionId); if (!child) return false; child.kill(); this.processes.delete(sessionId); return true; }
