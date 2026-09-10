@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import type { WorkbenchTab } from '@codeagent-studio/protocol';
+import { FileExplorer } from '../files/FileExplorer.js';
 
 type Activity = 'files' | 'sessions';
+const EMPTY_LIST = async () => [];
 
 export function Workbench() {
   const [activity, setActivity] = useState<Activity>('files');
@@ -27,7 +29,7 @@ export function Workbench() {
           {activity === 'files' ? (
             <div>
               <h2>文件资源管理器</h2>
-              <p>请选择一个项目开始浏览文件。</p>
+              <FileExplorer listEntries={EMPTY_LIST} onOpenFile={openExampleFile} />
             </div>
           ) : (
             <div>
