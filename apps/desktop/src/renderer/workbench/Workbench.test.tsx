@@ -41,4 +41,19 @@ describe('Workbench', () => {
     fireEvent.click(screen.getByRole('button', { name: '关闭 README.md' }));
     expect(screen.getByRole('tabpanel', { name: '聊天' })).toBeInTheDocument();
   });
+
+  it('does not remain in detecting state when the provider bridge is unavailable', async () => {
+    render(<Workbench />);
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Agent 检测接口不可用'));
+    expect(screen.queryByText('正在检测 Agent…')).not.toBeInTheDocument();
+  });
+
+  it('reports project selection bridge failures instead of silently ignoring them', async () => {
+    render(<Workbench />);
+
+    fireEvent.click(screen.getByRole('button', { name: '选择项目' }));
+
+    await waitFor(() => expect(screen.getAllByRole('alert').some((element) => element.textContent?.includes('项目选择接口不可用'))).toBe(true));
+  });
 });
