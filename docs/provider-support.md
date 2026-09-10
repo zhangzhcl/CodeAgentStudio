@@ -35,4 +35,10 @@ agent --version
 
 CodeAgent Studio 只保存 Provider 标识和会话元数据，不把 API Key 写入项目目录或会话转录。
 
+### Pi Transport 约定
+
+Pi CLI 0.85.1 提供 `--mode json`、`--session <path>`、`--session-id <id>`、
+`--resume <path|id>` 和 `--session-dir <dir>`。Pi 会话文件应保存在应用用户数据目录，
+不放入项目根目录；SDK/RPC 对象只允许存在于 Electron 主进程，不能通过 IPC 序列化。
+
 检测仅执行版本探针，不主动触发登录或认证流程。真实会话启动时显式传入项目 cwd；用户级配置目录由 Provider 自身读取，不纳入项目文件沙箱。
