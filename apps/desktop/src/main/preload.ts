@@ -12,3 +12,4 @@ const workspace = {
   delete: (projectId: string, path: string) => ipcRenderer.invoke('workspace:delete', projectId, path),
 };
 contextBridge.exposeInMainWorld('codeagent', { protocolVersion: 1, ready: true, workspace });
+contextBridge.exposeInMainWorld('codeagentSessions', { create: (input: unknown) => ipcRenderer.invoke('session:create', input), get: (id: string) => ipcRenderer.invoke('session:get', id), messages: (id: string) => ipcRenderer.invoke('session:messages', id) });
