@@ -69,6 +69,7 @@ export function Workbench() {
   const closeTab = (tab: WorkbenchTab) => { setTabs((items) => items.filter((item) => !isSameTab(item, tab))); if (isSameTab(activeTab, tab)) setActiveTab({ kind: 'chat', sessionId: 'new-chat', scope: 'personal' }); };
   const deleteActiveSession = () => {
     if (activeTab.kind !== 'chat' || activeTab.sessionId === 'new-chat') return;
+    if (!window.confirm('确定删除当前会话及其历史消息吗？')) return;
     const remove = (window as Window & { codeagentSessions?: { delete?: (id: string) => Promise<unknown> } }).codeagentSessions?.delete;
     if (remove) void remove(activeTab.sessionId);
     setPersonalSessions((items) => items.filter((item) => item.id !== activeTab.sessionId));
