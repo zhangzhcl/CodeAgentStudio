@@ -2,15 +2,18 @@ import type { AgentEvent, ProviderId, SessionScope } from '@codeagent-studio/pro
 
 export type SessionRecord = { id: string; provider: ProviderId; scope: SessionScope; projectId?: string; nativeId?: string; nativeSessionFile?: string; status: 'active' | 'done' | 'aborted' | 'error'; createdAt: number; updatedAt: number };
 export type MessageRecord = { id: string; sessionId: string; role: 'user' | 'agent' | 'tool'; content: unknown; sequence: number; createdAt: number };
+type SessionStore = { save(session: SessionRecord): unknown };
 
 export class SessionService {
   private readonly sessions = new Map<string, SessionRecord>();
   private readonly messages = new Map<string, MessageRecord>();
+  constructor(private readonly store?: SessionStore) {}
 
   create(input: Omit<SessionRecord, 'id' | 'createdAt' | 'updatedAt' | 'status'>): SessionRecord {
     const now = Date.now();
     const record: SessionRecord = { ...input, id: crypto.randomUUID(), status: 'active', createdAt: now, updatedAt: now };
     this.sessions.set(record.id, record);
+    this.store?.save(record);
     return record;
   }
   get(sessionId: string): SessionRecord { const record = this.sessions.get(sessionId); if (!record) throw new Error(`Unknown session: ${sessionId}`); return record; }
@@ -26,5 +29,5 @@ export class SessionService {
   }
   listMessages(sessionId: string): MessageRecord[] { return [...this.messages.values()].filter((message) => message.sessionId === sessionId).sort((a, b) => a.sequence - b.sequence); }
   replayTranscript(sessionId: string): MessageRecord[] { return this.listMessages(sessionId).map((message) => ({ ...message })); }
-  markStatus(sessionId: string, status: SessionRecord['status']): SessionRecord { const updated = { ...this.get(sessionId), status, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); return updated; }
+  markStatus(sessionId: string, status: SessionRecord['status']): SessionRecord { const updated = { ...this.get(sessionId), status, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
 }

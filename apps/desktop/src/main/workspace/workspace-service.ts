@@ -15,6 +15,7 @@ export class WorkspaceError extends Error {
 }
 
 export type RegisteredProject = { id: string; name: string; rootPath: string };
+type ProjectStore = { list(): RegisteredProject[]; save(project: RegisteredProject): unknown };
 
 function isWithinRoot(rootPath: string, targetPath: string): boolean {
   const path = resolve(targetPath);
@@ -24,6 +25,7 @@ function isWithinRoot(rootPath: string, targetPath: string): boolean {
 
 export class WorkspaceService {
   private readonly projects = new Map<string, RegisteredProject>();
+  constructor(private readonly store?: ProjectStore) { for (const project of store?.list() ?? []) this.projects.set(project.id, project); }
 
   listProjects(): RegisteredProject[] { return [...this.projects.values()]; }
   browseWorkspace(projectId: string, relativePath = '') { return this.listProjectFiles(projectId, relativePath); }
@@ -39,6 +41,7 @@ export class WorkspaceService {
     }
     const project = { id: randomUUID(), name: basename(canonicalRoot), rootPath: canonicalRoot };
     this.projects.set(project.id, project);
+    this.store?.save(project);
     return project;
   }
 
