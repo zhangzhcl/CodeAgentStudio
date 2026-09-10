@@ -1,5 +1,6 @@
 import { access, lstat, mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
+import { createReadStream } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { WorkspaceEntry } from '@codeagent-studio/protocol';
@@ -25,6 +26,8 @@ export class WorkspaceService {
   private readonly projects = new Map<string, RegisteredProject>();
 
   listProjects(): RegisteredProject[] { return [...this.projects.values()]; }
+  browseWorkspace(projectId: string, relativePath = '') { return this.listProjectFiles(projectId, relativePath); }
+  async openFileStream(projectId: string, relativePath: string) { const { path } = await this.resolvePath(projectId, relativePath); return createReadStream(path); }
 
   async registerProject(rootPath: string): Promise<RegisteredProject> {
     const canonicalRoot = await realpath(rootPath).catch(() => {
