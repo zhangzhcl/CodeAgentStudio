@@ -32,6 +32,16 @@ export function Workbench() {
   useEffect(() => { const list = (window as Window & { codeagentSessions?: { list: () => Promise<Array<{ id: string; provider: string; scope: 'personal' | 'project'; title?: string; projectId?: string; projectName?: string; projectRoot?: string; nativeId?: string }>> } }).codeagentSessions?.list; if (list) void list().then((sessions) => { setPersonalSessions(sessions.filter((session) => session.scope === 'personal')); setProjectSessions(sessions.filter((session) => session.scope === 'project')); }); }, []);
   const detectProviders = () => { const detect = (window as Window & { codeagent?: { providers?: { detect: () => Promise<Array<{ provider: string; installed: boolean; version?: string; command?: string }>> } } }).codeagent?.providers?.detect; if (detectingProviders) return; if (!detect) { setProviderDetectionError('Agent 检测接口不可用，请重启应用。'); setDetectingProviders(false); return; } setDetectingProviders(true); setProviderDetectionError(undefined); void detect().then(setProviderStatuses).catch(() => setProviderDetectionError('Agent 检测失败，请检查系统权限和 PATH。')).finally(() => setDetectingProviders(false)); };
   useEffect(() => { detectProviders(); }, []);
+  useEffect(() => {
+    const handleTitle = (event: Event) => {
+      const detail = (event as CustomEvent<{ sessionId?: string; title?: string }>).detail;
+      if (!detail.sessionId || !detail.title) return;
+      setPersonalSessions((items) => items.map((item) => item.id === detail.sessionId ? { ...item, title: detail.title } : item));
+      setProjectSessions((items) => items.map((item) => item.id === detail.sessionId ? { ...item, title: detail.title } : item));
+    };
+    window.addEventListener('codeagent:session-title', handleTitle);
+    return () => window.removeEventListener('codeagent:session-title', handleTitle);
+  }, []);
 
   const openFile = async (path: string) => {
     if (!projectId) return;

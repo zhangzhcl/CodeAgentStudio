@@ -5,10 +5,10 @@ import { applyAgentEvent, type ChatMessage } from './chat-state.js';
 import { MessageItem } from './message-item.js';
 import { Composer } from './Composer.js';
 
-type Props = { sessionId: string; providerName?: string; providers?: string[]; disabledProviders?: string[]; loadMessages?: () => Promise<ChatMessage[]>; subscribe?: (listener: (event: AgentEvent) => void) => () => void; onPrompt?: (text: string, provider: string) => Promise<void> | void; onAbort?: (sessionId: string) => Promise<unknown> | unknown; onProviderChange?: (provider: string) => void };
+type Props = { sessionId: string; providerName?: string; providers?: string[]; disabledProviders?: string[]; loadMessages?: () => Promise<ChatMessage[]>; subscribe?: (listener: (event: AgentEvent) => void) => () => void; onPrompt?: (text: string, provider: string) => Promise<void> | void; onAbort?: (sessionId: string) => Promise<unknown> | unknown; onProviderChange?: (provider: string) => void; onTitleChange?: (title: string) => void };
 
 
-export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Claude', 'Cursor', 'Codex', 'Pi', 'OpenCode'], disabledProviders = [], loadMessages, subscribe, onPrompt, onAbort, onProviderChange }: Props) {
+export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Claude', 'Cursor', 'Codex', 'Pi', 'OpenCode'], disabledProviders = [], loadMessages, subscribe, onPrompt, onAbort, onProviderChange, onTitleChange }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [provider, setProvider] = useState(providerName);
   const [draft, setDraft] = useState('');
@@ -31,7 +31,7 @@ export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Cl
   useEffect(() => { const element = transcriptRef.current; if (!element || !stickToBottom.current) return; element.scrollTop = element.scrollHeight; }, [messages]);
   const scrollToBottom = () => { const element = transcriptRef.current; if (!element) return; element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' }); stickToBottom.current = true; setShowScrollButton(false); };
   const useQuickPrompt = (text: string) => { setDraft(text); setComposerNotice('已填入快捷任务，按 Enter 发送'); requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.chat-composer textarea')?.focus()); };
-  const runPrompt = async (text: string, selectedProvider: string, optimistic = true) => { lastPrompt.current = { text, provider: selectedProvider }; setError(undefined); if (optimistic) setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'user', content: text, status: 'done', createdAt: Date.now() }]); setSending(true); try { if (!onPrompt) throw new Error('Agent 接口不可用，请重启应用'); await onPrompt(text, selectedProvider); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Agent 请求失败'); } finally { setSending(false); } };
+  const runPrompt = async (text: string, selectedProvider: string, optimistic = true) => { lastPrompt.current = { text, provider: selectedProvider }; setError(undefined); if (optimistic) { setMessages((current) => { if (!current.some((message) => message.role === 'user')) { onTitleChange?.(text); window.dispatchEvent(new CustomEvent('codeagent:session-title', { detail: { sessionId, title: text } })); } return [...current, { id: crypto.randomUUID(), role: 'user', content: text, status: 'done', createdAt: Date.now() }]; }); } setSending(true); try { if (!onPrompt) throw new Error('Agent 接口不可用，请重启应用'); await onPrompt(text, selectedProvider); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Agent 请求失败'); } finally { setSending(false); } };
   const send = async () => {
     const text = draft.trim();
     if (!text || sending) return;
