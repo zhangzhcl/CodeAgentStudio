@@ -34,6 +34,7 @@ export function Workbench() {
           {activity === 'files' ? (
             <div>
               <h2>文件资源管理器</h2>
+              <button type="button" onClick={() => { const choose = (window as Window & { codeagent?: { workspace?: { chooseProject: () => Promise<{ id: string } | undefined> } } }).codeagent?.workspace?.chooseProject; if (choose) void choose().then((project) => { if (project) setProjectId(project.id); }); }}>选择项目</button>
               <FileExplorer projectId={projectId} onOpenFile={(path) => void openExampleFile(path)} />
             </div>
           ) : (
