@@ -14,6 +14,7 @@
   "scripts": {
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "verify": "pnpm test && pnpm typecheck"
+    "build": "pnpm --filter @codeagent-studio/desktop build:renderer",
+    "verify": "pnpm test && pnpm typecheck && pnpm build"
   }
 }
