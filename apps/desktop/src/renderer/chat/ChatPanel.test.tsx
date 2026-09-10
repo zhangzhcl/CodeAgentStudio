@@ -45,3 +45,18 @@ describe('ChatPanel composer keyboard behavior', () => {
     });
   });
 });
+
+describe('ChatPanel retry behavior', () => {
+  it('retries the last prompt without duplicating the user message', async () => {
+    const onPrompt = vi.fn()
+      .mockRejectedValueOnce(new Error('网络错误'))
+      .mockResolvedValueOnce(undefined);
+    render(<ChatPanel sessionId="retry" onPrompt={onPrompt} />);
+    fireEvent.change(screen.getByLabelText('消息'), { target: { value: '再次运行' } });
+    fireEvent.click(screen.getByRole('button', { name: '发送' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('网络错误');
+    fireEvent.click(screen.getByRole('button', { name: '重试' }));
+    await waitFor(() => expect(onPrompt).toHaveBeenCalledTimes(2));
+    expect(screen.getAllByText('再次运行')).toHaveLength(1);
+  });
+});
