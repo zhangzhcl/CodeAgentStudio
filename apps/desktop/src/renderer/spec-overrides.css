@@ -1,4 +1,7 @@
 /* AGENT-01 1:1 输入台规格：必须最后加载，覆盖基础主题样式。 */
+:root{--bg-0:#08090c;--bg-1:#0d0f14;--bg-2:#13161d;--bg-3:#1a1e27;--line:#22262f;--line-strong:#2e333e;--text-1:#e9e6dc;--text-2:#9ba1ad;--text-3:#646b78;--amber:#f5a524;--green:#3ddc84}
+body{font-family:'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;background-color:#08090c;background-image:linear-gradient(rgba(255,255,255,.014) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px);background-size:40px 40px;-webkit-font-smoothing:antialiased}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");z-index:999}
 .codeagent-workbench{grid-template-columns:248px minmax(0,1fr);background:#08090c;color:#e9e6dc;font-family:'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif}
 .codeagent-workbench aside{background:rgba(13,15,20,.92);border-right:1px solid #22262f;padding:20px 14px 14px}
 .codeagent-workbench main{background:radial-gradient(900px 320px at 60% -80px,rgba(245,165,36,.055),transparent 70%),#08090c}
@@ -44,12 +47,14 @@
 .session-section-label,.project-group-header h3{margin:14px 6px 7px!important;font:600 11px 'IBM Plex Mono','Cascadia Code',monospace!important;letter-spacing:.08em;text-transform:uppercase;color:#646b78!important}
 .codeagent-workbench aside .session-section-label~button:not(.project-group-header button),.codeagent-workbench aside .session-project-group>button{width:100%;margin:3px 0;padding:9px 10px!important;border:1px solid #22262f!important;border-radius:8px!important;background:#13161d!important;color:#9ba1ad!important;font-size:12px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .codeagent-workbench aside .session-section-label~button:not(.project-group-header button):hover,.codeagent-workbench aside .session-project-group>button:hover{border-color:rgba(245,165,36,.45)!important;background:#1a1e27!important;color:#f5a524!important}
+.codeagent-workbench aside .session-section-label~button[aria-current="true"],.codeagent-workbench aside .session-project-group>button[aria-current="true"]{border-left:2px solid #f5a524!important;color:#f5a524!important;background:#1a1e27!important}
 .project-picker{width:100%;margin:0 0 8px;padding:9px 10px!important;border-style:dashed!important;text-align:left!important;color:#9ba1ad!important}
 .session-project-group{margin:0 0 14px}.project-group-header{display:flex;align-items:center;gap:6px}.project-group-header h3{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.project-group-header button{width:28px!important;height:26px;padding:0!important;border-radius:7px!important;color:#f5a524!important;font-size:16px!important}
 .codeagent-workbench aside p{margin:10px 6px;color:#646b78;font-size:12px}
 .codeagent-workbench main>div[role="tablist"]{height:52px;align-items:stretch;padding:8px 12px 0;border-bottom:1px solid #22262f;background:#0d0f14;gap:3px}
 .codeagent-workbench main>div[role="tablist"]>[role="tab"]{position:relative;max-width:190px;min-width:96px;height:44px;padding:0 12px!important;border:1px solid #22262f!important;border-bottom:0!important;border-radius:8px 8px 0 0!important;background:#0d0f14!important;color:#646b78!important;font:12px 'IBM Plex Mono','Cascadia Code',monospace!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .codeagent-workbench main>div[role="tablist"]>[role="tab"][aria-selected="true"]{background:#13161d!important;color:#e9e6dc!important;border-top:2px solid #f5a524!important}
+.codeagent-workbench main>div[role="tablist"]>[role="tab"]:hover{background:#1a1e27!important;color:#e9e6dc!important}.codeagent-workbench main>div[role="tablist"]>[role="tab"]:hover .tab-close{color:#f0564a!important}
 .codeagent-workbench main>div[role="tablist"] .tab-close{margin-left:7px;color:#646b78!important}.codeagent-workbench main>div[role="tablist"] .tab-close:hover{background:#2e333e;color:#f5a524!important}
 .agent-status-summary{padding-left:8px;font:10px 'IBM Plex Mono','Cascadia Code',monospace;color:#646b78!important}.agent-status-summary button{border-color:#22262f!important;border-radius:7px!important}
 .chat-panel{max-width:100%;gap:12px}.chat-header{padding:2px 0 12px}.chat-header h1{font-size:20px}.chat-transcript{padding-top:16px;padding-bottom:24px}
