@@ -19,7 +19,9 @@ export type ProviderStatus = {
 
 export type CreateSessionInput = {
   scope: SessionScope;
+  sessionId?: string;
   projectId?: string;
+  projectRoot?: string;
 };
 
 export type AgentProvider = {

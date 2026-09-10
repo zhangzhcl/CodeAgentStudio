@@ -11,12 +11,13 @@ export function Workbench() {
   const [activeTab, setActiveTab] = useState<WorkbenchTab>(tabs[0]);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [projectId, setProjectId] = useState('example-project');
+  const [projectRoot, setProjectRoot] = useState<string | undefined>();
   const [personalSessions, setPersonalSessions] = useState<string[]>([]);
   const [projectSessions, setProjectSessions] = useState<string[]>([]);
   const [providerStatuses, setProviderStatuses] = useState<Array<{ provider: string; command?: string; installed: boolean; version?: string }>>([]);
   const [detectingProviders, setDetectingProviders] = useState(false);
   const [providerDetectionError, setProviderDetectionError] = useState<string | undefined>();
-  useEffect(() => { const api = (window as Window & { codeagent?: { workspace?: { projects: () => Promise<Array<{ id: string }>> } } }).codeagent?.workspace; if (api) void api.projects().then((projects) => { if (projects[0]) setProjectId(projects[0].id); }); }, []);
+  useEffect(() => { const api = (window as Window & { codeagent?: { workspace?: { projects: () => Promise<Array<{ id: string; rootPath?: string }>> } } }).codeagent?.workspace; if (api) void api.projects().then((projects) => { if (projects[0]) { setProjectId(projects[0].id); setProjectRoot(projects[0].rootPath); } }); }, []);
   const detectProviders = () => { const detect = (window as Window & { codeagent?: { providers?: { detect: () => Promise<Array<{ provider: string; installed: boolean; version?: string; command?: string }>> } } }).codeagent?.providers?.detect; if (!detect || detectingProviders) return; setDetectingProviders(true); setProviderDetectionError(undefined); void detect().then(setProviderStatuses).catch(() => setProviderDetectionError('Agent 检测失败，请检查系统权限和 PATH。')).finally(() => setDetectingProviders(false)); };
   useEffect(() => { detectProviders(); }, []);
 
@@ -42,7 +43,7 @@ export function Workbench() {
           {activity === 'files' ? (
             <div>
               <h2>文件资源管理器</h2>
-              <button type="button" onClick={() => { const choose = (window as Window & { codeagent?: { workspace?: { chooseProject: () => Promise<{ id: string } | undefined> } } }).codeagent?.workspace?.chooseProject; if (choose) void choose().then((project) => { if (project) setProjectId(project.id); }); }}>选择项目</button>
+              <button type="button" onClick={() => { const choose = (window as Window & { codeagent?: { workspace?: { chooseProject: () => Promise<{ id: string; rootPath?: string } | undefined> } } }).codeagent?.workspace?.chooseProject; if (choose) void choose().then((project) => { if (project) { setProjectId(project.id); setProjectRoot(project.rootPath); } }); }}>选择项目</button>
               <FileExplorer projectId={projectId} onOpenFile={(path) => void openExampleFile(path)} />
               {providerStatuses.length > 0 && <div aria-label="Agent 状态"><h3>Agent 状态</h3><button type="button" onClick={detectProviders} disabled={detectingProviders}>{detectingProviders ? '检测中…' : '重新检测'}</button>{providerDetectionError && <p role="alert">{providerDetectionError}</p>}{providerStatuses.map((status) => <p key={status.provider}>{status.provider}: {status.installed ? `已安装${status.version ? ` (${status.version})` : ''}` : '未安装'}{status.command ? ` · ${status.command}` : ''}</p>)}</div>}
             </div>
@@ -67,7 +68,7 @@ export function Workbench() {
           ))}
         </div>
         {activeTab.kind === 'chat' ? (
-          <section role="tabpanel" aria-label="聊天"><ChatPanel sessionId={activeTab.sessionId} subscribe={(listener) => (window as Window & { codeagentAgent?: { subscribe: (handler: (event: unknown) => void) => () => void } }).codeagentAgent?.subscribe((event) => listener(event as never))} onPrompt={(text, provider) => { const id = provider.toLowerCase() as 'claude' | 'cursor' | 'codex' | 'pi' | 'opencode'; return (window as Window & { codeagentAgent?: { prompt: (input: unknown) => Promise<void> } }).codeagentAgent?.prompt({ sessionId: activeTab.sessionId, provider: id, scope: 'personal', text }); }} /><button type="button" aria-label="打开示例文件" onClick={() => void openExampleFile()}>打开示例文件</button></section>
+          <section role="tabpanel" aria-label="聊天"><ChatPanel sessionId={activeTab.sessionId} subscribe={(listener) => (window as Window & { codeagentAgent?: { subscribe: (handler: (event: unknown) => void) => () => void } }).codeagentAgent?.subscribe((event) => listener(event as never))} onPrompt={(text, provider) => { const id = provider.toLowerCase() as 'claude' | 'cursor' | 'codex' | 'pi' | 'opencode'; return (window as Window & { codeagentAgent?: { prompt: (input: unknown) => Promise<void> } }).codeagentAgent?.prompt({ sessionId: activeTab.sessionId, provider: id, scope: 'project', projectId, projectRoot, text }); }} /><button type="button" aria-label="打开示例文件" onClick={() => void openExampleFile()}>打开示例文件</button></section>
         ) : (
           <section role="tabpanel" aria-label={tabName(activeTab)}>
             <EditorTab projectId={activeTab.projectId} path={activeTab.path} content={fileContents[activeTab.path] ?? '# CodeAgent Studio\n'} useMonaco={typeof window.matchMedia === 'function'} onSave={(content) => { setFileContents((current) => ({ ...current, [activeTab.path]: content })); const write = (window as Window & { codeagent?: { workspace?: { write: (projectId: string, path: string, value: string) => Promise<unknown> } } }).codeagent?.workspace?.write; if (write) void write(activeTab.projectId, activeTab.path, content).catch((error: unknown) => console.error('Failed to save file', error)); }} />

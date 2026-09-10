@@ -3,7 +3,7 @@ import type { AgentEvent, ProviderId, SessionScope } from '@codeagent-studio/pro
 import { ProviderRegistry } from './provider-registry.js';
 import { ProviderRuntime } from './provider-runtime.js';
 
-type PromptInput = { sessionId: string; provider: ProviderId; scope: SessionScope; projectId?: string; text: string };
+type PromptInput = { sessionId: string; provider: ProviderId; scope: SessionScope; projectId?: string; projectRoot?: string; text: string };
 
 export function registerAgentIpc(registry: ProviderRegistry): void {
   const providers = new Map(registry.list().map((provider) => [provider.id, provider]));
@@ -12,7 +12,7 @@ export function registerAgentIpc(registry: ProviderRegistry): void {
   ipcMain.removeHandler('agent:prompt');
   ipcMain.removeHandler('agent:abort');
   ipcMain.handle('agent:prompt', async (_event, input: PromptInput) => {
-    if (!runtime.get(input.sessionId)) await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId });
+    if (!runtime.get(input.sessionId)) await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId, projectRoot: input.projectRoot });
     const provider = providers.get(input.provider);
     if (!provider) throw new Error(`Unknown provider: ${input.provider}`);
     await provider.prompt(input.sessionId, input.text);
