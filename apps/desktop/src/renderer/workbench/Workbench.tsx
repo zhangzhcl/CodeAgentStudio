@@ -45,7 +45,7 @@ export function Workbench() {
               <h2>文件资源管理器</h2>
               <button type="button" onClick={() => { const choose = (window as Window & { codeagent?: { workspace?: { chooseProject: () => Promise<{ id: string; rootPath?: string } | undefined> } } }).codeagent?.workspace?.chooseProject; if (choose) void choose().then((project) => { if (project) { setProjectId(project.id); setProjectRoot(project.rootPath); } }); }}>选择项目</button>
               <FileExplorer projectId={projectId} onOpenFile={(path) => void openExampleFile(path)} />
-              {providerStatuses.length > 0 && <div aria-label="Agent 状态"><h3>Agent 状态</h3><button type="button" onClick={detectProviders} disabled={detectingProviders}>{detectingProviders ? '检测中…' : '重新检测'}</button>{providerDetectionError && <p role="alert">{providerDetectionError}</p>}{providerStatuses.map((status) => <p key={status.provider}>{status.provider}: {status.installed ? `已安装${status.version ? ` (${status.version})` : ''}` : '未安装'}{status.command ? ` · ${status.command}` : ''}</p>)}</div>}
+              <div aria-label="Agent 状态"><h3>Agent 状态</h3>{providerStatuses.length === 0 && !providerDetectionError && <p>正在检测 Agent…</p>}<button type="button" onClick={detectProviders} disabled={detectingProviders}>{detectingProviders ? '检测中…' : '重新检测'}</button>{providerDetectionError && <p role="alert">{providerDetectionError}</p>}{providerStatuses.map((status) => <p key={status.provider}>{status.provider}: {status.installed ? `已安装${status.version ? ` (${status.version})` : ''}` : '未安装'}{status.command ? ` · ${status.command}` : ''}</p>)}</div>
             </div>
           ) : (
             <div>
