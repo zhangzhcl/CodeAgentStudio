@@ -9,7 +9,8 @@ import { parseCliEvent } from './cli-event-parser.js';
 type Config = { id: ProviderId; command: string; versionArgs?: string[]; promptArgs: (text: string) => string[] };
 const cursorWindowsPath = join(homedir(), 'AppData', 'Local', 'cursor-agent', 'agent.ps1');
 const cursorCommand = process.env.CODEAGENT_CURSOR_AGENT ?? (process.platform === 'win32' && existsSync(cursorWindowsPath) ? cursorWindowsPath : 'agent');
-export const CLI_CONFIGS: Config[] = [{ id: 'claude', command: 'claude', promptArgs: (text) => ['-p', text] }, { id: 'cursor', command: cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'text', text] }, { id: 'codex', command: 'codex', promptArgs: (text) => ['exec', text] }, { id: 'opencode', command: 'opencode', promptArgs: (text) => ['run', text] }];
+const resolveAgentCommand = (envKey: string, fallback: string) => process.env[envKey] ?? fallback;
+export const CLI_CONFIGS: Config[] = [{ id: 'claude', command: resolveAgentCommand('CODEAGENT_CLAUDE_COMMAND', 'claude'), promptArgs: (text) => ['-p', text] }, { id: 'cursor', command: cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'text', text] }, { id: 'codex', command: resolveAgentCommand('CODEAGENT_CODEX_COMMAND', 'codex'), promptArgs: (text) => ['exec', text] }, { id: 'opencode', command: resolveAgentCommand('CODEAGENT_OPENCODE_COMMAND', 'opencode'), promptArgs: (text) => ['run', text] }];
 
 export class CliProvider implements AgentProvider {
   readonly capabilities = { maxConcurrentSessions: 1, supportsResume: false, supportsAttachments: false, supportsProjectScope: true, supportsAbort: true };

@@ -7,4 +7,6 @@
 3. 若默认路径不存在，则回退到 PATH 中的 `agent` 命令。
 4. macOS/Linux 直接使用 PATH 中的 `agent`、`claude`、`codex`、`opencode`。
 
+所有 CLI 均支持路径覆盖环境变量：`CODEAGENT_CLAUDE_COMMAND`、`CODEAGENT_CURSOR_AGENT`、`CODEAGENT_CODEX_COMMAND`、`CODEAGENT_OPENCODE_COMMAND`。Pi 使用 SDK/RPC transport，不依赖固定可执行文件路径。
+
 项目注册保存的是用户选择的项目根目录，不保存开发者机器路径。打包产物由 Electron Forge 分别针对 win32、darwin、linux 构建；Provider 是否可用在目标机器启动时动态探测。
