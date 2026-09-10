@@ -1,6 +1,6 @@
 # CodeAgent Studio
 
-CodeAgent开发平台：独立打包的本地桌面工作台，统一接入 Claude Code、Cursor CLI、Codex 与 Pi Coding Agent，并提供项目文件树、Monaco 编辑器和会话管理。
+CodeAgent开发平台：独立打包的本地桌面工作台，统一接入 Claude Code、Cursor CLI、Codex、Pi Coding Agent 与 opencode，并提供项目文件树、Monaco 编辑器和会话管理。
 
 ## 当前状态
 
