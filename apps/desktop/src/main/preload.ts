@@ -4,6 +4,7 @@ const workspace = {
   registerProject: (rootPath: string) => ipcRenderer.invoke('workspace:register-project', rootPath),
   chooseProject: () => ipcRenderer.invoke('workspace:choose-project'),
   list: (projectId: string, path?: string) => ipcRenderer.invoke('workspace:list', projectId, path),
+  browse: (projectId: string, path?: string) => ipcRenderer.invoke('workspace:browse', projectId, path),
   read: (projectId: string, path: string) => ipcRenderer.invoke('workspace:read', projectId, path),
   write: (projectId: string, path: string, content: string) => ipcRenderer.invoke('workspace:write', projectId, path, content),
   create: (projectId: string, parent: string, name: string, directory?: boolean) => ipcRenderer.invoke('workspace:create', projectId, parent, name, directory),

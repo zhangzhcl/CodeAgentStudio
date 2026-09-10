@@ -6,6 +6,7 @@ export function registerWorkspaceIpc(service: WorkspaceService) {
   ipcMain.handle('workspace:register-project', (_event, rootPath: string) => service.registerProject(rootPath));
   ipcMain.handle('workspace:choose-project', async () => { const result = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] }); if (result.canceled || !result.filePaths[0]) return undefined; return service.registerProject(result.filePaths[0]); });
   ipcMain.handle('workspace:list', (_event, projectId: string, relativePath = '.') => service.listProjectFiles(projectId, relativePath));
+  ipcMain.handle('workspace:browse', (_event, projectId: string, relativePath = '.') => service.browseWorkspace(projectId, relativePath));
   ipcMain.handle('workspace:read', (_event, projectId: string, relativePath: string) => service.readTextFile(projectId, relativePath));
   ipcMain.handle('workspace:write', (_event, projectId: string, relativePath: string, content: string) => service.saveTextFile(projectId, relativePath, content));
   ipcMain.handle('workspace:create', (_event, projectId: string, parentPath: string, name: string, directory = false) => service.createEntry(projectId, parentPath, name, directory ? 'directory' : 'file'));
