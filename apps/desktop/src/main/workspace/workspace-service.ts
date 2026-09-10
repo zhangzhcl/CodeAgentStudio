@@ -24,6 +24,8 @@ function isWithinRoot(rootPath: string, targetPath: string): boolean {
 export class WorkspaceService {
   private readonly projects = new Map<string, RegisteredProject>();
 
+  listProjects(): RegisteredProject[] { return [...this.projects.values()]; }
+
   async registerProject(rootPath: string): Promise<RegisteredProject> {
     const canonicalRoot = await realpath(rootPath).catch(() => {
       throw new WorkspaceError('PROJECT_NOT_FOUND', `Project does not exist: ${rootPath}`);
@@ -110,4 +112,3 @@ export class WorkspaceService {
     await rm(path, { recursive: true, force: false });
   }
 }
-
