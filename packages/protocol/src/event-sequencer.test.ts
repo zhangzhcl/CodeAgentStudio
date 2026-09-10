@@ -1,0 +1,3 @@
+import { describe, expect, it } from 'vitest';
+import { EventSequencer } from './event-sequencer.js';
+describe('EventSequencer', () => { it('rejects duplicate and stale events', () => { const sequencer = new EventSequencer(); const base = { protocolVersion: 1 as const, type: 'done' as const, sessionId: 's', messageId: 'm', provider: 'pi' as const, occurredAt: new Date().toISOString(), payload: {} }; expect(sequencer.accept({ ...base, sequence: 1 })).toBe(true); expect(sequencer.accept({ ...base, sequence: 1 })).toBe(false); expect(sequencer.accept({ ...base, sequence: 0 })).toBe(false); }); });

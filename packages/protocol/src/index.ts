@@ -46,3 +46,4 @@ export const WorkbenchTabSchema = z.discriminatedUnion('kind', [
 export type WorkbenchTab = z.infer<typeof WorkbenchTabSchema>;
 
 export * from './handshake.js';
+export * from './event-sequencer.js';
