@@ -16,7 +16,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
   const attachmentInput = useRef<HTMLInputElement>(null);
   const [hint, setHint] = useState('支持 Markdown、代码和多行输入');
   const [notice, setNotice] = useState('');
-  const [attachment, setAttachment] = useState<string>();
+  const [attachments, setAttachments] = useState<string[]>([]);
   const [showCommandMenu, setShowCommandMenu] = useState(false);
   const [commandIndex, setCommandIndex] = useState(0);
   const history = useRef<string[]>([]);
@@ -28,7 +28,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
     element.style.height = `${Math.min(element.scrollHeight, 240)}px`;
   };
 
-  const submit = () => { if (draft.trim() && history.current.at(-1) !== draft.trim()) history.current.push(draft.trim()); historyIndex.current = -1; onSend(); };
+  const submit = () => { if (!draft.trim() && attachments.length === 0) return; if (draft.trim() && history.current.at(-1) !== draft.trim()) history.current.push(draft.trim()); historyIndex.current = -1; onSend(); setAttachments([]); };
   return <form className="chat-composer" aria-busy={sending} data-sending={sending ? 'true' : 'false'} onSubmit={(event) => { event.preventDefault(); submit(); }}>
     <textarea
       aria-label="消息"
@@ -59,11 +59,11 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
     />
     <div className="composer-toolbar">
       <div className="composer-tools">
-        <input ref={attachmentInput} type="file" hidden onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) {
-            setAttachment(file.name);
-            setNotice(`已选择附件：${file.name}`);
+        <input ref={attachmentInput} type="file" multiple hidden onChange={(event) => {
+          const files = Array.from(event.target.files ?? []);
+          if (files.length) {
+            setAttachments((current) => [...current, ...files.map((file) => file.name)]);
+            setNotice(`已选择 ${files.length} 个附件`);
           }
           event.target.value = '';
         }} />
@@ -78,10 +78,10 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
       </div>
       <div className="composer-actions">
         <span className="composer-model" title={`当前 Agent：${provider}`}>{provider}</span>
-        {sending ? <button type="button" className="stop-action" onClick={onStop}>停止</button> : <button type="submit" className="send-action" aria-label="发送" disabled={!draft.trim()}>➤</button>}
+        {sending ? <button type="button" className="stop-action" onClick={onStop}>停止</button> : <button type="submit" className="send-action" aria-label="发送" disabled={!draft.trim() && attachments.length === 0}>➤</button>}
       </div>
     </div>
-    {attachment && <div className="composer-attachments"><span className="attachment-chip">附件 · {attachment}<button type="button" aria-label="移除附件" onClick={() => setAttachment(undefined)}>×</button></span></div>}
+    {attachments.length > 0 && <div className="composer-attachments">{attachments.map((attachment, index) => <span className="attachment-chip" key={`${attachment}-${index}`}>附件 · {attachment}<button type="button" aria-label={`移除附件 ${attachment}`} onClick={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))}>×</button></span>)}</div>}
     {showCommandMenu && <div className="command-menu" role="listbox">
       {commands.map((command, index) => <button key={command.value} type="button" className={index === commandIndex ? 'is-active' : ''} onClick={() => { onDraftChange(`${command.value} `, document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea')); setShowCommandMenu(false); }}>{command.value} <span>{command.label}</span></button>)}
     </div>}
