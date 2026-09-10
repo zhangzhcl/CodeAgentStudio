@@ -12,5 +12,7 @@ export function applyAgentEvent(messages: ChatMessage[], event: AgentEvent): Cha
   }
   if (event.type === 'done') return messages.map((message) => message.status === 'streaming' ? { ...message, status: 'done' } : message);
   if (event.type === 'error') return [...messages, { id: event.messageId, role: 'agent', content: event.payload.message, status: 'error' }];
+  if (event.type === 'tool.started') return [...messages, { id: event.messageId, role: 'tool', content: `正在执行 ${event.payload.toolName}\n${JSON.stringify(event.payload.input, null, 2)}`, status: 'streaming' }];
+  if (event.type === 'tool.completed') return [...messages, { id: event.messageId, role: 'tool', content: `${event.payload.toolName}\n${JSON.stringify(event.payload.output, null, 2)}`, status: 'done' }];
   return messages;
 }
