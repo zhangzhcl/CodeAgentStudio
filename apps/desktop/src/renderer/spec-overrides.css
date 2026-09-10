@@ -1,4 +1,18 @@
 /* AGENT-01 1:1 输入台规格：必须最后加载，覆盖基础主题样式。 */
+.codeagent-workbench{grid-template-columns:248px minmax(0,1fr);background:#08090c;color:#e9e6dc;font-family:'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif}
+.codeagent-workbench aside{background:rgba(13,15,20,.92);border-right:1px solid #22262f;padding:20px 14px 14px}
+.codeagent-workbench main{background:radial-gradient(900px 320px at 60% -80px,rgba(245,165,36,.055),transparent 70%),#08090c}
+.codeagent-workbench [role=tablist]{border-color:#22262f;background:rgba(13,15,20,.68)}
+.codeagent-workbench [role=tab]{border-color:#2e333e;background:#13161d;color:#9ba1ad}
+.codeagent-workbench [role=tab][aria-selected="true"]{border-color:rgba(245,165,36,.5);color:#f5a524;background:#1a1e27}
+.sidebar-heading h2,.session-sidebar-heading h2{font-family:'Chakra Petch','PingFang SC','Microsoft YaHei',sans-serif;color:#e9e6dc}
+.nested-sidebar-tabs button[aria-selected="true"]{background:#1a1e27!important;border-color:rgba(245,165,36,.35)!important;color:#f5a524!important}
+.session-section-label,.project-group-header h3{color:#9ba1ad}
+.codeagent-workbench aside button{background:transparent;color:#9ba1ad;border-color:#2e333e}
+.codeagent-workbench aside button:hover{background:rgba(245,165,36,.1);border-color:#f5a524;color:#f5a524}
+.codeagent-workbench aside .session-project-group button,.codeagent-workbench aside .project-group-header button{background:#13161d}
+.chat-header{border-color:#22262f!important}.chat-header h1{font-family:'Chakra Petch','PingFang SC','Microsoft YaHei',sans-serif;color:#e9e6dc!important}.eyebrow{color:#646b78!important}.session-meta{color:#646b78!important}
+.chat-message-user{background:#13161d!important;border-color:#2e333e!important;border-radius:14px 14px 4px 14px!important}.chat-message-agent{background:transparent!important}.message-heading{color:#e9e6dc!important}.message-body p{color:#c8c6bf!important}.message-avatar{background:#1a1e27!important;color:#f5a524!important}.chat-message-user .message-avatar{background:#f5a524!important;color:#161000!important}
 .chat-transcript,.chat-composer{width:min(100%,872px);margin-left:auto;margin-right:auto}
 .chat-transcript{padding-left:0;padding-right:0}
 .chat-composer{background:rgba(19,22,29,.94);border-color:#2e333e;border-radius:14px;backdrop-filter:blur(10px);transition:border-color .18s,box-shadow .18s}
