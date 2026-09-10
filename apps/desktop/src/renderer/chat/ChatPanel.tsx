@@ -32,7 +32,22 @@ export function ChatPanel({ sessionId, providerName = 'Claude', providers = ['Cl
   const scrollToBottom = () => { const element = transcriptRef.current; if (!element) return; element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' }); stickToBottom.current = true; setShowScrollButton(false); };
   const useQuickPrompt = (text: string) => { setDraft(text); setComposerNotice('已填入快捷任务，按 Enter 发送'); requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.chat-composer textarea')?.focus()); };
   const runPrompt = async (text: string, selectedProvider: string, optimistic = true) => { lastPrompt.current = { text, provider: selectedProvider }; setError(undefined); if (optimistic) setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'user', content: text, status: 'done', createdAt: Date.now() }]); setSending(true); try { if (!onPrompt) throw new Error('Agent 接口不可用，请重启应用'); await onPrompt(text, selectedProvider); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Agent 请求失败'); } finally { setSending(false); } };
-  const send = async () => { const text = draft.trim(); if (!text || sending) return; setDraft(''); await runPrompt(text, provider); };
+  const send = async () => {
+    const text = draft.trim();
+    if (!text || sending) return;
+    setDraft('');
+    if (text === '/clear') {
+      setMessages([]);
+      setComposerNotice('当前会话已清空');
+      return;
+    }
+    if (text === '/help') {
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'agent', content: '可用命令：\n- `/help` 查看命令\n- `/clear` 清空当前会话', status: 'done', createdAt: Date.now() }]);
+      setComposerNotice('已显示可用命令');
+      return;
+    }
+    await runPrompt(text, provider);
+  };
   const retry = async () => { const prompt = lastPrompt.current; if (!prompt || sending) return; await runPrompt(prompt.text, prompt.provider, false); };
   const regenerate = async () => { const text = [...messages].reverse().find((message) => message.role === 'user')?.content; if (!text || sending || !onPrompt) return; setError(undefined); setSending(true); try { await onPrompt(text, provider); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Agent 请求失败'); } finally { setSending(false); } };
   const copyMessage = async (id: string, content: string) => { try { await navigator.clipboard?.writeText(content); setCopiedMessage(id); window.setTimeout(() => setCopiedMessage((current) => current === id ? undefined : current), 1400); } catch { setComposerNotice('当前环境不支持复制'); } };

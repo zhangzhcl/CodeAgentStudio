@@ -60,3 +60,26 @@ describe('ChatPanel retry behavior', () => {
     expect(screen.getAllByText('再次运行')).toHaveLength(1);
   });
 });
+
+describe('ChatPanel local commands', () => {
+  it('handles help locally without starting an agent run', async () => {
+    const onPrompt = vi.fn();
+    render(<ChatPanel sessionId="commands" onPrompt={onPrompt} />);
+    fireEvent.change(screen.getByLabelText('消息'), { target: { value: '/help' } });
+    fireEvent.keyDown(screen.getByLabelText('消息'), { key: 'Enter' });
+    expect(onPrompt).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByRole('log')).toHaveTextContent('可用命令：'));
+  });
+
+  it('clears the current transcript locally', async () => {
+    const onPrompt = vi.fn();
+    render(<ChatPanel sessionId="commands-clear" onPrompt={onPrompt} />);
+    fireEvent.change(screen.getByLabelText('消息'), { target: { value: '保留消息' } });
+    fireEvent.click(screen.getByRole('button', { name: '发送' }));
+    expect(await screen.findByText('保留消息')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('消息'), { target: { value: '/clear' } });
+    fireEvent.keyDown(screen.getByLabelText('消息'), { key: 'Enter' });
+    await waitFor(() => expect(screen.queryByText('保留消息')).not.toBeInTheDocument());
+    expect(onPrompt).toHaveBeenCalledTimes(1);
+  });
+});
