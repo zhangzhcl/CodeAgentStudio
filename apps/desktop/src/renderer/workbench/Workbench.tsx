@@ -6,6 +6,10 @@ import { EditorTab } from '../editor/EditorTab.js';
 
 type Activity = 'files' | 'sessions';
 export function Workbench() {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = window.localStorage.getItem('codeagent-theme');
+    return saved === 'light' ? 'light' : 'dark';
+  });
   const [activity, setActivity] = useState<Activity>('sessions');
   const [sessionView, setSessionView] = useState<'sessions' | 'projects'>('sessions');
   const [tabs, setTabs] = useState<WorkbenchTab[]>([{ kind: 'chat', sessionId: 'new-chat', scope: 'personal' }]);
@@ -32,6 +36,10 @@ export function Workbench() {
   useEffect(() => { const list = (window as Window & { codeagentSessions?: { list: () => Promise<Array<{ id: string; provider: string; scope: 'personal' | 'project'; title?: string; projectId?: string; projectName?: string; projectRoot?: string; nativeId?: string }>> } }).codeagentSessions?.list; if (list) void list().then((sessions) => { setPersonalSessions(sessions.filter((session) => session.scope === 'personal')); setProjectSessions(sessions.filter((session) => session.scope === 'project')); }); }, []);
   const detectProviders = () => { const detect = (window as Window & { codeagent?: { providers?: { detect: () => Promise<Array<{ provider: string; installed: boolean; version?: string; command?: string }>> } } }).codeagent?.providers?.detect; if (detectingProviders) return; if (!detect) { setProviderDetectionError('Agent 检测接口不可用，请重启应用。'); setDetectingProviders(false); return; } setDetectingProviders(true); setProviderDetectionError(undefined); void detect().then(setProviderStatuses).catch(() => setProviderDetectionError('Agent 检测失败，请检查系统权限和 PATH。')).finally(() => setDetectingProviders(false)); };
   useEffect(() => { detectProviders(); }, []);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem('codeagent-theme', theme);
+  }, [theme]);
   useEffect(() => {
     const handleTitle = (event: Event) => {
       const detail = (event as CustomEvent<{ sessionId?: string; title?: string }>).detail;
@@ -60,7 +68,7 @@ export function Workbench() {
   const changeProvider = (value: string) => { const provider = providerId(value); setSelectedProvider(provider); if (activeTab.kind !== 'chat') return; setTabs((items) => items.map((tab) => isSameTab(tab, activeTab) && tab.kind === 'chat' ? { ...tab, provider } : tab)); setActiveTab((tab) => tab.kind === 'chat' ? { ...tab, provider } : tab); };
 
   return (
-    <div className="codeagent-workbench">
+    <div className={`codeagent-workbench theme-${theme}`}>
       <aside aria-label="活动栏">
         <div role="tablist" aria-label="工作区入口">
           <button role="tab" aria-selected={activity === 'files'} onClick={() => setActivity('files')}>文件</button>
@@ -90,7 +98,7 @@ export function Workbench() {
               {tabName(tab)}{tab.kind === 'file' && <span role="button" tabIndex={0} aria-label={`关闭 ${tabName(tab)}`} onClick={(event) => { event.stopPropagation(); setTabs((items) => items.filter((item) => !isSameTab(item, tab))); if (isSameTab(activeTab, tab)) setActiveTab({ kind: 'chat', sessionId: 'new-chat', scope: 'personal' }); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); setTabs((items) => items.filter((item) => !isSameTab(item, tab))); if (isSameTab(activeTab, tab)) setActiveTab({ kind: 'chat', sessionId: 'new-chat', scope: 'personal' }); } }}>×</span>}
             </button>
           ))}
-          <div className="agent-status-summary" aria-label="Agent 状态"><span>{detectingProviders ? 'Agent 检测中…' : providerStatuses.filter((status) => status.installed).length ? `${providerStatuses.filter((status) => status.installed).length} 个 Agent 就绪` : 'Agent 未就绪'}</span><button type="button" onClick={detectProviders} disabled={detectingProviders}>{detectingProviders ? '检测中…' : '检测 Agent'}</button></div>
+          <div className="agent-status-summary" aria-label="Agent 状态"><button type="button" className="theme-toggle" aria-label={theme === 'dark' ? '切换浅色主题' : '切换深色主题'} onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☼' : '◐'}</button><span>{detectingProviders ? 'Agent 检测中…' : providerStatuses.filter((status) => status.installed).length ? `${providerStatuses.filter((status) => status.installed).length} 个 Agent 就绪` : 'Agent 未就绪'}</span><button type="button" onClick={detectProviders} disabled={detectingProviders}>{detectingProviders ? '检测中…' : '检测 Agent'}</button></div>
         </div>
         {activeTab.kind === 'chat' ? (
           <section role="tabpanel" aria-label="聊天"><ChatPanel sessionId={activeTab.sessionId} providerName={providerLabel(activeProvider)} onProviderChange={changeProvider} disabledProviders={providerStatuses.filter((status) => !status.installed).map((status) => providerLabel(status.provider))} loadMessages={async () => { const load = (window as Window & { codeagentSessions?: { messages: (id: string) => Promise<Array<{ id: string; role: 'user' | 'agent' | 'tool'; content: unknown; status?: 'done' | 'streaming' | 'error'; createdAt?: number }>> } }).codeagentSessions?.messages; if (!load) return []; return (await load(activeTab.sessionId)).map((message) => ({ id: message.id, role: message.role, content: typeof message.content === 'string' ? message.content : JSON.stringify(message.content), status: message.status ?? 'done', createdAt: message.createdAt })); }} subscribe={(listener) => (window as Window & { codeagentAgent?: { subscribe: (handler: (event: unknown) => void) => () => void } }).codeagentAgent?.subscribe((event) => listener(event as never))} onAbort={(sessionId) => (window as Window & { codeagentAgent?: { abort: (id: string) => Promise<unknown> } }).codeagentAgent?.abort(sessionId)} onPrompt={(text, provider) => { const id = providerId(provider); const scope = activeTab.scope; const prompt = (window as Window & { codeagentAgent?: { prompt: (input: unknown) => Promise<void> } }).codeagentAgent?.prompt; if (!prompt) return Promise.reject(new Error('Agent 接口不可用，请重启应用')); return prompt({ sessionId: activeTab.sessionId, provider: id, scope, ...(scope === 'project' ? { projectId, projectRoot } : {}), text }); }} /></section>
