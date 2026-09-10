@@ -34,5 +34,7 @@ export async function discoverNativeSessions(service: SessionService, workspace?
     for (const item of sessions) { const id = stableId('opencode', item.id); if (service.list().some((session) => session.id === id)) continue; const rows = parts.filter((part) => part.sessionId === item.id); let sequence = 0; service.create({ id, provider: 'opencode', scope: 'project', nativeId: item.id }); for (const row of rows) { try { const message = JSON.parse(row.messageData) as { role?: string }; const part = JSON.parse(row.partData) as { type?: string; text?: string }; if ((message.role === 'user' || message.role === 'assistant') && part.type === 'text' && part.text?.trim()) service.importMessage({ id: `${id}:native:${sequence}`, sessionId: id, role: message.role === 'user' ? 'user' : 'agent', content: part.text.trim(), sequence, createdAt: row.createdAt }); sequence++; } catch { /* skip malformed OpenCode rows */ } } if (sequence > 0) imported++; }
     db.close();
   } catch { /* OpenCode is optional and may not have a local database */ }
+  for (const [provider, root] of roots) for (const path of await files(root, '.jsonl')) { const firstUser = (await parseJsonl(path)).find((message) => message.role === 'user'); if (firstUser) service.ensureTitle(stableId(provider, basename(path, '.jsonl')), firstUser.content); }
+  for (const path of cursorFiles) { const firstUser = (await parseCursorHistory(path))[0]; if (firstUser) service.ensureTitle(stableId('cursor', basename(join(path, '..'))), firstUser.content); }
   return imported;
 }
