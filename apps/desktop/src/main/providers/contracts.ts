@@ -10,6 +10,7 @@ export type ProviderCapabilities = {
 
 export type ProviderStatus = {
   provider: ProviderId;
+  command?: string;
   installed: boolean;
   authenticated: boolean;
   version?: string;
