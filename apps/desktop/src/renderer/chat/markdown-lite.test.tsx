@@ -16,4 +16,10 @@ describe('MarkdownLite', () => {
     expect(screen.getByText('const ok = true')).toBeInTheDocument();
     expect(container.querySelector('code[data-language="ts"]')).toBeInTheDocument();
   });
+  it('renders emphasis, ordered lists and quote blocks', () => {
+    const { container } = render(<MarkdownLite content={'*重点*\n\n1. 第一步\n2. 第二步\n\n> 这是引用'} />);
+    expect(screen.getByText('重点').tagName).toBe('EM');
+    expect(container.querySelector('ol')).toBeInTheDocument();
+    expect(container.querySelector('blockquote')).toHaveTextContent('这是引用');
+  });
 });
