@@ -3,14 +3,17 @@ import type { WorkspaceEntry } from '@codeagent-studio/protocol';
 
 type Props = {
   projectId?: string;
+  projectName?: string;
   listEntries?: (relativePath: string) => Promise<WorkspaceEntry[]>;
   onOpenFile: (relativePath: string) => void;
   initialEntries?: WorkspaceEntry[];
 };
 
-const IGNORED = new Set(['.git', 'node_modules']);
+// Keep the explorer focused on editable project sources. These are generated
+// or local reference directories and should not clutter the default tree.
+const IGNORED = new Set(['.git', 'node_modules', '.vite', 'dist', 'out', 'release', 'reference-claudecodeui', '.DS_Store', 'Thumbs.db']);
 
-export function FileExplorer({ projectId, listEntries, onOpenFile, initialEntries = [] }: Props) {
+export function FileExplorer({ projectId, projectName = '项目', listEntries, onOpenFile, initialEntries = [] }: Props) {
   const resolvedList = listEntries ?? (projectId ? async (path: string) => { const api = (window as Window & { codeagent?: { workspace?: { list: (id: string, path?: string) => Promise<WorkspaceEntry[]> } } }).codeagent?.workspace; return api ? api.list(projectId, path) : []; } : async () => []);
   const [entries, setEntries] = useState<WorkspaceEntry[]>(initialEntries);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -34,7 +37,7 @@ export function FileExplorer({ projectId, listEntries, onOpenFile, initialEntrie
   const renderEntries = (items: WorkspaceEntry[], depth = 0) => items.filter((entry) => !IGNORED.has(entry.name)).map((entry) => (
     <li key={entry.path}>
       <button type="button" style={{ paddingLeft: `${depth * 16 + 4}px` }} aria-label={entry.name} onClick={() => void toggle(entry)}>
-        {entry.isDirectory ? (expanded.has(entry.path) ? '▾ ' : '▸ ') : '  '}{entry.name}
+        <span className="tree-chevron">{entry.isDirectory ? (expanded.has(entry.path) ? '⌄' : '›') : ''}</span><span className={entry.isDirectory ? 'folder-icon' : 'file-icon'}>{entry.isDirectory ? '▾' : '◈'}</span><span>{entry.name}</span>
       </button>
       {entry.isDirectory && expanded.has(entry.path) && <ul>{renderEntries(children[entry.path] ?? [], depth + 1)}</ul>}
     </li>
@@ -42,7 +45,8 @@ export function FileExplorer({ projectId, listEntries, onOpenFile, initialEntrie
 
   if (!projectId && !listEntries && initialEntries.length === 0) return <div role="tree" aria-label="文件资源管理器"><p className="file-empty">请选择一个项目以查看文件</p></div>;
   return <section className="file-explorer" aria-label="文件资源管理器">
-    <div className="file-explorer-toolbar"><span>{projectId ? '项目文件' : '未选择项目'}</span><button type="button" aria-label="刷新文件树" onClick={() => void resolvedList('').then(setEntries)}>↻</button></div>
-    <div role="tree">{entries.length === 0 ? <p className="file-empty">项目中暂无可显示的文件</p> : <ul>{renderEntries(entries)}</ul>}</div>
+    <div className="file-explorer-toolbar"><span>资源管理器</span><button type="button" aria-label="资源管理器更多操作">•••</button></div>
+    <div className="file-project-row"><span className="tree-chevron">⌄</span><span className="folder-icon">▾</span><strong>{projectName}</strong><div className="file-project-actions"><button type="button" aria-label="新建文件">＋</button><button type="button" aria-label="新建文件夹">▱</button><button type="button" aria-label="刷新文件树" onClick={() => void resolvedList('').then(setEntries)}>↻</button></div></div>
+    <div role="tree">{entries.length === 0 ? <p className="file-empty">{projectId ? '项目中暂无可显示的文件' : '请选择一个项目'}</p> : <ul>{renderEntries(entries)}</ul>}</div>
   </section>;
 }

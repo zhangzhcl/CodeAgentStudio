@@ -11,6 +11,7 @@ export function Workbench() {
   const [activeTab, setActiveTab] = useState<WorkbenchTab>(tabs[0]);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [projectId, setProjectId] = useState('example-project');
+  const [projectName, setProjectName] = useState('codeagent-studio');
   const [projectRoot, setProjectRoot] = useState<string | undefined>();
   const [personalSessions, setPersonalSessions] = useState<Array<{ id: string; provider: string }>>([]);
   const [projectSessions, setProjectSessions] = useState<Array<{ id: string; provider: string }>>([]);
@@ -18,7 +19,7 @@ export function Workbench() {
   const [detectingProviders, setDetectingProviders] = useState(false);
   const [providerDetectionError, setProviderDetectionError] = useState<string | undefined>();
   const [projectError, setProjectError] = useState<string | undefined>();
-  useEffect(() => { const api = (window as Window & { codeagent?: { workspace?: { projects: () => Promise<Array<{ id: string; rootPath?: string }>> } } }).codeagent?.workspace; if (!api) return; void api.projects().then((projects) => { if (projects[0]) { setProjectId(projects[0].id); setProjectRoot(projects[0].rootPath); } }).catch(() => setProjectError('项目列表加载失败，请重新选择项目。')); }, []);
+  useEffect(() => { const api = (window as Window & { codeagent?: { workspace?: { projects: () => Promise<Array<{ id: string; name?: string; rootPath?: string }>> } } }).codeagent?.workspace; if (!api) return; void api.projects().then((projects) => { if (projects[0]) { setProjectId(projects[0].id); setProjectName(projects[0].name ?? projects[0].rootPath?.split(/[\\/]/).pop() ?? '项目'); setProjectRoot(projects[0].rootPath); } }).catch(() => setProjectError('项目列表加载失败，请重新选择项目。')); }, []);
   useEffect(() => { const list = (window as Window & { codeagentSessions?: { list: () => Promise<Array<{ id: string; provider: string; scope: 'personal' | 'project' }>> } }).codeagentSessions?.list; if (list) void list().then((sessions) => { setPersonalSessions(sessions.filter((session) => session.scope === 'personal').map(({ id, provider }) => ({ id, provider }))); setProjectSessions(sessions.filter((session) => session.scope === 'project').map(({ id, provider }) => ({ id, provider }))); }); }, []);
   const detectProviders = () => { const detect = (window as Window & { codeagent?: { providers?: { detect: () => Promise<Array<{ provider: string; installed: boolean; version?: string; command?: string }>> } } }).codeagent?.providers?.detect; if (detectingProviders) return; if (!detect) { setProviderDetectionError('Agent 检测接口不可用，请重启应用。'); setDetectingProviders(false); return; } setDetectingProviders(true); setProviderDetectionError(undefined); void detect().then(setProviderStatuses).catch(() => setProviderDetectionError('Agent 检测失败，请检查系统权限和 PATH。')).finally(() => setDetectingProviders(false)); };
   useEffect(() => { detectProviders(); }, []);
@@ -46,10 +47,10 @@ export function Workbench() {
         <section aria-label="侧栏">
           {activity === 'files' ? (
             <div>
-              <h2>文件资源管理器</h2>
-              <button type="button" onClick={() => { const choose = (window as Window & { codeagent?: { workspace?: { chooseProject: () => Promise<{ id: string; rootPath?: string } | undefined> } } }).codeagent?.workspace?.chooseProject; if (!choose) { setProjectError('项目选择接口不可用，请重启应用。'); return; } setProjectError(undefined); void choose().then((project) => { if (project) { setProjectId(project.id); setProjectRoot(project.rootPath); } }).catch(() => setProjectError('项目选择失败，请确认目录可访问。')); }}>选择项目</button>
+              <header className="sidebar-heading"><h2>文件资源管理器</h2><button type="button" aria-label="侧栏更多操作">•••</button></header>
+              <button type="button" className="project-picker" onClick={() => { const choose = (window as Window & { codeagent?: { workspace?: { chooseProject: () => Promise<{ id: string; name?: string; rootPath?: string } | undefined> } } }).codeagent?.workspace?.chooseProject; if (!choose) { setProjectError('项目选择接口不可用，请重启应用。'); return; } setProjectError(undefined); void choose().then((project) => { if (project) { setProjectId(project.id); setProjectName(project.name ?? project.rootPath?.split(/[\\/]/).pop() ?? '项目'); setProjectRoot(project.rootPath); } }).catch(() => setProjectError('项目选择失败，请确认目录可访问。')); }}>选择项目</button>
               {projectError && <p role="alert">{projectError}</p>}
-              <FileExplorer projectId={projectId} onOpenFile={(path) => void openFile(path)} />
+              <FileExplorer projectId={projectId} projectName={projectName} onOpenFile={(path) => void openFile(path)} />
             </div>
           ) : (
             <div>
