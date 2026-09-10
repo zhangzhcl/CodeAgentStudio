@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { homedir } from 'node:os';
-import { join, basename } from 'node:path';
+import { join, basename, dirname } from 'node:path';
 import type { ProviderId } from '@codeagent-studio/protocol';
 import type { SessionService } from './session-service.js';
 
@@ -10,15 +10,16 @@ const textOf = (value: unknown): string => { if (typeof value === 'string') retu
 const stableId = (provider: ProviderId, nativeId: string) => `${provider}-native-${createHash('sha1').update(`${provider}:${nativeId}`).digest('hex').slice(0, 20)}`;
 async function files(root: string, suffix: string, depth = 0): Promise<string[]> { if (depth > 4) return []; try { const entries = await readdir(root, { withFileTypes: true }); const result: string[] = []; for (const entry of entries) { const path = join(root, entry.name); if (entry.isFile() && entry.name.endsWith(suffix)) result.push(path); else if (entry.isDirectory() && !entry.name.startsWith('.')) result.push(...await files(path, suffix, depth + 1)); if (result.length >= 120) break; } return result; } catch { return []; } }
 async function parseJsonl(path: string): Promise<DiscoveredMessage[]> { try { const lines = (await readFile(path, 'utf8')).split(/\r?\n/); const result: DiscoveredMessage[] = []; for (const line of lines) { try { const entry = JSON.parse(line) as Record<string, unknown>; const payload = entry.payload && typeof entry.payload === 'object' ? entry.payload as Record<string, unknown> : undefined; const message = (entry.message && typeof entry.message === 'object' ? entry.message : payload?.type === 'message' ? payload : entry) as Record<string, unknown>; const role = message.role === 'user' ? 'user' : message.role === 'assistant' ? 'agent' : undefined; const content = textOf(message.content ?? message.text ?? entry.text); if (role && content.trim()) result.push({ role, content: content.trim(), sequence: result.length }); } catch { /* skip partial native rows */ } } return result; } catch { return []; } }
+async function nativeCwd(path: string): Promise<string | undefined> { try { const first = (await readFile(path, 'utf8')).split(/\r?\n/, 1)[0]; const value = JSON.parse(first) as Record<string, unknown>; return typeof value.cwd === 'string' ? value.cwd : undefined; } catch { return undefined; } }
 async function parseCursorHistory(path: string): Promise<DiscoveredMessage[]> { try { const value = JSON.parse(await readFile(path, 'utf8')) as unknown; const items = Array.isArray(value) ? value : []; return items.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((content, sequence) => ({ role: 'user' as const, content: content.trim(), sequence })); } catch { return []; } }
 export async function discoverNativeSessions(service: SessionService): Promise<number> {
   let imported = 0;
   const roots: Array<[ProviderId, string]> = [
     ['claude', join(homedir(), '.claude', 'projects')],
     ['codex', join(homedir(), '.codex', 'sessions')],
-    ['pi', process.env.CODEAGENT_PI_SESSION_DIR ?? join(homedir(), '.codeagent-studio', 'pi-sessions')],
+    ['pi', process.env.CODEAGENT_PI_SESSION_DIR ?? join(homedir(), '.pi', 'agent', 'sessions')],
   ];
-  for (const [provider, root] of roots) for (const path of await files(root, '.jsonl')) { const messages = await parseJsonl(path); if (!messages.length) continue; const nativeId = basename(path, '.jsonl'); const id = stableId(provider, nativeId); if (!service.list().some((session) => session.id === id)) { service.create({ id, provider, scope: 'project', nativeId, nativeSessionFile: path }); for (const message of messages) service.importMessage({ id: `${id}:native:${message.sequence}`, sessionId: id, role: message.role, content: message.content, sequence: message.sequence, createdAt: Date.now() + message.sequence }); imported++; } }
+  for (const [provider, root] of roots) for (const path of await files(root, '.jsonl')) { const messages = await parseJsonl(path); if (!messages.length) continue; const nativeId = basename(path, '.jsonl'); const id = stableId(provider, nativeId); const cwd = await nativeCwd(path); const existing = service.list().find((session) => session.id === id); if (!existing) { service.create({ id, provider, scope: 'project', projectRoot: cwd, projectName: cwd ? basename(cwd) : basename(dirname(path)), nativeId, nativeSessionFile: path }); for (const message of messages) service.importMessage({ id: `${id}:native:${message.sequence}`, sessionId: id, role: message.role, content: message.content, sequence: message.sequence, createdAt: Date.now() + message.sequence }); imported++; } else if (cwd && (!existing.projectRoot || !existing.projectName)) service.updateProject(id, { projectRoot: cwd, projectName: basename(cwd) }); }
   const cursorFiles = await files(join(homedir(), '.cursor', 'chats'), 'prompt_history.json');
   for (const path of cursorFiles) { const messages = await parseCursorHistory(path); if (!messages.length) continue; const nativeId = basename(join(path, '..')); const id = stableId('cursor', nativeId); if (!service.list().some((session) => session.id === id)) { service.create({ id, provider: 'cursor', scope: 'project', nativeId, nativeSessionFile: path }); for (const message of messages) service.importMessage({ id: `${id}:native:${message.sequence}`, sessionId: id, role: message.role, content: message.content, sequence: message.sequence, createdAt: Date.now() + message.sequence }); imported++; } }
   try {

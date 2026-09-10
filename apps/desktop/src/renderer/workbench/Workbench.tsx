@@ -13,8 +13,8 @@ export function Workbench() {
   const [projectId, setProjectId] = useState<string>();
   const [projectName, setProjectName] = useState('未选择项目');
   const [projectRoot, setProjectRoot] = useState<string | undefined>();
-  const [personalSessions, setPersonalSessions] = useState<Array<{ id: string; provider: string; projectId?: string }>>([]);
-  const [projectSessions, setProjectSessions] = useState<Array<{ id: string; provider: string; projectId?: string }>>([]);
+  const [personalSessions, setPersonalSessions] = useState<Array<{ id: string; provider: string; projectId?: string; projectName?: string; projectRoot?: string; nativeId?: string }>>([]);
+  const [projectSessions, setProjectSessions] = useState<Array<{ id: string; provider: string; projectId?: string; projectName?: string; projectRoot?: string; nativeId?: string }>>([]);
   const [providerStatuses, setProviderStatuses] = useState<Array<{ provider: string; command?: string; installed: boolean; version?: string }>>([]);
   const [detectingProviders, setDetectingProviders] = useState(false);
   const [providerDetectionError, setProviderDetectionError] = useState<string | undefined>();
@@ -27,7 +27,7 @@ export function Workbench() {
   const visiblePersonalSessions = personalSessions.filter((session) => providerId(session.provider) === selectedProvider);
   const visibleProjectSessions = projectSessions.filter((session) => providerId(session.provider) === selectedProvider);
   useEffect(() => { const api = (window as Window & { codeagent?: { workspace?: { projects: () => Promise<Array<{ id: string; name?: string; rootPath?: string }>> } } }).codeagent?.workspace; if (!api) return; void api.projects().then((projects) => { if (projects[0]) { setProjectId(projects[0].id); setProjectName(projects[0].name ?? projects[0].rootPath?.split(/[\\/]/).pop() ?? '项目'); setProjectRoot(projects[0].rootPath); } }).catch(() => setProjectError('项目列表加载失败，请重新选择项目。')); }, []);
-  useEffect(() => { const list = (window as Window & { codeagentSessions?: { list: () => Promise<Array<{ id: string; provider: string; scope: 'personal' | 'project'; projectId?: string }>> } }).codeagentSessions?.list; if (list) void list().then((sessions) => { setPersonalSessions(sessions.filter((session) => session.scope === 'personal').map(({ id, provider, projectId }) => ({ id, provider, projectId }))); setProjectSessions(sessions.filter((session) => session.scope === 'project').map(({ id, provider, projectId }) => ({ id, provider, projectId }))); }); }, []);
+  useEffect(() => { const list = (window as Window & { codeagentSessions?: { list: () => Promise<Array<{ id: string; provider: string; scope: 'personal' | 'project'; projectId?: string; projectName?: string; projectRoot?: string; nativeId?: string }>> } }).codeagentSessions?.list; if (list) void list().then((sessions) => { setPersonalSessions(sessions.filter((session) => session.scope === 'personal')); setProjectSessions(sessions.filter((session) => session.scope === 'project')); }); }, []);
   const detectProviders = () => { const detect = (window as Window & { codeagent?: { providers?: { detect: () => Promise<Array<{ provider: string; installed: boolean; version?: string; command?: string }>> } } }).codeagent?.providers?.detect; if (detectingProviders) return; if (!detect) { setProviderDetectionError('Agent 检测接口不可用，请重启应用。'); setDetectingProviders(false); return; } setDetectingProviders(true); setProviderDetectionError(undefined); void detect().then(setProviderStatuses).catch(() => setProviderDetectionError('Agent 检测失败，请检查系统权限和 PATH。')).finally(() => setDetectingProviders(false)); };
   useEffect(() => { detectProviders(); }, []);
 
@@ -40,7 +40,7 @@ export function Workbench() {
     setActiveTab(fileTab);
   };
 
-  const sessionTitle = (id: string) => { const raw = id.replace(/^(personal|project)-/, ''); return raw === 'new-chat' ? '新聊天' : raw.length > 12 ? `${raw.slice(0, 8)}…${raw.slice(-4)}` : raw; };
+  const sessionTitle = (id: string, nativeId?: string) => { const raw = nativeId ?? id.replace(/^(personal|project)-/, ''); return raw === 'new-chat' ? '新聊天' : raw.length > 24 ? `${raw.slice(0, 12)}…${raw.slice(-8)}` : raw; };
   const tabName = (tab: WorkbenchTab) => tab.kind === 'chat' ? `${providerLabel(tab.provider)} · ${sessionTitle(tab.sessionId)}` : tab.path.split('/').pop() ?? tab.path;
   const isSameTab = (left: WorkbenchTab, right: WorkbenchTab) => left.kind === right.kind && (left.kind === 'chat' && right.kind === 'chat' ? left.sessionId === right.sessionId : left.kind === 'file' && right.kind === 'file' && left.projectId === right.projectId && left.path === right.path);
   const openSession = (id: string, scope: 'personal' | 'project', provider: string, sessionProjectId?: string) => { if (sessionProjectId) setProjectId(sessionProjectId); const existing = tabs.find((tab) => tab.kind === 'chat' && tab.sessionId === id); const tab: WorkbenchTab = existing ?? { kind: 'chat', sessionId: id, scope, provider: provider as 'claude' | 'cursor' | 'codex' | 'pi' | 'opencode', projectId: sessionProjectId }; if (!existing) setTabs((items) => [...items, tab]); setActiveTab(tab); };
@@ -66,10 +66,10 @@ export function Workbench() {
             <div>
               <div className="session-sidebar-heading"><h2>个人会话</h2><select aria-label="侧栏 Agent" value={selectedProvider} onChange={(event) => changeProvider(event.target.value)}>{['claude', 'cursor', 'codex', 'pi', 'opencode'].map((id) => <option key={id} value={id}>{providerLabel(id)}</option>)}</select></div>
               <button type="button" onClick={() => newSession('personal')}>新建个人会话</button>
-              {visiblePersonalSessions.length === 0 ? <p>暂无 {providerLabel(selectedProvider)} 个人会话</p> : visiblePersonalSessions.map(({ id, provider, projectId: sessionProjectId }) => <button type="button" key={id} onClick={() => openSession(id, 'personal', provider, sessionProjectId)}>{providerLabel(provider)} · {sessionTitle(id)}</button>)}
+              {visiblePersonalSessions.length === 0 ? <p>暂无 {providerLabel(selectedProvider)} 个人会话</p> : visiblePersonalSessions.map(({ id, provider, projectId: sessionProjectId, nativeId }) => <button type="button" key={id} onClick={() => openSession(id, 'personal', provider, sessionProjectId)}>{providerLabel(provider)} · {sessionTitle(id, nativeId)}</button>)}
               <div className="session-sidebar-heading"><h2>项目会话</h2><span className="session-provider-filter">{providerLabel(selectedProvider)}</span></div>
               <button type="button" onClick={() => newSession('project')}>新建项目会话</button>
-              {visibleProjectSessions.length === 0 ? <p>暂无 {providerLabel(selectedProvider)} 项目会话</p> : visibleProjectSessions.map(({ id, provider, projectId: sessionProjectId }) => <button type="button" key={id} onClick={() => openSession(id, 'project', provider, sessionProjectId)}>{providerLabel(provider)} · {sessionTitle(id)}</button>)}
+              {visibleProjectSessions.length === 0 ? <p>暂无 {providerLabel(selectedProvider)} 项目会话</p> : visibleProjectSessions.map(({ id, provider, projectId: sessionProjectId, projectName, projectRoot, nativeId }) => <button type="button" title={projectRoot ?? projectName ?? '未关联项目'} key={id} onClick={() => openSession(id, 'project', provider, sessionProjectId)}>{providerLabel(provider)} · {projectName ? `${projectName} · ` : ''}{sessionTitle(id, nativeId)}</button>)}
             </div>
           )}
         </section>

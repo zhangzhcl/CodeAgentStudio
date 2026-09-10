@@ -1,6 +1,6 @@
 import type { AgentEvent, ProviderId, SessionScope } from '@codeagent-studio/protocol';
 
-export type SessionRecord = { id: string; provider: ProviderId; scope: SessionScope; projectId?: string; nativeId?: string; nativeSessionFile?: string; status: 'active' | 'done' | 'aborted' | 'error'; createdAt: number; updatedAt: number };
+export type SessionRecord = { id: string; provider: ProviderId; scope: SessionScope; projectId?: string; projectRoot?: string; projectName?: string; nativeId?: string; nativeSessionFile?: string; status: 'active' | 'done' | 'aborted' | 'error'; createdAt: number; updatedAt: number };
 export type MessageRecord = { id: string; sessionId: string; role: 'user' | 'agent' | 'tool'; content: unknown; sequence: number; createdAt: number };
 type SessionStore = { save(session: SessionRecord): unknown; get?(id: string): SessionRecord | undefined; list?(): SessionRecord[]; saveMessage?(message: MessageRecord): unknown; listMessages?(sessionId: string): MessageRecord[] };
 
@@ -35,4 +35,5 @@ export class SessionService {
   replayTranscript(sessionId: string): MessageRecord[] { return this.listMessages(sessionId).map((message) => ({ ...message })); }
   markStatus(sessionId: string, status: SessionRecord['status']): SessionRecord { const updated = { ...this.get(sessionId), status, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
   updateNative(sessionId: string, native: Pick<SessionRecord, 'nativeId' | 'nativeSessionFile'>): SessionRecord { const updated = { ...this.get(sessionId), ...native, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
+  updateProject(sessionId: string, project: Pick<SessionRecord, 'projectRoot' | 'projectName'>): SessionRecord { const updated = { ...this.get(sessionId), ...project, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
 }
