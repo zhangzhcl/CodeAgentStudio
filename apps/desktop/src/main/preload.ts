@@ -1,2 +1,3 @@
 import { contextBridge } from 'electron';
-contextBridge.exposeInMainWorld('codeagent', { protocolVersion: 1, ready: true });
+import { ipcRenderer } from 'electron';
+contextBridge.exposeInMainWorld('codeagent', { protocolVersion: 1, ready: true, workspace: { list: (projectId: string, path?: string) => ipcRenderer.invoke('workspace:list', projectId, path), read: (projectId: string, path: string) => ipcRenderer.invoke('workspace:read', projectId, path), write: (projectId: string, path: string, content: string) => ipcRenderer.invoke('workspace:write', projectId, path, content), create: (projectId: string, path: string, directory?: boolean) => ipcRenderer.invoke('workspace:create', projectId, path, directory), rename: (projectId: string, path: string, nextPath: string) => ipcRenderer.invoke('workspace:rename', projectId, path, nextPath), delete: (projectId: string, path: string) => ipcRenderer.invoke('workspace:delete', projectId, path) } });
