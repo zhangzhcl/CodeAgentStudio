@@ -40,5 +40,6 @@ export function FileExplorer({ projectId, listEntries, onOpenFile, initialEntrie
     </li>
   ));
 
-  return <div role="tree" aria-label="文件资源管理器"><ul>{renderEntries(entries)}</ul></div>;
+  if (!projectId && !listEntries && initialEntries.length === 0) return <div role="tree" aria-label="文件资源管理器"><p className="file-empty">请选择一个项目以查看文件</p></div>;
+  return <div role="tree" aria-label="文件资源管理器">{entries.length === 0 ? <p className="file-empty">项目中暂无可显示的文件</p> : <ul>{renderEntries(entries)}</ul>}</div>;
 }
