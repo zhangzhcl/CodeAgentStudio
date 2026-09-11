@@ -6,6 +6,7 @@ import {
   IconCopy,
   IconFile,
   IconChevronRight,
+  IconChevronLeft,
   IconPencil,
   IconRefresh,
   IconSparkle,
@@ -25,7 +26,17 @@ type Props = {
   onEditResend?: (text: string) => void;
   onSuggestion?: (text: string) => void;
   isLastAgent?: boolean;
+  onSelectBranch?: (index: number) => void;
 };
+
+function BranchPicker({ branch, onSelect }: { branch: { index: number; total: number }; onSelect?: (index: number) => void }) {
+  if (branch.total < 2) return null;
+  return <span className="branch" aria-label={`第 ${branch.index + 1} 个版本，共 ${branch.total} 个`}>
+    <button type="button" className="branch-btn" disabled={branch.index <= 0} onClick={() => onSelect?.(branch.index - 1)} aria-label="上一个版本"><IconChevronLeft size={13} /></button>
+    <span className="branch-count">{branch.index + 1}/{branch.total}</span>
+    <button type="button" className="branch-btn" disabled={branch.index >= branch.total - 1} onClick={() => onSelect?.(branch.index + 1)} aria-label="下一个版本"><IconChevronRight size={13} /></button>
+  </span>;
+}
 
 function AgentMarkdown({ content }: { content: string }) {
   const lines = content.split(/\r?\n/);
@@ -84,6 +95,7 @@ export function MessageItem({
   onEditResend,
   onSuggestion,
   isLastAgent = true,
+  onSelectBranch,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [editDraft, setEditDraft] = useState(message.content);
@@ -122,6 +134,7 @@ export function MessageItem({
                 {provider}
               </span>
             )}
+            {message.role === "agent" && message.branch && <BranchPicker branch={message.branch} onSelect={onSelectBranch} />}
             {message.status === "streaming" && (
               <span className="streaming-badge">生成中</span>
             )}
@@ -268,6 +281,9 @@ export function MessageItem({
         <div
           className={`message-actions msg-actions${message.role === "user" ? " msg-user-meta" : ""}`}
         >
+          {message.role === "user" && (
+            message.branch && <BranchPicker branch={message.branch} onSelect={onSelectBranch} />
+          )}
           {message.role === "user" && (
             <time className="msg-time">
               {new Date(message.createdAt ?? Date.now()).toLocaleTimeString(

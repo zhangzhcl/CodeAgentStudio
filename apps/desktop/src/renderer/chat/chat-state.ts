@@ -8,6 +8,7 @@ export type ChatMessage = {
   createdAt?: number;
   thinking?: "running" | "done";
   attachments?: Array<{ name: string; size: number; type?: string }>;
+  branch?: { index: number; total: number };
 };
 
 export function applyAgentEvent(
