@@ -62,6 +62,7 @@ export function Workbench() {
   const [providerDetectionError, setProviderDetectionError] = useState<
     string | undefined
   >();
+  const [latency, setLatency] = useState(42);
   const [projectError, setProjectError] = useState<string | undefined>();
   const [pendingDelete, setPendingDelete] = useState<string>();
   const deleteTimer = useRef<number>();
@@ -215,6 +216,13 @@ export function Workbench() {
   };
   useEffect(() => {
     detectProviders();
+  }, []);
+  useEffect(() => {
+    const timer = window.setInterval(
+      () => setLatency(34 + Math.floor(Math.random() * 28)),
+      2000,
+    );
+    return () => window.clearInterval(timer);
   }, []);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -798,8 +806,15 @@ export function Workbench() {
         <div className="sidebar-status-card">
           <div>
             <span className="status-pulse" /> 在线
+            <span className="sidebar-status-value">{latency}ms</span>
           </div>
-          <span>本地工作区 · {providerLabel(activeProvider)}</span>
+          <div>
+            <span>Agent</span>
+            <span className="sidebar-status-value">
+              {providerLabel(activeProvider)}
+            </span>
+          </div>
+          <span>本地工作区</span>
         </div>
       </aside>
       <main className="main">
