@@ -513,6 +513,9 @@ export function Workbench() {
             </div>
           ) : (
             <div>
+              <button type="button" className="side-new-row" onClick={() => newSession(sessionView === "projects" ? "project" : "personal")}>
+                ＋ 新建会话
+              </button>
               <div
                 className="nested-sidebar-tabs"
                 role="tablist"
@@ -550,9 +553,6 @@ export function Workbench() {
               {sessionView === "sessions" ? (
                 <>
                   <h3 className="session-section-label">个人会话</h3>
-                  <button type="button" onClick={() => newSession("personal")}>
-                    ＋ 新建个人会话
-                  </button>
                   {visiblePersonalSessions.length === 0 ? (
                     <p>暂无 {providerLabel(selectedProvider)} 个人会话</p>
                   ) : (
