@@ -163,3 +163,26 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light .chat-message-agent,.codeagent-workbench.theme-light .msg-agent-text{color:#35495f!important}
 .codeagent-workbench.theme-light .chat-composer,.codeagent-workbench.theme-light .composer{background:#fff!important;color:#24364c!important;border-color:#cfd9e8!important}
 @media (max-width:760px){.codeagent-workbench .quick-prompts.welcome-grid{grid-template-columns:1fr;gap:10px}.codeagent-workbench .quick-prompts.welcome-grid .welcome-card{min-height:0}}
+
+/* Final light-theme semantic pass: legacy rules above intentionally keep the
+   dark design tokens for dark mode, so every text-bearing surface that had a
+   literal token gets an explicit light counterpart here. */
+.codeagent-workbench.theme-light{--bg-0:#f7f9fc;--bg-1:#ffffff;--bg-2:#eef3f9;--bg-3:#e5ebf3;--line:#d7e0ea;--line-strong:#c4d0df;--text-1:#24364c;--text-2:#52657b;--text-3:#74869a;color:#24364c!important}
+.codeagent-workbench.theme-light .chat-header h1,.codeagent-workbench.theme-light .topbar-name,.codeagent-workbench.theme-light .message-heading,.codeagent-workbench.theme-light .message-heading strong,.codeagent-workbench.theme-light .msg-agent-text,.codeagent-workbench.theme-light .welcome-title{color:#24364c!important}
+.codeagent-workbench.theme-light .eyebrow,.codeagent-workbench.theme-light .session-meta,.codeagent-workbench.theme-light .topbar-meta,.codeagent-workbench.theme-light .topbar-sep,.codeagent-workbench.theme-light .message-heading time{color:#74869a!important}
+.codeagent-workbench.theme-light .message-body p,.codeagent-workbench.theme-light .msg-agent-body,.codeagent-workbench.theme-light .chat-message-agent .message-body{color:#35495f!important}
+.codeagent-workbench.theme-light .chat-message-user.msg-user .msg-bubble,.codeagent-workbench.theme-light .chat-message-user .message-body p{background:#eef3f9!important;color:#24364c!important;border-color:#ccd8e5!important}
+.codeagent-workbench.theme-light .chat-message-user .message-actions button,.codeagent-workbench.theme-light .msg-actions .act{color:#74869a!important}
+.codeagent-workbench.theme-light .chat-composer textarea,.codeagent-workbench.theme-light .composer-input{color:#24364c!important;background:#fff!important}
+.codeagent-workbench.theme-light .chat-composer textarea::placeholder,.codeagent-workbench.theme-light .composer-input::placeholder{color:#8b9bb0!important}
+.codeagent-workbench.theme-light .composer-hint,.codeagent-workbench.theme-light .composer-hint-note{color:#74869a!important}
+.codeagent-workbench.theme-light .composer-hint kbd{background:#eef3f9!important;border-color:#cfd9e8!important;color:#52657b!important}
+.codeagent-workbench.theme-light .composer-toggle,.codeagent-workbench.theme-light .composer-model{background:#fff!important;border-color:#d3deea!important;color:#52657b!important}
+.codeagent-workbench.theme-light .composer-queue,.codeagent-workbench.theme-light .composer-model-menu,.codeagent-workbench.theme-light .tool-call-block,.codeagent-workbench.theme-light .task-list-block{background:#fff!important;border-color:#d3deea!important;color:#52657b!important}
+.codeagent-workbench.theme-light .composer-model-menu button,.codeagent-workbench.theme-light .tool-call-block pre,.codeagent-workbench.theme-light .task-list-item{color:#52657b!important}
+.codeagent-workbench.theme-light .chat-tabs .chat-tab-title,.codeagent-workbench.theme-light .chat-tabs .chat-tab-close{color:inherit!important}
+.codeagent-workbench.theme-light .chat-tabs .chat-tab-dot{background:#c38a1d!important}
+.codeagent-workbench.theme-light .file-explorer,.codeagent-workbench.theme-light .file-explorer-toolbar,.codeagent-workbench.theme-light .file-project-row,.codeagent-workbench.theme-light .file-explorer [role="tree"]{color:#52657b!important}
+.codeagent-workbench.theme-light .file-explorer [role="tree"] li button{background:transparent!important;color:#52657b!important}
+.codeagent-workbench.theme-light .file-explorer [role="tree"] li button:hover{background:#eef3f9!important;color:#24364c!important}
+.codeagent-workbench.theme-light .project-context-strip{background:#fff7e6!important;color:#52657b!important;border-color:#dfc17a!important}
