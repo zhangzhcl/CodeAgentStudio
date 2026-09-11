@@ -49,6 +49,7 @@ export function FileExplorer({
       : async () => []);
   const [entries, setEntries] = useState<WorkspaceEntry[]>(initialEntries);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [menuOpen, setMenuOpen] = useState(false);
   const [children, setChildren] = useState<Record<string, WorkspaceEntry[]>>(
     {},
   );
@@ -120,9 +121,14 @@ export function FileExplorer({
     <section className="file-explorer" aria-label="文件资源管理器">
       <div className="file-explorer-toolbar">
         <span>资源管理器</span>
-        <button type="button" aria-label="资源管理器更多操作">
+        <button type="button" aria-label="资源管理器更多操作" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
           <IconMore size={15} />
         </button>
+        {menuOpen && (
+          <div className="file-explorer-menu" role="menu">
+            <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); void resolvedList("").then(setEntries); }}>刷新文件树</button>
+          </div>
+        )}
       </div>
       <div className="file-project-row">
         <span className="tree-chevron">
