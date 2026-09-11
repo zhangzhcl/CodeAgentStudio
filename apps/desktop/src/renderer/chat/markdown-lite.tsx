@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { IconCheck, IconCopy } from "../icons.js";
 
 function InlineMarkdown({ text }: { text: string }) {
   const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g);
