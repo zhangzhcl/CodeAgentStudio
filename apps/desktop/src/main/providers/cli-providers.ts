@@ -5,7 +5,7 @@ import { existsSync } from 'node:fs';
 import type { AgentEvent, ProviderId } from '@codeagent-studio/protocol';
 import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contracts.js';
 import { parseCliEvent } from './cli-event-parser.js';
-import { findAgentCommand, resolveAgentCommand as resolveCommand, withUserBinaryPaths } from './command-resolver.js';
+import { findAgentCommand, quoteShellArg, resolveAgentCommand as resolveCommand, withUserBinaryPaths } from './command-resolver.js';
 import { PiProvider } from './pi-provider.js';
 import { PiCliTransport } from './pi-cli-transport.js';
 
@@ -15,7 +15,12 @@ const cursorDefault = process.platform === 'win32' && existsSync(cursorWindowsPa
 const cursorCommand = resolveCommand(process.env.CODEAGENT_CURSOR_AGENT ?? cursorDefault);
 const config = (id: ProviderId, command: string, promptArgs: Config['promptArgs']): Config => ({ id, ...resolveCommand(command), promptArgs });
 const commandFromEnvOrPath = (envKey: string, candidates: string[]) => process.env[envKey] ?? findAgentCommand(candidates);
-export const CLI_CONFIGS: Config[] = [config('claude', commandFromEnvOrPath('CODEAGENT_CLAUDE_COMMAND', ['claude']), (text) => ['-p', text]), { id: 'cursor', ...cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'text', text] }, config('codex', commandFromEnvOrPath('CODEAGENT_CODEX_COMMAND', ['codex']), (text) => ['exec', text]), config('opencode', commandFromEnvOrPath('CODEAGENT_OPENCODE_COMMAND', ['opencode']), (text) => ['run', '--model', process.env.CODEAGENT_OPENCODE_MODEL ?? 'sensenova/sensenova-6.8-flash-lite', text])];
+export const CLI_CONFIGS: Config[] = [
+  config('claude', commandFromEnvOrPath('CODEAGENT_CLAUDE_COMMAND', ['claude']), (text) => ['-p', '--output-format', 'stream-json', '--include-partial-messages', '--verbose', text]),
+  { id: 'cursor', ...cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'stream-json', '--stream-partial-output', text] },
+  config('codex', commandFromEnvOrPath('CODEAGENT_CODEX_COMMAND', ['codex']), (text) => ['exec', '--json', text]),
+  config('opencode', commandFromEnvOrPath('CODEAGENT_OPENCODE_COMMAND', ['opencode']), (text) => ['run', '--format', 'json', '--model', process.env.CODEAGENT_OPENCODE_MODEL ?? 'sensenova/sensenova-6.8-flash-lite', text]),
+];
 
 export class CliProvider implements AgentProvider {
   readonly capabilities = { maxConcurrentSessions: 1, supportsResume: false, supportsAttachments: false, supportsProjectScope: true, supportsAbort: true };
@@ -31,9 +36,9 @@ export class CliProvider implements AgentProvider {
   async resumeSession(_nativeId: string) { throw new Error(`${this.id} does not support resume`); }
   async prompt(sessionId: string, text: string) {
     await new Promise<void>((resolve, reject) => {
-      const child = spawn(this.config.command, [...(this.config.commandArgs ?? []), ...this.config.promptArgs(text)], { shell: this.config.shell, windowsHide: true, cwd: this.sessionCwds.get(sessionId), env: withUserBinaryPaths(process.env), stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0; let pending = '';
+      const rawArgs = [...(this.config.commandArgs ?? []), ...this.config.promptArgs(text)]; const args = this.config.shell ? rawArgs.map((arg) => quoteShellArg(arg)) : rawArgs; const child = spawn(this.config.command, args, { shell: this.config.shell, windowsHide: true, cwd: this.sessionCwds.get(sessionId), env: withUserBinaryPaths(process.env), stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0; let pending = '';
       const consume = (data: Buffer) => { pending += data.toString(); const lines = pending.split(/\r?\n/); pending = lines.pop() ?? ''; lines.forEach((line) => { const event = parseCliEvent(line, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); }); };
-      child.stdout?.on('data', consume); child.stderr?.on('data', consume); child.once('error', reject); child.once('close', () => { if (pending.trim()) { const event = parseCliEvent(pending, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); } this.processes.delete(sessionId); const done = parseCliEvent(JSON.stringify({ type: 'done' }), this.id, sessionId, sequence++); if (done) this.listeners.forEach((listener) => listener(done)); resolve(); });
+      child.stdout?.on('data', consume); child.stderr?.on('data', (data) => { const line = data.toString(); if (/no api key|not logged in|authentication required|rate limit|timed out|error/i.test(line)) { const event = parseCliEvent(line, this.id, sessionId, sequence++); if (event?.type === 'error') this.listeners.forEach((listener) => listener(event)); } }); child.once('error', reject); child.once('close', () => { if (pending.trim()) { const event = parseCliEvent(pending, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); } this.processes.delete(sessionId); const done = parseCliEvent(JSON.stringify({ type: 'done' }), this.id, sessionId, sequence++); if (done) this.listeners.forEach((listener) => listener(done)); resolve(); });
     });
   }
   async abort(sessionId: string) { const child = this.processes.get(sessionId); if (!child) return false; child.kill(); this.processes.delete(sessionId); return true; }

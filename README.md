@@ -6,6 +6,8 @@ CodeAgent开发平台：独立打包的本地桌面工作台，统一接入 Clau
 
 已完成协议、项目文件沙箱、Workbench、文件树、编辑器状态模型、聊天流式状态、CLI Provider 适配层、Pi Transport、Provider 生命周期、原生会话发现与日志基础能力。项目目录与 Agent 默认工作区已分离：只有用户显式选择的目录会进入项目列表，原生会话默认归入个人会话。
 
+当前本机已完成只读真实冒烟：Claude Code 2.1.267、Cursor Agent 2026.09.08-6caf4ff、Codex CLI 0.153.4、Pi 0.85.1、OpenCode 1.18.30 均能启动并返回 `PING`。四种 CLI 的流式参数已分别接入；只有 Pi 的原生会话恢复已接入，其他 CLI 当前在恢复历史后按新运行降级。
+
 ## 开发运行
 
 要求 Node.js 22+ 与 pnpm 10+：
@@ -23,7 +25,14 @@ pnpm --filter @codeagent-studio/desktop start
 pnpm --filter @codeagent-studio/desktop package
 ```
 
-如果本机 Node.js 主版本与 `better-sqlite3` 的预编译模块不一致，请先执行 `pnpm rebuild better-sqlite3`，再运行测试或 Electron。
+如果本机 Node.js 主版本与 `better-sqlite3` 的预编译模块不一致，请先执行 `pnpm rebuild better-sqlite3`，再运行测试或 Electron。当前 Node 进程无法加载 Electron ABI 的 native binding 时，SQLite 集成测试会跳过；schema migration 和 12 列插入回归仍由纯单元测试覆盖，Electron 打包会在其运行时加载正确的 native module。
+
+真实 Agent E2E（会产生真实模型请求，默认跳过）：
+
+```powershell
+$env:CODEAGENT_REAL_AGENT_E2E = "1"
+pnpm --filter @codeagent-studio/desktop test -- --run src/main/providers/real-agent.e2e.test.ts
+```
 
 ## 合规边界
 

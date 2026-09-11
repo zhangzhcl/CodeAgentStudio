@@ -2,11 +2,11 @@
 
 | Provider | 检测命令 | 未安装行为 | 当前状态 |
 |---|---|---|---|
-| Claude Code | `claude --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成，需本机联调 |
-| Cursor CLI | `agent --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成；支持 Windows `agent.ps1` |
-| Codex | `codex --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已完成，需本机联调 |
-| Pi Coding Agent | SDK/RPC transport 探针 | 显示“未就绪”，不阻塞应用启动 | Transport 已完成，SDK 版本待锁定 |
-| opencode | `opencode --version` | 显示“未就绪”，不阻塞应用启动 | 适配器已加入；本机 1.18.30 |
+| Claude Code | `claude --version` | 显示“未就绪”，不阻塞应用启动 | `stream-json` 增量输出已验证；原生 resume 尚未接入 |
+| Cursor CLI | `agent --version` | 显示“未就绪”，不阻塞应用启动 | Windows `agent.ps1`、`stream-json` 增量输出已验证；原生 resume 尚未接入 |
+| Codex | `codex --version` | 显示“未就绪”，不阻塞应用启动 | `codex exec --json` 增量事件已验证；原生 resume 尚未接入 |
+| Pi Coding Agent | `pi --version` | 显示“未就绪”，不阻塞应用启动 | `--mode json` 增量事件与 `--resume` 参数已验证 |
+| opencode | `opencode --version` | 显示“未就绪”，不阻塞应用启动 | `run --format json` 增量事件已验证；原生 resume 尚未接入 |
 
 本机探测记录（2026-09-11）：Claude Code 2.1.267、Cursor Agent 2026.09.08-6caf4ff、Codex CLI 0.153.4、Pi 0.85.1、opencode 1.18.30。
 
@@ -19,10 +19,11 @@ agent --version
 
 ## 联调命令模板
 
-- Claude：`claude -p "<prompt>" --add-dir <projectRoot>`；继续会话使用 `--resume <session-id>`。
-- Codex：`codex exec "<prompt>"`；恢复会话使用 `codex resume <session-id>`。
-- Pi：`pi --print --mode json --session <session-file> "<prompt>"`；恢复使用同一 `--session` 文件。
-- opencode：`opencode run "<prompt>" --session <session-id>`；恢复使用 `--continue` 或 `--session`。
+- Claude：`claude -p --output-format stream-json --include-partial-messages --verbose "<prompt>"`；原生恢复命令为 `--resume <session-id>`，当前适配器暂按新运行处理。
+- Cursor：`agent -p --output-format stream-json --stream-partial-output "<prompt>"`；原生恢复命令为 `--resume <chat-id>`，当前适配器暂按新运行处理。
+- Codex：`codex exec --json "<prompt>"`；原生恢复命令为 `codex exec resume <session-id>`，当前适配器暂按新运行处理。
+- Pi：`pi --print --mode json --session <session-file> "<prompt>"`；非交互恢复使用同一个精确 session 文件再次传入 `--session`（Pi 的 `--resume` 在无 TTY 时会打开选择器），已接入并通过二次对话验证。
+- opencode：`opencode run --format json "<prompt>" --session <session-id>`；恢复使用 `--session`，当前适配器暂按新运行处理。
 
 以上命令模板会触发真实模型请求，联调时必须由用户明确选择项目目录和 Provider。
 
@@ -38,7 +39,9 @@ CodeAgent Studio 只保存 Provider 标识和会话元数据，不把 API Key �
 ### Pi Transport 约定
 
 Pi CLI 0.85.1 提供 `--mode json`、`--session <path>`、`--session-id <id>`、
-`--resume <path|id>` 和 `--session-dir <dir>`。Pi 会话文件应保存在应用用户数据目录，
+`--resume <path|id>` 和 `--session-dir <dir>`。默认扫描和创建目录统一为
+`%USERPROFILE%/.pi/agent/sessions`（macOS/Linux 为 `~/.pi/agent/sessions`），也可用
+`CODEAGENT_PI_HOME` 或 `CODEAGENT_PI_SESSION_DIR` 覆盖；Pi 会话文件不放入项目根目录，
 不放入项目根目录；SDK/RPC 对象只允许存在于 Electron 主进程，不能通过 IPC 序列化。
 
 检测仅执行版本探针，不主动触发登录或认证流程。真实会话启动时显式传入项目 cwd；用户级配置目录由 Provider 自身读取，不纳入项目文件沙箱。

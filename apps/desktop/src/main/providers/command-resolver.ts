@@ -6,6 +6,14 @@ export type CommandResolutionOptions = { platform?: NodeJS.Platform };
 export type BinaryPathOptions = { platform?: NodeJS.Platform; home?: string };
 export type CommandLookupOptions = { platform?: NodeJS.Platform; lookup?: (command: string) => string | undefined };
 
+/** Quote one argument before passing it to a Windows shell-backed spawn. */
+export function quoteShellArg(value: string, platform: NodeJS.Platform = process.platform): string {
+  if (platform !== 'win32') return value;
+  if (value.length === 0) return '""';
+  if (!/[\s"]/.test(value)) return value;
+  return `"${value.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/g, '$1$1')}"`;
+}
+
 /**
  * Converts a user/PATH command into a safe spawn tuple. PATH is intentionally
  * left to the operating system; only Windows script/shim semantics differ.
@@ -46,10 +54,18 @@ export function findAgentCommand(candidates: string[], options: CommandLookupOpt
   const lookup = options.lookup ?? ((candidate: string) => {
     try {
       const tool = platform === 'win32' ? 'where.exe' : 'which';
-      return execFileSync(tool, [candidate], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }).trim() || undefined;
+      const output = execFileSync(tool, [candidate], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }).trim();
+      if (!output) return undefined;
+      const matches = output.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+      if (platform === 'win32') return matches.find((value) => /\.(?:cmd|exe|bat)$/i.test(value)) ?? matches[0];
+      return matches[0];
     } catch {
       return undefined;
     }
   });
-  return candidates.find((candidate) => Boolean(lookup(candidate))) ?? candidates[0]!;
+  for (const candidate of candidates) {
+    const resolved = lookup(candidate);
+    if (resolved) return resolved;
+  }
+  return candidates[0]!;
 }

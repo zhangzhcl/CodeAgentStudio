@@ -1,5 +1,5 @@
 import { mkdir, realpath } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import type { AgentEvent } from '@codeagent-studio/protocol';
 import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contracts.js';
@@ -13,7 +13,7 @@ export class PiProvider implements AgentProvider {
   constructor(private readonly transport: PiTransport, private readonly sessionsDir = process.env.CODEAGENT_PI_SESSION_DIR ?? join(process.env.CODEAGENT_PI_HOME ?? join(homedir(), '.pi', 'agent'), 'sessions')) {}
   detect() { return this.transport.detect(); }
   async createSession(input: CreateSessionInput) { await mkdir(this.sessionsDir, { recursive: true }); const sessionFile = resolve(this.sessionsDir, `${crypto.randomUUID()}.jsonl`); const created = await this.transport.createSession({ ...input, sessionFile }); if (input.sessionId) this.nativeSessions.set(input.sessionId, created.nativeId); return { ...created, nativeSessionFile: sessionFile }; }
-  async resumeSession(nativeId: string, nativeSessionFile?: string, appSessionId?: string) { if (!nativeSessionFile) throw new Error('Pi resume requires native session file'); const allowed = await realpath(this.sessionsDir); const file = resolve(nativeSessionFile); const relative = file.slice(allowed.length); if (!relative.startsWith('/') && !relative.startsWith('\\')) throw new Error('Pi session file is outside the project session directory'); await this.transport.resumeSession(nativeId, file); this.nativeSessions.set(appSessionId ?? nativeId, nativeId); }
+  async resumeSession(nativeId: string, nativeSessionFile?: string, appSessionId?: string) { if (!nativeSessionFile) throw new Error('Pi resume requires native session file'); const allowed = await realpath(this.sessionsDir); const file = await realpath(resolve(nativeSessionFile)); const within = relative(allowed, file); if (!within || within === '..' || within.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) || isAbsolute(within)) throw new Error('Pi session file is outside the configured session directory'); await this.transport.resumeSession(nativeId, file); this.nativeSessions.set(appSessionId ?? nativeId, nativeId); }
   prompt(sessionId: string, text: string) { return this.transport.prompt(this.nativeSessions.get(sessionId) ?? sessionId, text); }
   abort(sessionId: string) { return this.transport.abort(this.nativeSessions.get(sessionId) ?? sessionId); }
   subscribe(listener: (event: AgentEvent) => void) { return this.transport.subscribe(listener); }

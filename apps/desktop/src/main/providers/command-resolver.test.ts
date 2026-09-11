@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findAgentCommand, resolveAgentCommand, withUserBinaryPaths } from './command-resolver.js';
+import { findAgentCommand, quoteShellArg, resolveAgentCommand, withUserBinaryPaths } from './command-resolver.js';
 
 describe('resolveAgentCommand', () => {
   it('wraps a Windows PowerShell script without changing the script path', () => {
@@ -26,5 +26,10 @@ describe('resolveAgentCommand', () => {
 
   it('selects the first command confirmed by the platform lookup', () => {
     expect(findAgentCommand(['agent', 'cursor-agent'], { platform: 'linux', lookup: (command) => command === 'cursor-agent' ? command : undefined })).toBe('cursor-agent');
+  });
+
+  it('quotes prompt arguments for Windows shell-backed shims', () => {
+    expect(quoteShellArg('reply with spaces', 'win32')).toBe('"reply with spaces"');
+    expect(quoteShellArg('plain', 'win32')).toBe('plain');
   });
 });

@@ -50,9 +50,9 @@ app.whenReady().then(async () => {
 
   registerWorkspaceIpc(workspace);
   workspaceIpcRegistered = true;
-  registerSessionIpc(sessions);
+  registerSessionIpc(sessions, workspace);
   sessionIpcRegistered = true;
-  registerAgentIpc(registry, sessions);
+  registerAgentIpc(registry, sessions, workspace);
   agentIpcRegistered = true;
 
   try {
