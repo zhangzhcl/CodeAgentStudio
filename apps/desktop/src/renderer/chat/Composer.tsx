@@ -4,9 +4,11 @@ import {
   IconCheck,
   IconChip,
   IconChevronDown,
+  IconArrowDown,
   IconFile,
   IconGlobe,
   IconPaperclip,
+  IconPencil,
   IconSend,
   IconStop,
   IconX,
@@ -116,24 +118,27 @@ export function Composer({
                 <span title={item}>{item}</span>
                 <button
                   type="button"
+                  className="queue-act is-promote queue-promote"
                   aria-label={`立即发送 ${index + 1}`}
                   onClick={() => onPromoteQueued(index)}
                 >
-                  ↑
+                  <IconArrowDown size={14} />
                 </button>
                 <button
                   type="button"
+                  className="queue-act is-edit queue-edit"
                   aria-label={`编辑排队消息 ${index + 1}`}
                   onClick={() => onEditQueued(index)}
                 >
-                  ✎
+                  <IconPencil size={13} />
                 </button>
                 <button
                   type="button"
+                  className="queue-act is-cancel queue-cancel"
                   aria-label={`取消排队消息 ${index + 1}`}
                   onClick={() => onCancelQueued(index)}
                 >
-                  ×
+                  <IconX size={13} />
                 </button>
               </div>
             ))}

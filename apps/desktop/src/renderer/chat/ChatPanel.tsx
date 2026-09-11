@@ -4,7 +4,7 @@ import type { AgentEvent } from "@codeagent-studio/protocol";
 import { applyAgentEvent, type ChatMessage } from "./chat-state.js";
 import { MessageItem } from "./message-item.js";
 import { Composer } from "./Composer.js";
-import { IconSparkle } from "../icons.js";
+import { IconArrowDown, IconSparkle } from "../icons.js";
 
 type Props = {
   sessionId: string;
@@ -358,7 +358,7 @@ export function ChatPanel({
           title="回到底部"
           onClick={scrollToBottom}
         >
-          ↓
+          <IconArrowDown size={15} />
         </button>
       )}
       <Composer
