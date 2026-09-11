@@ -74,7 +74,6 @@ export function Workbench() {
   const [providerDetectionError, setProviderDetectionError] = useState<
     string | undefined
   >();
-  const [latency, setLatency] = useState(42);
   const [activeStats, setActiveStats] = useState({ rounds: 0, tokens: 0 });
   const [projectError, setProjectError] = useState<string | undefined>();
   const [pendingDelete, setPendingDelete] = useState<string>();
@@ -240,13 +239,6 @@ export function Workbench() {
   };
   useEffect(() => {
     detectProviders();
-  }, []);
-  useEffect(() => {
-    const timer = window.setInterval(
-      () => setLatency(34 + Math.floor(Math.random() * 28)),
-      2000,
-    );
-    return () => window.clearInterval(timer);
   }, []);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -890,11 +882,6 @@ export function Workbench() {
         </section>
         <div className="side-status sidebar-status-card">
           <div className="side-status-row">
-            <span className="pulse-dot status-pulse" />
-            <span className="side-status-label">在线</span>
-            <span className="side-status-val sidebar-status-value">{latency}ms</span>
-          </div>
-          <div className="side-status-row">
             <span className="side-status-label">Agent</span>
             <span className="side-status-val sidebar-status-value">
               {detectingProviders
@@ -917,10 +904,6 @@ export function Workbench() {
               {providerDetectionError}
             </span>
           )}
-          <div className="side-status-row">
-            <span className="side-status-label">模型</span>
-            <span className="side-status-val sidebar-status-value">GLM-4.7</span>
-          </div>
           <span>本地工作区</span>
         </div>
       </aside>
@@ -1103,7 +1086,7 @@ export function Workbench() {
                   }
                 ).codeagentAgent?.abort(sessionId)
               }
-              onPrompt={(text, provider, model) => {
+              onPrompt={(text, provider, model, options) => {
                 const id = providerId(provider);
                 const scope = activeTab.scope;
                 const prompt = (
@@ -1123,6 +1106,7 @@ export function Workbench() {
                   scope,
                   ...(scope === "project" ? { projectId, projectRoot } : {}),
                   ...(model ? { model } : {}),
+                  ...(options?.repeat ? { repeat: true } : {}),
                   text,
                 });
               }}

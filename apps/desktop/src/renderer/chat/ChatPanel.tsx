@@ -7,6 +7,7 @@ import { Composer } from "./Composer.js";
 import { IconArrowDown, IconSparkle } from "../icons.js";
 import { getAgentPresentation } from "../agent-presentation.js";
 
+type PromptSendOptions = { repeat?: boolean };
 type Props = {
   sessionId: string;
   providerName?: string;
@@ -16,7 +17,7 @@ type Props = {
   disabledProviders?: string[];
   loadMessages?: () => Promise<ChatMessage[]>;
   subscribe?: (listener: (event: AgentEvent) => void) => () => void;
-  onPrompt?: (text: string, provider: string, model: string) => Promise<void> | void;
+  onPrompt?: (text: string, provider: string, model: string, options?: PromptSendOptions) => Promise<void> | void;
   onAbort?: (sessionId: string) => Promise<unknown> | unknown;
   onProviderChange?: (provider: string) => void;
   onTitleChange?: (title: string) => void;
@@ -24,7 +25,6 @@ type Props = {
   onSelectBranch?: (messageId: string, index: number) => void;
   quickPrompts?: string[];
 };
-type ChatAttachment = { name: string; size: number; type: string };
 
 export const DEFAULT_WELCOME_PROMPTS = [
   "帮我搜索本周 AI 领域的重要新闻，并总结成三条要点",
@@ -146,9 +146,9 @@ export function ChatPanel({
   const runPrompt = async (
     text: string,
     selectedProvider: string,
-    attachments: ChatAttachment[] = [],
     optimistic = true,
     selectedModel = "",
+    repeat = false,
   ) => {
     lastPrompt.current = { text, provider: selectedProvider, model: selectedModel };
     setError(undefined);
@@ -168,7 +168,6 @@ export function ChatPanel({
             id: crypto.randomUUID(),
             role: "user",
             content: text,
-            ...(attachments.length > 0 ? { attachments } : {}),
             status: "done",
             createdAt: Date.now(),
           },
@@ -178,7 +177,7 @@ export function ChatPanel({
     setSending(true);
     try {
       if (!onPrompt) throw new Error("Agent 接口不可用，请重启应用");
-      await onPrompt(text, selectedProvider, selectedModel);
+      await onPrompt(text, selectedProvider, selectedModel, { repeat });
       // IPC streaming providers resolve when the run is registered and finish
       // via done/error events. Standalone callers without a stream callback
       // are complete at this point and must unlock the composer immediately.
@@ -188,7 +187,7 @@ export function ChatPanel({
       setError(cause instanceof Error ? cause.message : "Agent 请求失败");
     }
   };
-  const send = async (attachments: ChatAttachment[] = [], selectedModel = "") => {
+  const send = async (selectedModel = "") => {
     const text = draft.trim();
     if (!text) return;
     setDraft("");
@@ -216,12 +215,12 @@ export function ChatPanel({
       setComposerNotice("已显示可用命令");
       return;
     }
-    await runPrompt(text, provider, attachments, true, selectedModel);
+    await runPrompt(text, provider, true, selectedModel);
   };
   const retry = async () => {
     const prompt = lastPrompt.current;
     if (!prompt || sending) return;
-    await runPrompt(prompt.text, prompt.provider, [], false, prompt.model);
+    await runPrompt(prompt.text, prompt.provider, false, prompt.model, true);
   };
   const regenerate = async () => {
     const text = [...messages]
@@ -231,7 +230,7 @@ export function ChatPanel({
     setError(undefined);
     setSending(true);
     try {
-      await onPrompt(text, provider, lastPrompt.current?.model ?? "");
+      await onPrompt(text, provider, lastPrompt.current?.model ?? "", { repeat: true });
       if (!subscribe) setSending(false);
     } catch (cause) {
       setSending(false);
@@ -405,7 +404,7 @@ export function ChatPanel({
         queued={queued}
         notice={composerNotice}
         onDraftChange={(value) => setDraft(value)}
-        onSend={(_, attachments, model) => void send(attachments, model)}
+        onSend={(_, model) => void send(model)}
         onStop={() => {
           setSending(false);
           void onAbort?.(sessionId);

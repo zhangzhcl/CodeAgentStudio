@@ -4,7 +4,6 @@ import type { ChatMessage } from "./chat-state.js";
 import {
   IconCheck,
   IconCopy,
-  IconFile,
   IconChevronRight,
   IconChevronLeft,
   IconPencil,
@@ -236,17 +235,6 @@ export function MessageItem({
           </div>
         ) : (
           <>
-            {message.role === "user" && message.attachments?.length ? (
-              <div className="msg-files">
-                {message.attachments.map((file, index) => (
-                  <span className="file-chip" key={`${file.name}-${index}`}>
-                    <IconFile size={13} />
-                    <span className="file-name">{file.name}</span>
-                    <span className="file-size">{file.size >= 1024 ? `${Math.round(file.size / 1024)} KB` : `${file.size} B`}</span>
-                  </span>
-                ))}
-              </div>
-            ) : null}
             <div className={message.role === "agent" ? "msg-agent-text" : undefined}>
               {message.role === "agent" ? <AgentMarkdown content={message.content} /> : <MarkdownLite content={message.content} />}
             </div>

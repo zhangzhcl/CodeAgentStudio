@@ -8,7 +8,6 @@ export type ChatMessage = {
   createdAt?: number;
   thinking?: "running" | "done";
   thinkingContent?: string;
-  attachments?: Array<{ name: string; size: number; type?: string }>;
   suggestions?: string[];
   branch?: { index: number; total: number };
 };
@@ -63,17 +62,19 @@ export function applyAgentEvent(
     return [
       ...messages,
       {
-        id: event.messageId,
+        id: `${event.messageId}:error:${event.sequence}`,
         role: "agent",
         content: event.payload.message,
         status: "error",
       },
     ];
+  // 同一轮运行的所有事件共用 runMessageId，工具与错误需要独立条目渲染；
+  // 直接复用 messageId 会与正文消息产生重复的 React key。
   if (event.type === "tool.started")
     return [
       ...messages,
       {
-        id: event.messageId,
+        id: `${event.messageId}:tool:${event.sequence}`,
         role: "tool",
         content: `正在执行 ${event.payload.toolName}\n${JSON.stringify(event.payload.input, null, 2)}`,
         status: "streaming",
@@ -83,7 +84,7 @@ export function applyAgentEvent(
     return [
       ...messages,
       {
-        id: event.messageId,
+        id: `${event.messageId}:tool:${event.sequence}`,
         role: "tool",
         content: `${event.payload.toolName}\n${JSON.stringify(event.payload.output, null, 2)}`,
         status: "done",

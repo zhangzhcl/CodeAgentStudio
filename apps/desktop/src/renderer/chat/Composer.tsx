@@ -2,11 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "./chat-state.js";
 import {
   IconCheck,
-  IconChip,
   IconChevronDown,
-  IconFile,
-  IconGlobe,
-  IconPaperclip,
   IconPencil,
   IconSend,
   IconStop,
@@ -20,7 +16,7 @@ type Props = {
   provider: string;
   sending: boolean;
   onDraftChange: (value: string, element: HTMLTextAreaElement) => void;
-  onSend: (text: string, attachments?: Array<{ name: string; size: number; type: string }>, model?: string) => void;
+  onSend: (text: string, model?: string) => void;
   onStop: () => void;
   notice?: string;
   queued: string[];
@@ -43,16 +39,10 @@ export function Composer({
   onEditQueued,
   onPromoteQueued,
 }: Props) {
-  const attachmentInput = useRef<HTMLInputElement>(null);
   const [hint, setHint] = useState("支持 Markdown、代码和多行输入");
   const [notice, setNotice] = useState("");
-  const [attachments, setAttachments] = useState<
-    Array<{ name: string; size: number; type: string }>
-  >([]);
   const [showCommandMenu, setShowCommandMenu] = useState(false);
   const [commandIndex, setCommandIndex] = useState(0);
-  const [deepThink, setDeepThink] = useState(false);
-  const [webSearch, setWebSearch] = useState(false);
   const models = getAgentModels(provider);
   const [model, setModel] = useState(models[0]?.id ?? "");
   const [modelOpen, setModelOpen] = useState(false);
@@ -95,12 +85,11 @@ export function Composer({
   };
 
   const submit = () => {
-    if (!draft.trim() && attachments.length === 0) return;
-    if (draft.trim() && history.current.at(-1) !== draft.trim())
+    if (!draft.trim()) return;
+    if (history.current.at(-1) !== draft.trim())
       history.current.push(draft.trim());
     historyIndex.current = -1;
-    onSend(draft.trim(), attachments, model);
-    setAttachments([]);
+    onSend(draft.trim(), model);
   };
   return (
     <div className="composer">
@@ -154,29 +143,6 @@ export function Composer({
           submit();
         }}
       >
-        {attachments.length > 0 && (
-          <div className="composer-files">
-            {attachments.map((attachment, index) => (
-              <span className="file-chip" key={`${attachment.name}-${index}`}>
-                <IconFile size={13} />
-                <span className="file-name" title={attachment.name}>{attachment.name}</span>
-                <button
-                  type="button"
-                  className="file-remove"
-                  aria-label={`移除附件 ${attachment.name}`}
-                  title="移除附件"
-                  onClick={() =>
-                    setAttachments((current) =>
-                      current.filter((_, itemIndex) => itemIndex !== index),
-                    )
-                  }
-                >
-                  <IconX size={11} />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
         <textarea
           className="composer-input"
           rows={1}
@@ -265,36 +231,6 @@ export function Composer({
         />
         <div className="composer-toolbar composer-bar">
           <div className="composer-tools composer-bar-left">
-            <input
-              ref={attachmentInput}
-              type="file"
-              multiple
-              hidden
-              onChange={(event) => {
-                const files = Array.from(event.target.files ?? []);
-                if (files.length) {
-                  setAttachments((current) => [
-                    ...current,
-                    ...files.map((file) => ({
-                      name: file.name,
-                      size: file.size,
-                      type: file.type,
-                    })),
-                  ]);
-                  setNotice(`已选择 ${files.length} 个附件`);
-                }
-                event.target.value = "";
-              }}
-            />
-            <button
-              type="button"
-              aria-label="添加附件"
-              title="添加附件"
-              className="toolbar-icon pill pill-icon"
-              onClick={() => attachmentInput.current?.click()}
-            >
-              <IconPaperclip size={16} />
-            </button>
             <div className="model-menu" ref={modelRef}>
               <button
                 type="button"
@@ -322,30 +258,6 @@ export function Composer({
                 </div>
               )}
             </div>
-            <button
-              type="button"
-              className={`composer-toggle pill${deepThink ? " is-on" : ""}`}
-              aria-pressed={deepThink}
-              onClick={() => {
-                setDeepThink((value) => !value);
-                setNotice(deepThink ? "已关闭深度思考" : "已开启深度思考");
-              }}
-              title="深度思考模式"
-            >
-              <IconChip size={15} /> <span className="pill-label">深度思考</span>
-            </button>
-            <button
-              type="button"
-              className={`composer-toggle pill${webSearch ? " is-on" : ""}`}
-              aria-pressed={webSearch}
-              onClick={() => {
-                setWebSearch((value) => !value);
-                setNotice(webSearch ? "已关闭联网搜索" : "已开启联网搜索");
-              }}
-              title="联网搜索模式"
-            >
-              <IconGlobe size={15} /> <span className="pill-label">联网</span>
-            </button>
           </div>
           <div className="composer-actions composer-bar-right">
             {draft.length > 0 && (
@@ -353,7 +265,7 @@ export function Composer({
                 {draft.length} 字 · 约 {Math.ceil(draft.length * 0.6)} tokens
               </span>
             )}
-            {sending && !draft.trim() && attachments.length === 0 ? (
+            {sending && !draft.trim() ? (
               <button
                 type="button"
                 className="stop-action send-btn is-stop"
@@ -369,7 +281,7 @@ export function Composer({
                 className="send-action send-btn"
                 aria-label="发送"
                 title={sending ? "排队发送（当前回复结束后自动发出）" : "发送（Enter）"}
-                disabled={!draft.trim() && attachments.length === 0}
+                disabled={!draft.trim()}
               >
                 <IconSend size={17} />
               </button>

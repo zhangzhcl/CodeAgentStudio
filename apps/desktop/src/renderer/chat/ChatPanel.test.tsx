@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ChatPanel } from './ChatPanel.js';
-describe('ChatPanel', () => { it('sends a prompt and model and renders it optimistically', async () => { const onPrompt = vi.fn(); render(<ChatPanel sessionId="s" onPrompt={onPrompt} />); fireEvent.change(screen.getByLabelText('消息'), { target: { value: '你好' } }); fireEvent.click(screen.getByRole('button', { name: '发送' })); await waitFor(() => expect(onPrompt).toHaveBeenCalledWith('你好', 'Claude', 'sonnet')); expect(screen.getByText('你好')).toBeInTheDocument(); }); it('shows provider errors without losing the user message', async () => { const onPrompt = vi.fn().mockRejectedValue(new Error('未安装')); render(<ChatPanel sessionId="s" onPrompt={onPrompt} />); fireEvent.change(screen.getByLabelText('消息'), { target: { value: '测试' } }); fireEvent.click(screen.getByRole('button', { name: '发送' })); expect(await screen.findByRole('alert')).toHaveTextContent('未安装'); expect(screen.getByText('测试')).toBeInTheDocument(); }); it('aborts the active session and unlocks input', async () => { let resolvePrompt!: () => void; const onPrompt = vi.fn(() => new Promise<void>((resolve) => { resolvePrompt = resolve; })); const onAbort = vi.fn(); render(<ChatPanel sessionId="s" onPrompt={onPrompt} onAbort={onAbort} />); fireEvent.change(screen.getByLabelText('消息'), { target: { value: '运行' } }); fireEvent.click(screen.getByRole('button', { name: '发送' })); await waitFor(() => expect(screen.getByRole('button', { name: '停止' })).toBeInTheDocument()); fireEvent.click(screen.getByRole('button', { name: '停止' })); expect(onAbort).toHaveBeenCalledWith('s'); expect(screen.getByLabelText('消息')).not.toBeDisabled(); await act(async () => { resolvePrompt(); }); }); });
+describe('ChatPanel', () => { it('sends a prompt and model and renders it optimistically', async () => { const onPrompt = vi.fn(); render(<ChatPanel sessionId="s" onPrompt={onPrompt} />); fireEvent.change(screen.getByLabelText('消息'), { target: { value: '你好' } }); fireEvent.click(screen.getByRole('button', { name: '发送' })); await waitFor(() => expect(onPrompt).toHaveBeenCalledWith('你好', 'Claude', 'sonnet', { repeat: false })); expect(screen.getByText('你好')).toBeInTheDocument(); }); it('shows provider errors without losing the user message', async () => { const onPrompt = vi.fn().mockRejectedValue(new Error('未安装')); render(<ChatPanel sessionId="s" onPrompt={onPrompt} />); fireEvent.change(screen.getByLabelText('消息'), { target: { value: '测试' } }); fireEvent.click(screen.getByRole('button', { name: '发送' })); expect(await screen.findByRole('alert')).toHaveTextContent('未安装'); expect(screen.getByText('测试')).toBeInTheDocument(); }); it('aborts the active session and unlocks input', async () => { let resolvePrompt!: () => void; const onPrompt = vi.fn(() => new Promise<void>((resolve) => { resolvePrompt = resolve; })); const onAbort = vi.fn(); render(<ChatPanel sessionId="s" onPrompt={onPrompt} onAbort={onAbort} />); fireEvent.change(screen.getByLabelText('消息'), { target: { value: '运行' } }); fireEvent.click(screen.getByRole('button', { name: '发送' })); await waitFor(() => expect(screen.getByRole('button', { name: '停止' })).toBeInTheDocument()); fireEvent.click(screen.getByRole('button', { name: '停止' })); expect(onAbort).toHaveBeenCalledWith('s'); expect(screen.getByLabelText('消息')).not.toBeDisabled(); await act(async () => { resolvePrompt(); }); }); });
 describe('ChatPanel composer keyboard behavior', () => {
   it('sends with Enter and preserves newlines with Shift+Enter', async () => {
     const onPrompt = vi.fn();
@@ -13,7 +13,7 @@ describe('ChatPanel composer keyboard behavior', () => {
     expect(onPrompt).not.toHaveBeenCalled();
     fireEvent.change(input, { target: { value: '第一行\n第二行' } });
     fireEvent.keyDown(input, { key: 'Enter' });
-    await waitFor(() => expect(onPrompt).toHaveBeenCalledWith('第一行\n第二行', 'Claude', 'sonnet'));
+    await waitFor(() => expect(onPrompt).toHaveBeenCalledWith('第一行\n第二行', 'Claude', 'sonnet', { repeat: false }));
   });
 
   it('keeps send disabled while the draft is empty', () => {
@@ -57,6 +57,7 @@ describe('ChatPanel retry behavior', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('网络错误');
     fireEvent.click(screen.getByRole('button', { name: '重试' }));
     await waitFor(() => expect(onPrompt).toHaveBeenCalledTimes(2));
+    expect(onPrompt).toHaveBeenLastCalledWith('再次运行', 'Claude', 'sonnet', { repeat: true });
     expect(screen.getAllByText('再次运行')).toHaveLength(1);
   });
 });
@@ -83,18 +84,5 @@ describe('ChatPanel local commands', () => {
     fireEvent.keyDown(screen.getByLabelText('消息'), { key: 'Enter' });
     await waitFor(() => expect(screen.queryByText('保留消息')).not.toBeInTheDocument());
     expect(onPrompt).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('ChatPanel composer controls', () => {
-  it('toggles deep thinking and web search controls with visible state', () => {
-    render(<ChatPanel sessionId="controls" onPrompt={vi.fn()} />);
-    const thinking = screen.getByRole('button', { name: /深度思考/ });
-    const search = screen.getByRole('button', { name: /联网/ });
-    expect(thinking).toHaveAttribute('aria-pressed', 'false');
-    fireEvent.click(thinking);
-    fireEvent.click(search);
-    expect(thinking).toHaveAttribute('aria-pressed', 'true');
-    expect(search).toHaveAttribute('aria-pressed', 'true');
   });
 });
