@@ -61,6 +61,7 @@ export function ChatPanel({
   const [copiedMessage, setCopiedMessage] = useState<string>();
   const lastPrompt = useRef<{ text: string; provider: string; model: string }>();
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [markerTops, setMarkerTops] = useState<number[]>([]);
   const sequencer = useRef(new EventSequencer());
   const transcriptRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
@@ -122,6 +123,30 @@ export function ChatPanel({
     setQueued(rest);
     void runPrompt(next!, provider);
   }, [sending, queued, provider]);
+  const updateRailPositions = (element = transcriptRef.current) => {
+    if (!element || userMessages.length === 0) {
+      setMarkerTops([]);
+      return;
+    }
+    const viewportRect = element.getBoundingClientRect();
+    const next = userMessages.map((message) => {
+      const target = element.querySelector<HTMLElement>(`[data-message-id="${CSS.escape(message.id)}"]`);
+      if (!target) return 50;
+      const targetRect = target.getBoundingClientRect();
+      const center = targetRect.top - viewportRect.top + targetRect.height / 2;
+      return Math.max(2, Math.min(98, (center / Math.max(1, element.clientHeight)) * 100));
+    });
+    setMarkerTops(next);
+  };
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => updateRailPositions());
+    const handleResize = () => updateRailPositions();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [messages]);
   const scrollToBottom = () => {
     const element = transcriptRef.current;
     if (!element) return;
@@ -321,6 +346,7 @@ export function ChatPanel({
               setShowScrollButton(
                 !atBottom && element.scrollHeight > element.clientHeight + 80,
               );
+              updateRailPositions(element);
             }}
           >
             {messages.length === 0 ? (
@@ -375,7 +401,7 @@ export function ChatPanel({
         <nav className="conversation-rail" aria-label="提问定位">
           <span className="conversation-rail-track" aria-hidden="true" />
           {userMessages.map((message, index) => {
-            const top = userMessages.length === 1 ? 50 : (index / (userMessages.length - 1)) * 100;
+            const top = markerTops[index] ?? (userMessages.length === 1 ? 50 : (index / (userMessages.length - 1)) * 100);
             const preview = `${message.content.slice(0, 48)}${message.content.length > 48 ? "…" : ""}`;
             return <button key={message.id} type="button" className="conversation-marker" style={{ top: `${top}%` }} onClick={() => jumpToMessage(message.id)} title={preview} data-preview={preview} aria-label={`定位提问：${preview}`} />;
           })}
