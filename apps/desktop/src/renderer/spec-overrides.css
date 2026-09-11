@@ -277,3 +277,4 @@ html[data-theme="light"] body::after{opacity:.012}
    come from the inner .composer-box, otherwise light mode creates a second
    white bordered panel around the actual input. */
 .codeagent-workbench .composer{background:transparent!important;border:0!important;box-shadow:none!important}
+.codeagent-workbench.theme-light .composer{background:transparent!important;border:0!important;box-shadow:none!important}
