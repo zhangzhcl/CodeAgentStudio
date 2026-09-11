@@ -137,7 +137,12 @@ export function Workbench() {
       })
       .catch(() => setProjectError("项目列表加载失败，请重新选择项目。"));
   }, []);
-  useEffect(() => () => { if (deleteTimer.current) window.clearTimeout(deleteTimer.current); }, []);
+  useEffect(
+    () => () => {
+      if (deleteTimer.current) window.clearTimeout(deleteTimer.current);
+    },
+    [],
+  );
   useEffect(() => {
     const list = (
       window as Window & {
@@ -194,12 +199,17 @@ export function Workbench() {
     setDetectingProviders(true);
     setProviderDetectionError(undefined);
     const timeout = new Promise<never>((_, reject) =>
-      window.setTimeout(() => reject(new Error("provider-detect-timeout")), 8_000),
+      window.setTimeout(
+        () => reject(new Error("provider-detect-timeout")),
+        8_000,
+      ),
     );
     void Promise.race([detect(), timeout])
       .then(setProviderStatuses)
       .catch(() =>
-        setProviderDetectionError("Agent 检测超时或失败，请检查系统权限和 PATH。"),
+        setProviderDetectionError(
+          "Agent 检测超时或失败，请检查系统权限和 PATH。",
+        ),
       )
       .finally(() => setDetectingProviders(false));
   };
@@ -415,19 +425,31 @@ export function Workbench() {
       setProjectSessions((items) => items.filter((item) => item.id !== id));
       setPendingDelete(undefined);
       if (deleteTimer.current) window.clearTimeout(deleteTimer.current);
-      if (activeTab.kind === "chat" && activeTab.sessionId === id) closeTab(activeTab);
+      if (activeTab.kind === "chat" && activeTab.sessionId === id)
+        closeTab(activeTab);
       return;
     }
     setPendingDelete(id);
     if (deleteTimer.current) window.clearTimeout(deleteTimer.current);
-    deleteTimer.current = window.setTimeout(() => setPendingDelete(undefined), 2200);
+    deleteTimer.current = window.setTimeout(
+      () => setPendingDelete(undefined),
+      2200,
+    );
   };
-  const activeSession = activeTab.kind === "chat"
-    ? [...personalSessions, ...projectSessions].find((session) => session.id === activeTab.sessionId)
-    : undefined;
-  const activeTitle = activeTab.kind === "chat"
-    ? sessionTitle(activeTab.sessionId, activeSession?.nativeId, activeSession?.title)
-    : tabName(activeTab);
+  const activeSession =
+    activeTab.kind === "chat"
+      ? [...personalSessions, ...projectSessions].find(
+          (session) => session.id === activeTab.sessionId,
+        )
+      : undefined;
+  const activeTitle =
+    activeTab.kind === "chat"
+      ? sessionTitle(
+          activeTab.sessionId,
+          activeSession?.nativeId,
+          activeSession?.title,
+        )
+      : tabName(activeTab);
 
   return (
     <div className={`codeagent-workbench app theme-${theme}`}>
@@ -513,7 +535,15 @@ export function Workbench() {
             </div>
           ) : (
             <div>
-              <button type="button" className="side-new-row" onClick={() => newSession(sessionView === "projects" ? "project" : "personal")}>
+              <button
+                type="button"
+                className="side-new-row"
+                onClick={() =>
+                  newSession(
+                    sessionView === "projects" ? "project" : "personal",
+                  )
+                }
+              >
                 ＋ 新建会话
               </button>
               <div
@@ -586,7 +616,29 @@ export function Workbench() {
                             {sessionTitle(id, nativeId, title)}
                           </span>
                           <small>{relativeTime(updatedAt)}</small>
-                          <span role="button" tabIndex={0} className={`session-row-delete${pendingDelete === id ? " is-confirm" : ""}`} aria-label={pendingDelete === id ? `再次点击确认删除 ${sessionTitle(id, nativeId, title)}` : `删除会话 ${sessionTitle(id, nativeId, title)}`} onClick={(event) => { event.stopPropagation(); requestDelete(id); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.stopPropagation(); requestDelete(id); } }}>{pendingDelete === id ? "删除" : "×"}</span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            className={`session-row-delete${pendingDelete === id ? " is-confirm" : ""}`}
+                            aria-label={
+                              pendingDelete === id
+                                ? `再次点击确认删除 ${sessionTitle(id, nativeId, title)}`
+                                : `删除会话 ${sessionTitle(id, nativeId, title)}`
+                            }
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              requestDelete(id);
+                            }}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                requestDelete(id);
+                              }
+                            }}
+                          >
+                            {pendingDelete === id ? "删除" : "×"}
+                          </span>
                         </button>
                       ),
                     )
@@ -600,10 +652,30 @@ export function Workbench() {
                     [...projectGroups.entries()].map(([key, group]) => (
                       <div
                         className="session-project-group"
-                        data-expanded={expandedProjectId === key ? "true" : "false"}
+                        data-expanded={
+                          expandedProjectId === key ? "true" : "false"
+                        }
                         key={key}
                       >
-                        <div className="project-group-header" role="button" tabIndex={0} aria-expanded={expandedProjectId === key} onClick={() => setExpandedProjectId((current) => current === key ? undefined : key)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setExpandedProjectId((current) => current === key ? undefined : key); } }}>
+                        <div
+                          className="project-group-header"
+                          role="button"
+                          tabIndex={0}
+                          aria-expanded={expandedProjectId === key}
+                          onClick={() =>
+                            setExpandedProjectId((current) =>
+                              current === key ? undefined : key,
+                            )
+                          }
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setExpandedProjectId((current) =>
+                                current === key ? undefined : key,
+                              );
+                            }
+                          }}
+                        >
                           <h3 title={group.root}>
                             <span>{group.name}</span>
                             <small>{group.sessions.length}</small>
@@ -679,7 +751,11 @@ export function Workbench() {
                                   role="button"
                                   tabIndex={0}
                                   className={`session-row-delete${pendingDelete === id ? " is-confirm" : ""}`}
-                                  aria-label={pendingDelete === id ? `再次点击确认删除 ${sessionTitle(id, nativeId, title)}` : `删除会话 ${sessionTitle(id, nativeId, title)}`}
+                                  aria-label={
+                                    pendingDelete === id
+                                      ? `再次点击确认删除 ${sessionTitle(id, nativeId, title)}`
+                                      : `删除会话 ${sessionTitle(id, nativeId, title)}`
+                                  }
                                   onClick={(event) => {
                                     event.stopPropagation();
                                     requestDelete(id);
@@ -721,22 +797,81 @@ export function Workbench() {
       <main className="main">
         <header className="topbar">
           <div className="topbar-title">
-            {activeTab.kind === "chat" && activeTab.scope === "project" && projectName !== "未选择项目" && <>
-              <span className="topbar-project">{projectName}</span>
-              <span className="topbar-sep">/</span>
-            </>}
+            {activeTab.kind === "chat" &&
+              activeTab.scope === "project" &&
+              projectName !== "未选择项目" && (
+                <>
+                  <span className="topbar-project">{projectName}</span>
+                  <span className="topbar-sep">/</span>
+                </>
+              )}
             <span className="topbar-name">{activeTitle}</span>
-            <span className="topbar-meta">{activeTab.kind === "chat" ? `${providerLabel(activeProvider)} · 本地会话` : "编辑器"}</span>
+            <span className="topbar-meta">
+              {activeTab.kind === "chat"
+                ? `${providerLabel(activeProvider)} · 本地会话`
+                : "编辑器"}
+            </span>
           </div>
           <div className="topbar-actions">
-            {activeTab.kind === "chat" && <select className="topbar-provider" aria-label="选择 Agent" value={activeProvider} onChange={(event) => changeProvider(event.target.value)}>{["claude", "cursor", "codex", "pi", "opencode"].map((id) => <option key={id} value={id}>{providerLabel(id)}</option>)}</select>}
+            {activeTab.kind === "chat" && (
+              <select
+                className="topbar-provider"
+                aria-label="选择 Agent"
+                value={activeProvider}
+                onChange={(event) => changeProvider(event.target.value)}
+              >
+                {["claude", "cursor", "codex", "pi", "opencode"].map((id) => (
+                  <option key={id} value={id}>
+                    {providerLabel(id)}
+                  </option>
+                ))}
+              </select>
+            )}
             <span className="agent-status-summary" aria-label="Agent 状态">
-              <span className={detectingProviders ? "status-dot is-busy" : "status-dot"} />
-              {detectingProviders ? "检测中…" : providerStatuses.filter((status) => status.installed).length ? `${providerStatuses.filter((status) => status.installed).length} 个 Agent 就绪` : "Agent 未就绪"}
+              <span
+                className={
+                  detectingProviders ? "status-dot is-busy" : "status-dot"
+                }
+              />
+              {detectingProviders
+                ? "检测中…"
+                : providerStatuses.filter((status) => status.installed).length
+                  ? `${providerStatuses.filter((status) => status.installed).length} 个 Agent 就绪`
+                  : "Agent 未就绪"}
             </span>
-            <button type="button" className="topbar-detect" onClick={detectProviders} disabled={detectingProviders}>{detectingProviders ? "检测中" : "检测"}</button>
-            <button type="button" className="theme-toggle" aria-label={theme === "dark" ? "切换浅色主题" : "切换深色主题"} onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>{theme === "dark" ? "☼" : "◐"}</button>
-            <button type="button" className="topbar-clear" onClick={() => { if (activeTab.kind === "chat") window.dispatchEvent(new CustomEvent("codeagent:clear-session", { detail: { sessionId: activeTab.sessionId } })); }} disabled={activeTab.kind !== "chat"}>清空</button>
+            <button
+              type="button"
+              className="topbar-detect"
+              onClick={detectProviders}
+              disabled={detectingProviders}
+            >
+              {detectingProviders ? "检测中" : "检测"}
+            </button>
+            <button
+              type="button"
+              className="theme-toggle"
+              aria-label={theme === "dark" ? "切换浅色主题" : "切换深色主题"}
+              onClick={() =>
+                setTheme((current) => (current === "dark" ? "light" : "dark"))
+              }
+            >
+              {theme === "dark" ? "☼" : "◐"}
+            </button>
+            <button
+              type="button"
+              className="topbar-clear"
+              onClick={() => {
+                if (activeTab.kind === "chat")
+                  window.dispatchEvent(
+                    new CustomEvent("codeagent:clear-session", {
+                      detail: { sessionId: activeTab.sessionId },
+                    }),
+                  );
+              }}
+              disabled={activeTab.kind !== "chat"}
+            >
+              清空
+            </button>
           </div>
         </header>
         <div className="chat-tabs" role="tablist" aria-label="打开的标签">
@@ -759,7 +894,9 @@ export function Workbench() {
               onClick={() => setActiveTab(tab)}
             >
               {tab.kind === "file" && <span className="tab-kind-icon">▤</span>}
-              {tab.kind === "chat" && tab.scope === "project" && <span className="chat-tab-dot" />}
+              {tab.kind === "chat" && tab.scope === "project" && (
+                <span className="chat-tab-dot" />
+              )}
               <span className="chat-tab-title">{tabName(tab)}</span>
               <span
                 role="button"
@@ -800,9 +937,7 @@ export function Workbench() {
                 const load = (
                   window as Window & {
                     codeagentSessions?: {
-                      messages: (
-                        id: string,
-                      ) => Promise<
+                      messages: (id: string) => Promise<
                         Array<{
                           id: string;
                           role: "user" | "agent" | "tool";
