@@ -20,6 +20,7 @@ type Props = {
   onProviderChange?: (provider: string) => void;
   onTitleChange?: (title: string) => void;
   onStatsChange?: (stats: { rounds: number; tokens: number }) => void;
+  onSelectBranch?: (messageId: string, index: number) => void;
 };
 type ChatAttachment = { name: string; size: number; type: string };
 
@@ -37,6 +38,7 @@ export function ChatPanel({
   onProviderChange,
   onTitleChange,
   onStatsChange,
+  onSelectBranch,
 }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [provider, setProvider] = useState(providerName);
@@ -350,6 +352,7 @@ export function ChatPanel({
                     message.role === "agent" &&
                     !messages.slice(index + 1).some((item) => item.role === "agent")
                   }
+                  onSelectBranch={(branchIndex) => onSelectBranch?.(message.id, branchIndex)}
                 />
               ))
             )}

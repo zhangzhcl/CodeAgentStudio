@@ -1048,6 +1048,7 @@ export function Workbench() {
                           content: unknown;
                           status?: "done" | "streaming" | "error";
                           createdAt?: number;
+                          branch?: { index: number; total: number };
                         }>
                       >;
                     };
@@ -1063,6 +1064,7 @@ export function Workbench() {
                       : JSON.stringify(message.content),
                   status: message.status ?? "done",
                   createdAt: message.createdAt,
+                  branch: message.branch,
                 }));
               }}
               subscribe={(listener) =>
