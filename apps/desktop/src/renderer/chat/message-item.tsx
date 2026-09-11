@@ -23,6 +23,52 @@ type Props = {
   onEditResend?: (text: string) => void;
   onSuggestion?: (text: string) => void;
 };
+
+function AgentMarkdown({ content }: { content: string }) {
+  const lines = content.split(/\r?\n/);
+  const taskLines = lines.filter((line) =>
+    /^\s*[-*]\s+\[[ xX]\]\s+/.test(line),
+  );
+  if (taskLines.length < 2) return <MarkdownLite content={content} />;
+  const taskSet = new Set(taskLines);
+  const rest = lines
+    .filter((line) => !taskSet.has(line))
+    .join("\n")
+    .trim();
+  const done = taskLines.filter((line) => /\[[xX]\]/.test(line)).length;
+  return (
+    <>
+      <div className={`tasks${done < taskLines.length ? " is-live" : ""}`}>
+        <div className="tasks-head">
+          <span className="tasks-label">执行计划</span>
+          <span className="tasks-progress">
+            {done}/{taskLines.length}
+          </span>
+        </div>
+        <ul className="tasks-list">
+          {taskLines.map((line, index) => {
+            const complete = /\[[xX]\]/.test(line);
+            return (
+              <li
+                className={`task-item is-${complete ? "done" : "pending"}`}
+                key={`${line}-${index}`}
+              >
+                <span className="task-check">
+                  {complete && <IconCheck size={11} />}
+                </span>
+                <span className="task-content">
+                  {line.replace(/^\s*[-*]\s+\[[ xX]\]\s+/, "")}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      {rest && <MarkdownLite content={rest} />}
+    </>
+  );
+}
+
 export function MessageItem({
   message,
   provider,
@@ -168,7 +214,11 @@ export function MessageItem({
           <div
             className={message.role === "agent" ? "msg-agent-text" : undefined}
           >
-            <MarkdownLite content={message.content} />
+            {message.role === "agent" ? (
+              <AgentMarkdown content={message.content} />
+            ) : (
+              <MarkdownLite content={message.content} />
+            )}
           </div>
         )}
         {message.status === "streaming" && (
