@@ -19,9 +19,6 @@ import { discoverNativeSessions } from './sessions/native-session-discovery.js';
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 const mainDir = dirname(fileURLToPath(import.meta.url));
 let database: Database.Database | undefined;
-let workspaceIpcRegistered = false;
-let sessionIpcRegistered = false;
-let agentIpcRegistered = false;
 function createApplicationMenu() { Menu.setApplicationMenu(Menu.buildFromTemplate([{ label: '项目', submenu: [{ label: '选择项目', click: () => BrowserWindow.getFocusedWindow()?.webContents.send('menu:choose-project') }, { label: '刷新文件树', click: () => BrowserWindow.getFocusedWindow()?.webContents.send('menu:refresh-files') }, { type: 'separator' }, { role: 'quit', label: '退出 CodeAgent Studio' }] }, { label: '会话', submenu: [{ label: '新建项目会话', click: () => BrowserWindow.getFocusedWindow()?.webContents.send('menu:new-project-session') }, { label: '新建个人会话', click: () => BrowserWindow.getFocusedWindow()?.webContents.send('menu:new-personal-session') }] }, { label: '视图', submenu: [{ role: 'toggleDevTools', label: '开发者工具' }, { role: 'reload', label: '重新加载界面' }] }, { role: 'help', label: '帮助', submenu: [{ label: '关于 CodeAgent Studio', click: () => BrowserWindow.getFocusedWindow()?.webContents.send('menu:about') }] }])); }
 type WindowState = { width: number; height: number };
 function windowStatePath() { return join(app.getPath('userData'), 'window-state.json'); }
@@ -49,11 +46,8 @@ app.whenReady().then(async () => {
   }
 
   registerWorkspaceIpc(workspace);
-  workspaceIpcRegistered = true;
   registerSessionIpc(sessions, workspace);
-  sessionIpcRegistered = true;
   registerAgentIpc(registry, sessions, workspace);
-  agentIpcRegistered = true;
 
   try {
     await discoverNativeSessions(sessions, workspace);
