@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MarkdownLite } from "./markdown-lite.js";
 import type { ChatMessage } from "./chat-state.js";
 import {
@@ -100,6 +100,8 @@ export function MessageItem({
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [toolOpen, setToolOpen] = useState(false);
+  const [thinkingOpen, setThinkingOpen] = useState(message.thinking === "running");
+  useEffect(() => setThinkingOpen(message.thinking === "running"), [message.thinking]);
   const [editDraft, setEditDraft] = useState(message.content);
   const toolParts = message.role === "tool" ? message.content.split("\n") : [];
   const toolName = toolParts[0] || "工具调用";
@@ -152,11 +154,9 @@ export function MessageItem({
           </div>
         )}
         {message.role === "agent" && message.thinking && (
-          <details
-            className={`think${message.thinking === "running" ? " is-running" : ""}`}
-            open={message.thinking === "running"}
-          >
-            <summary className="think-head">
+          <div className={`think${thinkingOpen ? " is-open" : ""}${message.thinking === "running" ? " is-running" : ""}`}>
+            <button type="button" className="think-head" onClick={() => setThinkingOpen((open) => !open)}>
+              <IconChevronRight size={13} className={`think-chevron${thinkingOpen ? " is-open" : ""}`} />
               <span className="think-label">
                 {message.thinking === "running" ? "正在思考" : "已完成思考"}
               </span>
@@ -169,11 +169,9 @@ export function MessageItem({
               ) : (
                 <span className="think-cost">已完成</span>
               )}
-            </summary>
-            {message.thinking === "running" && (
-              <div className="think-body" aria-hidden="true" />
-            )}
-          </details>
+            </button>
+            {thinkingOpen && <div className="think-body"><div className="think-text">{message.thinking === "running" ? "正在整理思路…" : "思考过程已完成"}</div></div>}
+          </div>
         )}
         {message.role === "tool" ? (
           <div
