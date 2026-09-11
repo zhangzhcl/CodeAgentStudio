@@ -19,6 +19,7 @@ type Props = {
   onAbort?: (sessionId: string) => Promise<unknown> | unknown;
   onProviderChange?: (provider: string) => void;
   onTitleChange?: (title: string) => void;
+  onStatsChange?: (stats: { rounds: number; tokens: number }) => void;
 };
 type ChatAttachment = { name: string; size: number; type: string };
 
@@ -35,6 +36,7 @@ export function ChatPanel({
   onAbort,
   onProviderChange,
   onTitleChange,
+  onStatsChange,
 }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [provider, setProvider] = useState(providerName);
@@ -49,6 +51,12 @@ export function ChatPanel({
   const sequencer = useRef(new EventSequencer());
   const transcriptRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
+  useEffect(() => {
+    onStatsChange?.({
+      rounds: messages.filter((message) => message.role === "user").length,
+      tokens: Math.max(0, Math.ceil(messages.reduce((total, message) => total + message.content.length, 0) / 4)),
+    });
+  }, [messages, onStatsChange]);
   useEffect(() => {
     setProvider(providerName);
   }, [providerName]);

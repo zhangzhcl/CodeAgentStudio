@@ -75,6 +75,7 @@ export function Workbench() {
     string | undefined
   >();
   const [latency, setLatency] = useState(42);
+  const [activeStats, setActiveStats] = useState({ rounds: 0, tokens: 0 });
   const [projectError, setProjectError] = useState<string | undefined>();
   const [pendingDelete, setPendingDelete] = useState<string>();
   const deleteTimer = useRef<number>();
@@ -885,7 +886,7 @@ export function Workbench() {
             <span className="topbar-name">{activeTitle}</span>
             <span className="topbar-meta">
               {activeTab.kind === "chat"
-                ? `${providerLabel(activeProvider)} · 本地会话`
+                ? `${activeStats.rounds} 轮对话 · 约 ${activeStats.tokens.toLocaleString()} tokens`
                 : "编辑器"}
             </span>
           </div>
@@ -1009,6 +1010,7 @@ export function Workbench() {
               }
               providerName={providerLabel(activeProvider)}
               onProviderChange={changeProvider}
+              onStatsChange={setActiveStats}
               disabledProviders={providerStatuses
                 .filter((status) => !status.installed)
                 .map((status) => providerLabel(status.provider))}
