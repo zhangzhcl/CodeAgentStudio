@@ -5,5 +5,8 @@ export const MIGRATIONS: Record<number, string> = {
   3: `ALTER TABLE sessions ADD COLUMN native_id TEXT;\nALTER TABLE sessions ADD COLUMN native_session_file TEXT;\nALTER TABLE sessions ADD COLUMN native_transcript_path TEXT;\nALTER TABLE sessions ADD COLUMN resume_capability TEXT NOT NULL DEFAULT 'replay_only';`,
   4: `ALTER TABLE sessions ADD COLUMN project_root TEXT;\nALTER TABLE sessions ADD COLUMN project_name TEXT;`,
   5: `ALTER TABLE sessions ADD COLUMN title TEXT;`,
-  6: `ALTER TABLE projects ADD COLUMN source TEXT NOT NULL DEFAULT 'native';`,
+  // Existing rows were created by the user-project registry before source
+  // metadata existed. Preserve their visibility; native discovery never
+  // creates project rows in the current model.
+  6: `ALTER TABLE projects ADD COLUMN source TEXT NOT NULL DEFAULT 'user';`,
 };

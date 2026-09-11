@@ -7,7 +7,7 @@ describe('database schema migrations', () => {
   });
 
   it('adds explicit project source metadata', () => {
-    expect(MIGRATIONS[6]).toContain('ALTER TABLE projects ADD COLUMN source TEXT NOT NULL DEFAULT \'native\'');
+    expect(MIGRATIONS[6]).toContain('ALTER TABLE projects ADD COLUMN source TEXT NOT NULL DEFAULT \'user\'');
     expect(MIGRATIONS[1]).toContain('CREATE TABLE IF NOT EXISTS projects');
   });
 
