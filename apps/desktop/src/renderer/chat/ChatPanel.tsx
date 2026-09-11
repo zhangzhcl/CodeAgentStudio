@@ -336,25 +336,27 @@ export function ChatPanel({
                 </div>
               </div>
             ) : (
-              messages.map((message, index) => (
-                <MessageItem
-                  key={message.id}
-                  message={message}
-                  provider={provider}
-                  copied={copiedMessage === message.id}
-                  sending={sending}
-                  onCopy={(id, content) => void copyMessage(id, content)}
-                  onRegenerate={() => void regenerate()}
-                  onFeedback={() => setComposerNotice("已记录反馈")}
-                  onEditResend={(text) => void runPrompt(text)}
-                  onSuggestion={useQuickPrompt}
-                  isLastAgent={
-                    message.role === "agent" &&
-                    !messages.slice(index + 1).some((item) => item.role === "agent")
-                  }
-                  onSelectBranch={(branchIndex) => onSelectBranch?.(message.id, branchIndex)}
-                />
-              ))
+              <div className="list-inner">
+                {messages.map((message, index) => (
+                  <MessageItem
+                    key={message.id}
+                    message={message}
+                    provider={provider}
+                    copied={copiedMessage === message.id}
+                    sending={sending}
+                    onCopy={(id, content) => void copyMessage(id, content)}
+                    onRegenerate={() => void regenerate()}
+                    onFeedback={() => setComposerNotice("已记录反馈")}
+                    onEditResend={(text) => void runPrompt(text)}
+                    onSuggestion={useQuickPrompt}
+                    isLastAgent={
+                      message.role === "agent" &&
+                      !messages.slice(index + 1).some((item) => item.role === "agent")
+                    }
+                    onSelectBranch={(branchIndex) => onSelectBranch?.(message.id, branchIndex)}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </div>
