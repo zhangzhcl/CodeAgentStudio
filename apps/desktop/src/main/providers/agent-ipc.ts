@@ -17,7 +17,16 @@ export const PromptInputSchema = z.object({ sessionId: z.string().min(1), provid
 export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionService, workspace?: WorkspaceService): void {
   const providers = new Map(registry.list().map((provider) => [provider.id, provider]));
   const runtime = new ProviderRuntime(providers);
-  for (const provider of registry.list()) provider.subscribe((event: AgentEvent) => { sessions?.appendEvent(event); for (const window of BrowserWindow.getAllWindows()) window.webContents.send('agent:event', event); });
+  for (const provider of registry.list()) provider.subscribe((event: AgentEvent) => {
+    sessions?.appendEvent(event);
+    if (event.type === 'done' || event.type === 'error') {
+      runtime.complete(event.sessionId, event.type === 'error' ? 'error' : 'stopped');
+      if (sessions) {
+        try { sessions.markStatus(event.sessionId, event.type === 'done' ? 'done' : 'error'); } catch { /* the session may have been deleted while the process was closing */ }
+      }
+    }
+    for (const window of BrowserWindow.getAllWindows()) window.webContents.send('agent:event', event);
+  });
   ipcMain.removeHandler('agent:prompt');
   ipcMain.removeHandler('agent:abort');
   ipcMain.handle('agent:prompt', async (_event, rawInput: unknown) => {
@@ -28,7 +37,7 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
     }
     if (sessions) { try { sessions.get(input.sessionId); } catch { sessions.create({ id: input.sessionId, provider: input.provider, scope: input.scope, projectId: input.projectId }); } }
     sessions?.appendUserMessage(input.sessionId, input.text);
-    if (!runtime.get(input.sessionId)) { const record = sessions?.get(input.sessionId); const provider = providers.get(input.provider); if (record?.nativeId && provider?.capabilities.supportsResume) await provider.resumeSession(record.nativeId, record.nativeSessionFile, input.sessionId); else { const created = await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId, projectRoot: input.projectRoot }); if (created.nativeId || created.nativeSessionFile) sessions?.updateNative(input.sessionId, { nativeId: created.nativeId, nativeSessionFile: created.nativeSessionFile }); } }
+    if (!runtime.isActive(input.sessionId)) { const record = sessions?.get(input.sessionId); const provider = providers.get(input.provider); if (record?.nativeId && provider?.capabilities.supportsResume) { await provider.resumeSession(record.nativeId, record.nativeSessionFile, input.sessionId); runtime.activate(input.sessionId, input.provider); } else { const created = await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId, projectRoot: input.projectRoot }); if (created.nativeId || created.nativeSessionFile) sessions?.updateNative(input.sessionId, { nativeId: created.nativeId, nativeSessionFile: created.nativeSessionFile }); } }
     const provider = providers.get(input.provider);
     if (!provider) throw new Error(`Unknown provider: ${input.provider}`);
     await provider.prompt(input.sessionId, input.text);
