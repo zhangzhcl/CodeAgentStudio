@@ -4,6 +4,7 @@ import type { ChatMessage } from "./chat-state.js";
 import {
   IconCheck,
   IconCopy,
+  IconChevronRight,
   IconPencil,
   IconRefresh,
   IconSparkle,
@@ -82,13 +83,23 @@ export function MessageItem({
             </time>
           </div>
         )}
+        {message.role === "agent" && message.status === "streaming" && (
+          <div className="think is-running" aria-label="正在思考">
+            <span className="think-label">正在思考</span>
+            <span className="think-dots" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+          </div>
+        )}
         {message.role === "tool" ? (
           <details
             className="tool-call-block tool"
             open={message.status === "streaming"}
           >
             <summary>
-              <span className="tool-caret">›</span>
+              <IconChevronRight size={13} className="tool-caret" />
               <strong>{toolName}</strong>
               <span
                 className={`tool-status tool-status-${message.status ?? "done"}`}
@@ -147,9 +158,7 @@ export function MessageItem({
           </div>
         )}
         {message.status === "streaming" && (
-          <span className="cursor-block stream-caret" aria-label="正在生成">
-            ▍
-          </span>
+          <span className="cursor-block stream-caret" aria-label="正在生成" />
         )}
         {message.role === "agent" &&
           message.status === "done" &&
