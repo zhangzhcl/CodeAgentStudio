@@ -34,8 +34,10 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
   useEffect(() => {
     if (!modelOpen) return;
     const close = (event: MouseEvent) => { if (modelRef.current && !modelRef.current.contains(event.target as Node)) setModelOpen(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setModelOpen(false); };
     document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape); };
   }, [modelOpen]);
 
   const resize = (element: HTMLTextAreaElement) => {

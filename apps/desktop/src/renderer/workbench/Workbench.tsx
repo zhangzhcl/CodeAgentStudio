@@ -193,10 +193,13 @@ export function Workbench() {
     }
     setDetectingProviders(true);
     setProviderDetectionError(undefined);
-    void detect()
+    const timeout = new Promise<never>((_, reject) =>
+      window.setTimeout(() => reject(new Error("provider-detect-timeout")), 8_000),
+    );
+    void Promise.race([detect(), timeout])
       .then(setProviderStatuses)
       .catch(() =>
-        setProviderDetectionError("Agent 检测失败，请检查系统权限和 PATH。"),
+        setProviderDetectionError("Agent 检测超时或失败，请检查系统权限和 PATH。"),
       )
       .finally(() => setDetectingProviders(false));
   };
