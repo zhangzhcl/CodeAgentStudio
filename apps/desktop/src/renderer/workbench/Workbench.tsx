@@ -637,17 +637,6 @@ export function Workbench() {
               </div>
               <div className="session-sidebar-heading">
                 <h2>{sessionView === "sessions" ? "会话" : "项目"}</h2>
-                <select
-                  aria-label="侧栏 Agent"
-                  value={selectedProvider}
-                  onChange={(event) => changeProvider(event.target.value)}
-                >
-                  {["claude", "cursor", "codex", "pi", "opencode"].map((id) => (
-                    <option key={id} value={id}>
-                      {providerLabel(id)}
-                    </option>
-                  ))}
-                </select>
               </div>
               {sessionView === "sessions" ? (
                 <>
