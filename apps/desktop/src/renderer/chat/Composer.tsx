@@ -280,10 +280,9 @@ export function Composer({
               {modelOpen && (
                 <div className="composer-model-menu" role="listbox" aria-label="选择模型">
                   {[
-                    ["GLM-4.7", "通用", 3],
-                    ["Claude Sonnet", "代码", 2],
-                    ["GPT-5.5", "推理", 2],
-                    ["DeepSeek V4", "长上下文", 1],
+                    ["GLM-4.7", "旗舰 · 推理最强", 2],
+                    ["GLM-4.7-Air", "均衡 · 日常首选", 2],
+                    ["GLM-4-Flash", "极速 · 轻量任务", 3],
                   ].map(([item, tag, speed]) => (
                     <button key={String(item)} type="button" role="option" aria-selected={item === model}
                       onClick={() => { setModel(String(item)); setModelOpen(false); setNotice(`已切换模型：${item}`); }}>
