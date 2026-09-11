@@ -43,12 +43,14 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.03;ba
 .codeagent-workbench aside>section[aria-label="侧栏"]{flex:1;min-height:0;overflow:auto;padding:14px 0 18px}
 .codeagent-workbench aside>section[aria-label="侧栏"]>div{min-height:100%}
 .sidebar-heading,.session-sidebar-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 12px;padding:0 6px}
-.sidebar-heading h2,.session-sidebar-heading h2{margin:0;font-size:18px;font-weight:700;letter-spacing:-.02em}
+.sidebar-heading h2,.session-sidebar-heading h2{margin:0;font-size:12px;font-weight:500;letter-spacing:.08em}
 .sidebar-heading button{padding:3px 6px!important;border:0!important;color:#646b78!important;font-size:14px}
 .nested-sidebar-tabs{display:flex!important;gap:2px!important;margin:0 0 14px!important;padding:3px!important;border:1px solid #22262f!important;border-radius:10px;background:#0d0f14!important}
 .nested-sidebar-tabs button{flex:1;width:auto!important;text-align:center!important;padding:7px 0!important;border:0!important;border-radius:7px!important;background:transparent!important;color:#646b78!important;font-size:12px!important}
 .nested-sidebar-tabs button[aria-selected="true"]{background:#1a1e27!important;color:#f5a524!important;box-shadow:inset 0 0 0 1px rgba(245,165,36,.25)}
-.session-sidebar-heading{margin-top:2px}.session-sidebar-heading h2{font-size:20px}.session-sidebar-heading select{max-width:122px;padding:7px 26px 7px 10px!important;border-radius:8px!important}
+.session-sidebar-heading{margin-top:2px;min-height:28px}.session-sidebar-heading h2{font-family:'IBM Plex Mono','Cascadia Code',monospace!important;font-size:12px!important;font-weight:500!important;letter-spacing:.08em;color:#9ba1ad!important}.session-sidebar-heading select{max-width:122px;padding:7px 26px 7px 10px!important;border-radius:8px!important}
+.codeagent-workbench aside .session-section-label{margin:17px 6px 7px;color:#646b78;font:10px/1.2 'IBM Plex Mono','Cascadia Code',monospace;letter-spacing:.08em}
+.codeagent-workbench aside .session-project-group .project-no-sessions{font:10px/1.5 'IBM Plex Mono','Cascadia Code',monospace;color:#646b78}
 .session-section-label,.project-group-header h3{margin:14px 6px 7px!important;font:600 11px 'IBM Plex Mono','Cascadia Code',monospace!important;letter-spacing:.08em;text-transform:uppercase;color:#646b78!important}
 .codeagent-workbench aside .session-section-label~button:not(.project-group-header button),.codeagent-workbench aside .session-project-group>button{width:100%;margin:3px 0;padding:9px 10px!important;border:1px solid #22262f!important;border-radius:8px!important;background:#13161d!important;color:#9ba1ad!important;font-size:12px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .codeagent-workbench aside .session-section-label~button:not(.project-group-header button):hover,.codeagent-workbench aside .session-project-group>button:hover{border-color:rgba(245,165,36,.45)!important;background:#1a1e27!important;color:#f5a524!important}
