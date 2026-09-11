@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { quoteShellArg, withUserBinaryPaths } from './command-resolver.js';
+import { quoteShellArg, withUserBinaryPaths, MAX_ARGV_PROMPT_CHARS } from './command-resolver.js';
 import { parseCliEvent } from './cli-event-parser.js';
 import type { AgentEvent } from '@codeagent-studio/protocol';
 import type { CreateSessionInput, ProviderStatus } from './contracts.js';
@@ -28,14 +28,20 @@ export class PiCliTransport implements PiTransport {
       const model = selectedModel || process.env.CODEAGENT_PI_MODEL || 'sensenova-6.8-flash-lite';
       const sessionTarget = this.resumed.get(nativeId) ?? nativeId;
       const resume = this.resumed.delete(nativeId);
-      const rawArgs = buildPiPromptArgs(provider, model, sessionTarget, text, resume);
+      const useStdin = text.length > MAX_ARGV_PROMPT_CHARS;
+      const rawArgs = buildPiPromptArgs(provider, model, sessionTarget, useStdin ? null : text, resume);
       const args = process.platform === 'win32' ? rawArgs.map((arg) => quoteShellArg(arg)) : rawArgs;
       const child = spawn(this.command, args, {
         shell: process.platform === 'win32',
         windowsHide: true,
         env: withUserBinaryPaths(process.env),
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: [useStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'],
       });
+      if (useStdin && child.stdin) {
+        // 子进程可能先退出，忽略 EPIPE 防止未处理异常
+        child.stdin.on('error', () => undefined);
+        child.stdin.end(text);
+      }
       this.running.set(nativeId, child);
       let sequence = 0;
       let pending = '';
@@ -121,7 +127,8 @@ export class PiCliTransport implements PiTransport {
   }
 }
 
-export function buildPiPromptArgs(provider: string, model: string, nativeId: string, text: string, _resume: boolean): string[] {
+export function buildPiPromptArgs(provider: string, model: string, nativeId: string, text: string | null, _resume: boolean): string[] {
   // Pi's exact session file is the deterministic continuation path for both first and subsequent turns.
-  return ['--print', '--mode', 'json', '--provider', provider, '--model', model, '--session', nativeId, text];
+  // text 为 null 时省略位置参数，提示词改由 stdin 传入以规避命令行长度上限。
+  return ['--print', '--mode', 'json', '--provider', provider, '--model', model, '--session', nativeId, ...(text === null ? [] : [text])];
 }

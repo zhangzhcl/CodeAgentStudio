@@ -15,6 +15,12 @@ export function quoteShellArg(value: string, platform: NodeJS.Platform = process
 }
 
 /**
+ * 超过该长度的提示词改经 stdin 传递。Windows 对整条命令行有约 32K 字符的硬性
+ * 上限，argv 携带长文本会直接启动失败；短文本仍走位置参数，保持既有行为。
+ */
+export const MAX_ARGV_PROMPT_CHARS = 8192;
+
+/**
  * Converts a user/PATH command into a safe spawn tuple. PATH is intentionally
  * left to the operating system; only Windows script/shim semantics differ.
  */

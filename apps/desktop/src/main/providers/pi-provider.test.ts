@@ -9,6 +9,11 @@ describe('PiProvider', () => {
     const args = buildPiPromptArgs('sensenova', 'sensenova-6.8-flash-lite', 'C:\\Users\\me\\.pi\\agent\\sessions\\native.jsonl', 'next', true);
     expect(args).toEqual(['--print', '--mode', 'json', '--provider', 'sensenova', '--model', 'sensenova-6.8-flash-lite', '--session', 'C:\\Users\\me\\.pi\\agent\\sessions\\native.jsonl', 'next']);
   });
+  it('omits the positional prompt when the text is streamed via stdin', () => {
+    const args = buildPiPromptArgs('sensenova', 'm', 'native.jsonl', null, false);
+    expect(args).toEqual(['--print', '--mode', 'json', '--provider', 'sensenova', '--model', 'm', '--session', 'native.jsonl']);
+    expect(args).not.toContain(null);
+  });
   it('creates sessions in its controlled directory and resumes only there', async () => {
     const root = await mkdtemp(join(tmpdir(), 'cas-pi-')); const transport: PiTransport = { createSession: vi.fn(async () => ({ nativeId: 'n1' })), resumeSession: vi.fn(async () => {}), prompt: vi.fn(async () => {}), abort: vi.fn(async () => true), subscribe: () => () => {}, detect: vi.fn(async () => ({ provider: 'pi' as const, installed: true, authenticated: true })) }; const provider = new PiProvider(transport, join(root, 'sessions')); const created = await provider.createSession({ scope: 'project', projectId: 'p' }); expect(created.nativeSessionFile).toContain('sessions'); await writeFile(created.nativeSessionFile!, '{}'); await provider.resumeSession('n1', created.nativeSessionFile); const outside = join(root, 'outside.jsonl'); await writeFile(outside, '{}'); await expect(provider.resumeSession('n1', outside)).rejects.toThrow('outside'); await rm(root, { recursive: true, force: true });
   });
