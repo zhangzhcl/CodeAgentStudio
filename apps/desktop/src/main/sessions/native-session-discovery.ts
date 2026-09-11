@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { homedir } from 'node:os';
 import { join, basename, dirname } from 'node:path';
@@ -23,17 +23,33 @@ export async function discoverNativeSessions(service: SessionService, workspace?
   // cwd happens to sit below a previously discovered directory.
   const legacyNativeIds = new Set(service.list().filter((session) => session.nativeId && !session.projectId).map((session) => session.nativeId as string));
   const projectForSession = async (nativeId: string, cwd: string | undefined) => legacyNativeIds.has(nativeId) ? undefined : projectForCwd(cwd);
+  const codexHome = process.env.CODEX_HOME || join(homedir(), '.codex');
+  const claudeHome = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
+  const cursorHome = process.env.CURSOR_HOME || join(homedir(), '.cursor');
+  const piHome = process.env.CODEAGENT_PI_HOME || join(homedir(), '.pi', 'agent');
   const roots: Array<[ProviderId, string]> = [
-    ['claude', join(homedir(), '.claude', 'projects')],
-    ['codex', join(homedir(), '.codex', 'sessions')],
-    ['pi', process.env.CODEAGENT_PI_SESSION_DIR ?? join(homedir(), '.pi', 'agent', 'sessions')],
+    ['claude', join(claudeHome, 'projects')],
+    ['claude', join(claudeHome, 'sessions')],
+    ['codex', join(codexHome, 'sessions')],
+    ['codex', join(codexHome, 'archived_sessions')],
+    ['pi', process.env.CODEAGENT_PI_SESSION_DIR ?? join(piHome, 'sessions')],
   ];
   for (const [provider, root] of roots) for (const path of await files(root, '.jsonl')) { const messages = await parseJsonl(path); if (!messages.length) continue; const nativeId = basename(path, '.jsonl'); const id = stableId(provider, nativeId); const cwd = await nativeCwd(path); const project = await projectForCwd(cwd); const projectFields = project ? { projectId: project.id, projectRoot: project.rootPath, projectName: project.name } : undefined; const existing = service.list().find((session) => session.id === id); if (!existing) { service.create({ id, provider, scope: project ? 'project' : 'personal', ...(projectFields ?? {}), nativeId, nativeSessionFile: path }); for (const message of messages) service.importMessage({ id: `${id}:native:${message.sequence}`, sessionId: id, role: message.role, content: message.content, sequence: message.sequence, createdAt: Date.now() + message.sequence }); imported++; } else if (existing.scope !== (project ? 'project' : 'personal') || (project && existing.projectId !== project.id) || (!project && (existing.projectId || existing.projectRoot || existing.projectName))) service.updateScope(id, project ? 'project' : 'personal', projectFields); }
-  const cursorFiles = await files(join(homedir(), '.cursor', 'chats'), 'prompt_history.json');
+  const cursorFiles = await files(join(cursorHome, 'chats'), 'prompt_history.json');
   for (const path of cursorFiles) { const messages = await parseCursorHistory(path); if (!messages.length) continue; const meta = await cursorMeta(path); const nativeId = basename(join(path, '..')); const id = stableId('cursor', nativeId); const project = await projectForCwd(meta.cwd); const projectFields = project ? { projectId: project.id, projectRoot: project.rootPath, projectName: project.name } : undefined; const existing = service.list().find((session) => session.id === id); if (!existing) { service.create({ id, provider: 'cursor', scope: project ? 'project' : 'personal', ...(projectFields ?? {}), nativeId, nativeSessionFile: path }); for (const message of messages) service.importMessage({ id: `${id}:native:${message.sequence}`, sessionId: id, role: message.role, content: message.content, sequence: message.sequence, createdAt: Date.now() + message.sequence }); imported++; } else if (existing.scope !== (project ? 'project' : 'personal') || (project && existing.projectId !== project.id) || (!project && (existing.projectId || existing.projectRoot || existing.projectName))) service.updateScope(id, project ? 'project' : 'personal', projectFields); }
   try {
     const { default: Database } = await import('better-sqlite3');
-    const opencodePath = join(homedir(), '.local', 'share', 'opencode', 'opencode.db');
+    const opencodeCandidates = [
+      process.env.OPENCODE_DB,
+      process.env.XDG_DATA_HOME ? join(process.env.XDG_DATA_HOME, 'opencode', 'opencode.db') : undefined,
+      join(homedir(), '.local', 'share', 'opencode', 'opencode.db'),
+      join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'opencode', 'opencode.db'),
+      join(process.env.LOCALAPPDATA || join(homedir(), 'AppData', 'Local'), 'opencode', 'opencode.db'),
+      join(homedir(), '.config', 'opencode', 'opencode.db'),
+    ].filter((value): value is string => Boolean(value));
+    let opencodePath = opencodeCandidates[0];
+    for (const candidate of opencodeCandidates) { if (await stat(candidate).then((info) => info.isFile()).catch(() => false)) { opencodePath = candidate; break; } }
+    if (!opencodePath) throw new Error('OpenCode database not found');
     const db = new Database(opencodePath, { readonly: true, fileMustExist: true });
     const sessions = db.prepare('SELECT id, title, directory, time_created FROM session ORDER BY time_updated DESC LIMIT 120').all() as Array<{ id: string; title?: string; directory?: string; time_created: number }>;
     const parts = db.prepare('SELECT m.session_id as sessionId, m.data as messageData, p.data as partData, p.time_created as createdAt FROM message m JOIN part p ON p.message_id = m.id ORDER BY p.time_created').all() as Array<{ sessionId: string; messageData: string; partData: string; createdAt: number }>;
