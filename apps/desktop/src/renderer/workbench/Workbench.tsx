@@ -321,7 +321,7 @@ export function Workbench() {
     const raw =
       title?.trim() || nativeId || id.replace(/^(personal|project)-/, "");
     return raw === "new-chat"
-      ? "新聊天"
+      ? "新对话"
       : raw.length > 80
         ? `${raw.slice(0, 77)}…`
         : raw;

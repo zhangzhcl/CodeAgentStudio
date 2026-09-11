@@ -151,6 +151,7 @@ export function Composer({
         )}
         <textarea
           className="composer-input"
+          rows={1}
           aria-label="消息"
           placeholder={
             sending
