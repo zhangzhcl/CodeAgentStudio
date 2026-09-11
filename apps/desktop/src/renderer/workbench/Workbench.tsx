@@ -569,6 +569,7 @@ export function Workbench() {
                 type="button"
                 id="project-picker"
                 className="project-picker"
+                title="选择已有文件夹，或在系统窗口中先新建文件夹"
                 onClick={() => {
                   const choose = (
                     window as Window & {
