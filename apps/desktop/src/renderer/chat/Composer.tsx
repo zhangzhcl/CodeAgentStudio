@@ -152,6 +152,29 @@ export function Composer({
           submit();
         }}
       >
+        {attachments.length > 0 && (
+          <div className="composer-files">
+            {attachments.map((attachment, index) => (
+              <span className="file-chip" key={`${attachment.name}-${index}`}>
+                <IconFile size={13} />
+                <span className="file-name" title={attachment.name}>{attachment.name}</span>
+                <button
+                  type="button"
+                  className="file-remove"
+                  aria-label={`移除附件 ${attachment.name}`}
+                  title="移除附件"
+                  onClick={() =>
+                    setAttachments((current) =>
+                      current.filter((_, itemIndex) => itemIndex !== index),
+                    )
+                  }
+                >
+                  <IconX size={11} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         <textarea
           className="composer-input"
           rows={1}
@@ -371,37 +394,6 @@ export function Composer({
             )}
           </div>
         </div>
-        {attachments.length > 0 && (
-          <div className="composer-attachments">
-            {attachments.map((attachment, index) => (
-              <span
-                className="attachment-chip"
-                key={`${attachment.name}-${index}`}
-              >
-                <span className="attachment-kind">
-                  {attachment.type.startsWith("image/") ? "IMG" : "FILE"}
-                </span>
-                <span title={attachment.name}>{attachment.name}</span>
-                <small>
-                  {attachment.size >= 1024 * 1024
-                    ? `${(attachment.size / 1024 / 1024).toFixed(1)} MB`
-                    : `${Math.max(1, Math.round(attachment.size / 1024))} KB`}
-                </small>
-                <button
-                  type="button"
-                  aria-label={`移除附件 ${attachment.name}`}
-                  onClick={() =>
-                    setAttachments((current) =>
-                      current.filter((_, itemIndex) => itemIndex !== index),
-                    )
-                  }
-                >
-                  <IconX size={11} />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
         {showCommandMenu && (
           <div className="command-menu" role="listbox">
             <div className="command-menu-head">命令面板</div>
