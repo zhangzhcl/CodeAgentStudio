@@ -30,7 +30,7 @@ describe('Workbench', () => {
   it('does not remain in detecting state when the provider bridge is unavailable', async () => {
     render(<Workbench />);
 
-    await waitFor(() => expect(screen.getByText('Agent 未就绪')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('未就绪')).toBeInTheDocument());
     expect(screen.queryByText('正在检测 Agent…')).not.toBeInTheDocument();
   });
 
