@@ -293,3 +293,8 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light .conversation-marker{background:#aab8c8!important}
 .codeagent-workbench.theme-light .conversation-marker:hover,.codeagent-workbench.theme-light .conversation-marker:focus-visible{background:#c38a1d!important}
 .codeagent-workbench.theme-light .conversation-marker span{border-color:#d3deea;background:#fff;color:#34465a;box-shadow:0 8px 22px rgba(40,65,95,.16)}
+
+/* The jump-to-bottom control is anchored to the output pane's lower-right
+   edge, immediately above the composer. It is absolute, so queued messages
+   in the composer never get reflowed or pushed by it. */
+.codeagent-workbench .list-wrap>.scroll-bottom{right:max(12px,calc((100% - 872px)/2 + 26px))!important;bottom:10px!important;z-index:6}
