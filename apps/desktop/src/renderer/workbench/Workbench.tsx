@@ -865,14 +865,15 @@ export function Workbench() {
             </div>
           )}
         </section>
-        <div className="sidebar-status-card">
-          <div>
-            <span className="status-pulse" /> 在线
-            <span className="sidebar-status-value">{latency}ms</span>
+        <div className="side-status sidebar-status-card">
+          <div className="side-status-row">
+            <span className="pulse-dot status-pulse" />
+            <span className="side-status-label">在线</span>
+            <span className="side-status-val sidebar-status-value">{latency}ms</span>
           </div>
-          <div>
-            <span>Agent</span>
-            <span className="sidebar-status-value">
+          <div className="side-status-row">
+            <span className="side-status-label">Agent</span>
+            <span className="side-status-val sidebar-status-value">
               {detectingProviders
                 ? "检测中…"
                 : providerStatuses.filter((status) => status.installed).length
@@ -893,9 +894,9 @@ export function Workbench() {
               {providerDetectionError}
             </span>
           )}
-          <div>
-            <span>模型</span>
-            <span className="sidebar-status-value">GLM-4.7</span>
+          <div className="side-status-row">
+            <span className="side-status-label">模型</span>
+            <span className="side-status-val sidebar-status-value">GLM-4.7</span>
           </div>
           <span>本地工作区</span>
         </div>
