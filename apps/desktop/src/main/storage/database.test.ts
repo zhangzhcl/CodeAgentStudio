@@ -26,10 +26,10 @@ describe('database', () => {
     db.close(); await rm(dir, { recursive: true, force: true });
   });
 
-  it('upgrades a legacy v5 database and preserves existing projects as user projects', async () => {
+  it('upgrades a legacy v1 database through all migrations and preserves projects as user projects', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'cas-db-')); const file = join(dir, 'legacy.db'); const { DatabaseSync } = require('node:sqlite') as typeof import('node:sqlite'); const legacy = new DatabaseSync(file);
-    legacy.exec("CREATE TABLE schema_version (version INTEGER NOT NULL); INSERT INTO schema_version VALUES (5); CREATE TABLE projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, root_path TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL); INSERT INTO projects VALUES ('p','Demo','C:/Demo',1);"); legacy.close();
-    const db = openDatabase(file); expect((db.prepare('SELECT source FROM projects WHERE id=?').get('p') as { source: string }).source).toBe('user'); db.close(); await rm(dir, { recursive: true, force: true });
+    legacy.exec("CREATE TABLE schema_version (version INTEGER NOT NULL); INSERT INTO schema_version VALUES (1); CREATE TABLE projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, root_path TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL); CREATE TABLE sessions (id TEXT PRIMARY KEY, provider TEXT NOT NULL, scope TEXT NOT NULL, project_id TEXT, status TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL); INSERT INTO projects VALUES ('p','Demo','C:/Demo',1);"); legacy.close();
+    const db = openDatabase(file); expect((db.prepare('SELECT MAX(version) as version FROM schema_version').get() as { version: number }).version).toBe(6); expect((db.prepare('SELECT source FROM projects WHERE id=?').get('p') as { source: string }).source).toBe('user'); expect((db.prepare('PRAGMA table_info(sessions)').all() as Array<{ name: string }>).some((column) => column.name === 'title')).toBe(true); db.close(); await rm(dir, { recursive: true, force: true });
   });
 
   it('backs up a corrupt database before recreating it', async () => {
