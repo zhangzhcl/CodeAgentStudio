@@ -44,13 +44,10 @@ export function MarkdownLite({ content }: { content: string }) {
           const lines = paragraph.split("\n");
           if (lines.every((line) => /^[-*] \[[ x~>]\] /.test(line)))
             nodes.push(
-              <div
-                className="task-list-block"
-                key={`tasks-${index}-${partIndex}`}
-              >
-                <div className="task-list-head">
-                  执行计划{" "}
-                  <span>
+              <div className="tasks" key={`tasks-${index}-${partIndex}`}>
+                <div className="tasks-head">
+                  <span className="tasks-label">执行计划</span>{" "}
+                  <span className="tasks-progress">
                     {lines.filter((line) => /^[-*] \[x\] /i.test(line)).length}/
                     {lines.length}
                   </span>
@@ -65,15 +62,17 @@ export function MarkdownLite({ content }: { content: string }) {
                         : "pending";
                   return (
                     <div
-                      className={`task-list-item task-${status}`}
+                      className={`task-item is-${status}`}
                       key={`${line}-${taskIndex}`}
                     >
                       <span className="task-check" aria-hidden="true">
-                        {status === "done"
-                          ? "✓"
-                          : status === "running"
-                            ? "·"
-                            : ""}
+                        {status === "done" ? (
+                          <IconCheck size={11} />
+                        ) : status === "running" ? (
+                          "·"
+                        ) : (
+                          ""
+                        )}
                       </span>
                       <span>
                         <InlineMarkdown
@@ -87,7 +86,7 @@ export function MarkdownLite({ content }: { content: string }) {
             );
           else if (lines.every((line) => /^[-*] /.test(line)))
             nodes.push(
-              <ul className="md-list" key={`list-${index}-${partIndex}`}>
+              <ul className="md-ul" key={`list-${index}-${partIndex}`}>
                 {lines.map((line) => (
                   <li key={line}>
                     <InlineMarkdown text={line.slice(2)} />
@@ -97,7 +96,7 @@ export function MarkdownLite({ content }: { content: string }) {
             );
           else if (lines.every((line) => /^\d+\. /.test(line)))
             nodes.push(
-              <ol className="md-list" key={`ordered-${index}-${partIndex}`}>
+              <ol className="md-ol" key={`ordered-${index}-${partIndex}`}>
                 {lines.map((line) => (
                   <li key={line}>
                     <InlineMarkdown text={line.replace(/^\d+\. /, "")} />
@@ -128,13 +127,13 @@ export function MarkdownLite({ content }: { content: string }) {
             );
             if (lines.length > 1)
               nodes.push(
-                <p key={`heading-text-${index}-${partIndex}`}>
+                <p className="md-p" key={`heading-text-${index}-${partIndex}`}>
                   <InlineMarkdown text={lines.slice(1).join("\n")} />
                 </p>,
               );
           } else
             nodes.push(
-              <p key={`text-${index}-${partIndex}`}>
+              <p className="md-p" key={`text-${index}-${partIndex}`}>
                 <InlineMarkdown text={paragraph} />
               </p>,
             );
