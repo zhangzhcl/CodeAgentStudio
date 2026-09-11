@@ -123,13 +123,14 @@ export function MarkdownLite({ content }: { content: string }) {
             );
           else if (/^#{1,3} /.test(lines[0] ?? "")) {
             const level = Math.min(3, lines[0]!.match(/^#+/)?.[0].length ?? 1);
+            const Heading = level === 1 ? "h2" : level === 2 ? "h3" : "h4";
             nodes.push(
-              <div
+              <Heading
                 className={`md-h md-h${level}`}
                 key={`heading-${index}-${partIndex}`}
               >
                 <InlineMarkdown text={lines[0]!.replace(/^#+\s*/, "")} />
-              </div>,
+              </Heading>,
             );
             if (lines.length > 1)
               nodes.push(
