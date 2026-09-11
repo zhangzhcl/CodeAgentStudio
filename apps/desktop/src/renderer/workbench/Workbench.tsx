@@ -3,7 +3,14 @@ import type { WorkbenchTab } from "@codeagent-studio/protocol";
 import { FileExplorer } from "../files/FileExplorer.js";
 import { ChatPanel } from "../chat/ChatPanel.js";
 import { EditorTab } from "../editor/EditorTab.js";
-import { IconArrowDown, IconPlus, IconSparkle, IconX } from "../icons.js";
+import {
+  IconArrowDown,
+  IconChat,
+  IconPlus,
+  IconSparkle,
+  IconTrash,
+  IconX,
+} from "../icons.js";
 
 type Activity = "files" | "sessions";
 export function Workbench() {
@@ -625,6 +632,7 @@ export function Workbench() {
                             )
                           }
                         >
+                          <IconChat size={14} className="conv-icon" />
                           <span className="conv-title">
                             {providerLabel(provider)} ·{" "}
                             {sessionTitle(id, nativeId, title)}
@@ -653,7 +661,11 @@ export function Workbench() {
                               }
                             }}
                           >
-                            {pendingDelete === id ? "删除" : "×"}
+                            {pendingDelete === id ? (
+                              "删除"
+                            ) : (
+                              <IconTrash size={12} />
+                            )}
                           </span>
                         </button>
                       ),
@@ -755,6 +767,7 @@ export function Workbench() {
                                   )
                                 }
                               >
+                                <IconChat size={13} className="conv-icon" />
                                 <span>
                                   {providerLabel(provider)} ·{" "}
                                   {sessionTitle(id, nativeId, title)}
@@ -786,7 +799,11 @@ export function Workbench() {
                                     }
                                   }}
                                 >
-                                  {pendingDelete === id ? "删除" : "×"}
+                                  {pendingDelete === id ? (
+                                    "删除"
+                                  ) : (
+                                    <IconTrash size={12} />
+                                  )}
                                 </span>
                               </button>
                             ),
