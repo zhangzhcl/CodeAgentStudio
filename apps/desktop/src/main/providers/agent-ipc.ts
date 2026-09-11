@@ -6,6 +6,9 @@ import { ProviderRegistry } from './provider-registry.js';
 import { ProviderRuntime } from './provider-runtime.js';
 import type { SessionService } from '../sessions/session-service.js';
 import type { WorkspaceService } from '../workspace/workspace-service.js';
+import type { AgentProvider } from './contracts.js';
+
+const providerUnsubscribers = new WeakMap<AgentProvider, () => void>();
 
 type PromptInput = { sessionId: string; provider: ProviderId; scope: SessionScope; projectId?: string; projectRoot?: string; text: string };
 export const PromptInputSchema = z.object({ sessionId: z.string().min(1), provider: ProviderIdSchema, scope: SessionScopeSchema, projectId: z.string().min(1).optional(), projectRoot: z.string().min(1).optional(), text: z.string().min(1).max(1_000_000) }).strict().superRefine((input, context) => {
@@ -17,7 +20,9 @@ export const PromptInputSchema = z.object({ sessionId: z.string().min(1), provid
 export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionService, workspace?: WorkspaceService): void {
   const providers = new Map(registry.list().map((provider) => [provider.id, provider]));
   const runtime = new ProviderRuntime(providers);
-  for (const provider of registry.list()) provider.subscribe((event: AgentEvent) => {
+  for (const provider of registry.list()) {
+    providerUnsubscribers.get(provider)?.();
+    const unsubscribe = provider.subscribe((event: AgentEvent) => {
     sessions?.appendEvent(event);
     if (event.type === 'done' || event.type === 'error') {
       runtime.complete(event.sessionId, event.type === 'error' ? 'error' : 'stopped');
@@ -26,7 +31,9 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
       }
     }
     for (const window of BrowserWindow.getAllWindows()) window.webContents.send('agent:event', event);
-  });
+    });
+    providerUnsubscribers.set(provider, unsubscribe);
+  }
   ipcMain.removeHandler('agent:prompt');
   ipcMain.removeHandler('agent:abort');
   ipcMain.handle('agent:prompt', async (_event, rawInput: unknown) => {

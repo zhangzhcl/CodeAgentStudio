@@ -9,6 +9,7 @@ const contentSchema = z.string().max(20 * 1024 * 1024);
 const projectRegistrationSchema = z.string().min(1).max(32768);
 
 export function registerWorkspaceIpc(service: WorkspaceService) {
+  for (const channel of ['workspace:projects', 'workspace:register-project', 'workspace:choose-project', 'workspace:list', 'workspace:browse', 'workspace:read', 'workspace:write', 'workspace:create', 'workspace:rename', 'workspace:delete']) ipcMain.removeHandler(channel);
   ipcMain.handle('workspace:projects', () => service.listProjects());
   ipcMain.handle('workspace:register-project', (_event, rootPath: unknown) => service.registerProject(projectRegistrationSchema.parse(rootPath)));
   ipcMain.handle('workspace:choose-project', async () => { const result = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] }); if (result.canceled || !result.filePaths[0]) return undefined; return service.registerProject(result.filePaths[0]); });
