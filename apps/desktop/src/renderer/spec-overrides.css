@@ -222,3 +222,19 @@ html[data-theme="light"] body::after{opacity:.012}
    which visually split input/output into giant cards. */
 .codeagent-workbench .chat-message-user.msg-user .msg-bubble{display:block;width:fit-content!important;max-width:76%!important;flex:0 0 auto!important}
 .codeagent-workbench .chat-message-user.msg-user .msg-bubble p{display:block;width:auto!important;background:transparent!important}
+
+/* Keep internal scrolling unobtrusive. Thumb length remains proportional to
+   content (short transcripts naturally produce a longer thumb), while the
+   track no longer looks like a second layout column. */
+.codeagent-workbench .chat-transcript,
+.codeagent-workbench aside>section[aria-label="侧栏"]{scrollbar-width:thin;scrollbar-color:#394453 transparent}
+.codeagent-workbench .chat-transcript::-webkit-scrollbar,
+.codeagent-workbench aside>section[aria-label="侧栏"]::-webkit-scrollbar{width:6px;height:6px}
+.codeagent-workbench .chat-transcript::-webkit-scrollbar-thumb,
+.codeagent-workbench aside>section[aria-label="侧栏"]::-webkit-scrollbar-thumb{background:rgba(57,68,83,.72);border-radius:999px}
+.codeagent-workbench .chat-transcript::-webkit-scrollbar-thumb:hover,
+.codeagent-workbench aside>section[aria-label="侧栏"]::-webkit-scrollbar-thumb:hover{background:rgba(78,94,114,.9)}
+.codeagent-workbench.theme-light .chat-transcript,
+.codeagent-workbench.theme-light aside>section[aria-label="侧栏"]{scrollbar-color:#b8c5d4 transparent}
+.codeagent-workbench.theme-light .chat-transcript::-webkit-scrollbar-thumb,
+.codeagent-workbench.theme-light aside>section[aria-label="侧栏"]::-webkit-scrollbar-thumb{background:rgba(184,197,212,.9)}
