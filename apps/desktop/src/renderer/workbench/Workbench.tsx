@@ -964,8 +964,8 @@ export function Workbench() {
         </header>
         <div className="chat-tabs" role="tablist" aria-label="打开的标签">
           {tabs.length === 0 && (
-            <span className="tabs-empty">
-              没有打开的标签，可从左侧选择会话或文件
+            <span className="chat-tabs-empty">
+              没有打开的会话，可从左侧选择或新建
             </span>
           )}
           {tabs.map((tab) => (
