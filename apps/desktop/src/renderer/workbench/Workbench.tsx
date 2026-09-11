@@ -871,6 +871,29 @@ export function Workbench() {
             <span className="sidebar-status-value">{latency}ms</span>
           </div>
           <div>
+            <span>Agent</span>
+            <span className="sidebar-status-value">
+              {detectingProviders
+                ? "检测中…"
+                : providerStatuses.filter((status) => status.installed).length
+                  ? `${providerStatuses.filter((status) => status.installed).length} 个就绪`
+                  : "未就绪"}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="sidebar-detect"
+            onClick={detectProviders}
+            disabled={detectingProviders}
+          >
+            {detectingProviders ? "检测中" : "检测 Agent"}
+          </button>
+          {providerDetectionError && (
+            <span className="sidebar-status-error" role="alert">
+              {providerDetectionError}
+            </span>
+          )}
+          <div>
             <span>模型</span>
             <span className="sidebar-status-value">GLM-4.7</span>
           </div>
@@ -910,26 +933,6 @@ export function Workbench() {
                 ))}
               </select>
             )}
-            <span className="agent-status-summary" aria-label="Agent 状态">
-              <span
-                className={
-                  detectingProviders ? "status-dot is-busy" : "status-dot"
-                }
-              />
-              {detectingProviders
-                ? "检测中…"
-                : providerStatuses.filter((status) => status.installed).length
-                  ? `${providerStatuses.filter((status) => status.installed).length} 个 Agent 就绪`
-                  : "Agent 未就绪"}
-            </span>
-            <button
-              type="button"
-              className="topbar-detect"
-              onClick={detectProviders}
-              disabled={detectingProviders}
-            >
-              {detectingProviders ? "检测中" : "检测"}
-            </button>
             <button
               type="button"
               className="theme-toggle"
