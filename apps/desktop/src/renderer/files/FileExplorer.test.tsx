@@ -13,7 +13,7 @@ describe('FileExplorer', () => {
     await waitFor(() => expect(list).toHaveBeenCalledWith('src'));
   });
 
-  it('filters default ignored directories', () => {
+  it('keeps project directories visible and hides only VCS internals', () => {
     const list = vi.fn().mockResolvedValue([]);
     render(<FileExplorer listEntries={list} onOpenFile={vi.fn()} initialEntries={[
       { name: '.git', path: '.git', isDirectory: true, mtime: 1, size: 0 },
@@ -22,8 +22,8 @@ describe('FileExplorer', () => {
       { name: 'README.md', path: 'README.md', isDirectory: false, mtime: 1, size: 10 },
     ]} />);
     expect(screen.queryByRole('button', { name: '.git' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'dist' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'reference-claudecodeui' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'dist' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'reference-claudecodeui' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'README.md' })).toBeInTheDocument();
   });
 });
