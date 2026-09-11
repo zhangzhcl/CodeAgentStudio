@@ -171,7 +171,7 @@ export function MessageItem({
                 <span className="think-cost">已完成</span>
               )}
             </button>
-            {thinkingOpen && <div className="think-body"><div className="think-text">{message.thinking === "running" ? "正在整理思路…" : "思考过程已完成"}</div></div>}
+            {thinkingOpen && <div className="think-body"><div className="think-text">{message.thinkingContent || (message.thinking === "running" ? "正在整理思路…" : "思考过程未返回可展示内容")}</div></div>}
           </div>
         )}
         {message.role === "tool" ? (

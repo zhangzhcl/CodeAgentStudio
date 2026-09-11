@@ -7,6 +7,7 @@ export type ChatMessage = {
   status?: "streaming" | "done" | "error";
   createdAt?: number;
   thinking?: "running" | "done";
+  thinkingContent?: string;
   attachments?: Array<{ name: string; size: number; type?: string }>;
   suggestions?: string[];
   branch?: { index: number; total: number };
@@ -16,6 +17,13 @@ export function applyAgentEvent(
   messages: ChatMessage[],
   event: AgentEvent,
 ): ChatMessage[] {
+  if (event.type === "thinking_delta") {
+    const index = messages.findIndex((message) => message.id === event.messageId);
+    if (index < 0) return [...messages, { id: event.messageId, role: "agent", content: "", thinking: "running", thinkingContent: event.payload.text, status: "streaming", createdAt: Date.now() }];
+    const next = messages.slice();
+    next[index] = { ...next[index], thinking: "running", thinkingContent: `${next[index].thinkingContent ?? ""}${event.payload.text}`, status: "streaming" };
+    return next;
+  }
   if (event.type === "text_delta") {
     const index = messages.findIndex(
       (message) => message.id === event.messageId,

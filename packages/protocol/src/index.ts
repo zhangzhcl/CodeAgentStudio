@@ -28,6 +28,7 @@ const BaseEventSchema = z.object({
 
 export const AgentEventSchema = z.discriminatedUnion('type', [
   BaseEventSchema.extend({ type: z.literal('text_delta'), payload: z.object({ text: z.string() }) }),
+  BaseEventSchema.extend({ type: z.literal('thinking_delta'), payload: z.object({ text: z.string() }) }),
   BaseEventSchema.extend({ type: z.literal('tool.started'), payload: z.object({ toolName: z.string().min(1), input: z.unknown() }) }),
   BaseEventSchema.extend({ type: z.literal('tool.completed'), payload: z.object({ toolName: z.string().min(1), output: z.unknown() }) }),
   BaseEventSchema.extend({ type: z.literal('error'), payload: z.object({ code: z.string().min(1), message: z.string() }) }),

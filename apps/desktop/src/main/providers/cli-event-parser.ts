@@ -1,6 +1,6 @@
 import type { AgentEvent, ProviderId } from '@codeagent-studio/protocol';
 
-type RawEvent = { type?: string; event?: string | Record<string, unknown>; message?: string | Record<string, unknown>; text?: string; delta?: string | { text?: string; type?: string }; toolName?: string; input?: unknown; output?: unknown; code?: string; item?: Record<string, unknown>; part?: Record<string, unknown>; data?: Record<string, unknown>; assistantMessageEvent?: Record<string, unknown> };
+type RawEvent = { type?: string; event?: string | Record<string, unknown>; message?: string | Record<string, unknown>; text?: string; delta?: string | { text?: string; type?: string }; reasoning?: string; thinking?: string; analysis?: string; toolName?: string; input?: unknown; output?: unknown; code?: string; item?: Record<string, unknown>; part?: Record<string, unknown>; data?: Record<string, unknown>; assistantMessageEvent?: Record<string, unknown> };
 
 function textFrom(raw: RawEvent): string {
   if (typeof raw.text === 'string') return raw.text;
@@ -25,6 +25,8 @@ export function parseCliEvent(line: string, provider: ProviderId, sessionId: str
   let raw: RawEvent;
   try { raw = JSON.parse(line) as RawEvent; } catch { return line.trim() ? base(provider, sessionId, sequence, 'text_delta', { text: line }, messageId) : undefined; }
   const kind = raw.type ?? (typeof raw.event === 'string' ? raw.event : undefined);
+  const nestedKind = raw.delta && typeof raw.delta === 'object' ? raw.delta.type : raw.assistantMessageEvent?.type;
+  if (kind === 'thinking' || kind === 'reasoning' || kind === 'analysis' || kind === 'thinking_delta' || kind === 'reasoning.delta' || nestedKind === 'thinking' || nestedKind === 'reasoning' || nestedKind === 'thinking_delta' || nestedKind === 'reasoning_delta') return base(provider, sessionId, sequence, 'thinking_delta', { text: thinkingFrom(raw) }, messageId);
   if (kind === 'text' || kind === 'text_delta' || kind === 'message.delta' || kind === 'stream_event' || kind === 'content_block_delta' || kind === 'assistant' || kind === 'assistant_message' || kind === 'item.delta' || kind === 'item.completed' || kind === 'message.part.updated' || kind === 'message_update' || kind === 'response.output_text.delta') return base(provider, sessionId, sequence, 'text_delta', { text: textFrom(raw) }, messageId);
   if (kind === 'tool.started' || kind === 'tool_start') return base(provider, sessionId, sequence, 'tool.started', { toolName: raw.toolName ?? 'tool', input: raw.input }, messageId);
   if (kind === 'tool.completed' || kind === 'tool_end') return base(provider, sessionId, sequence, 'tool.completed', { toolName: raw.toolName ?? 'tool', output: raw.output }, messageId);
@@ -35,4 +37,13 @@ export function parseCliEvent(line: string, provider: ProviderId, sessionId: str
 
 function base<T extends AgentEvent['type']>(provider: ProviderId, sessionId: string, sequence: number, type: T, payload: Extract<AgentEvent, { type: T }>['payload'], messageId: string): Extract<AgentEvent, { type: T }> {
   return { protocolVersion: 1, provider, sessionId, messageId, sequence, occurredAt: new Date().toISOString(), type, payload } as Extract<AgentEvent, { type: T }>;
+}
+
+function thinkingFrom(raw: RawEvent): string {
+  if (typeof raw.text === 'string') return raw.text;
+  if (typeof raw.reasoning === 'string') return raw.reasoning;
+  if (typeof raw.thinking === 'string') return raw.thinking;
+  if (typeof raw.analysis === 'string') return raw.analysis;
+  if (raw.delta && typeof raw.delta === 'object' && typeof raw.delta.text === 'string') return raw.delta.text;
+  return '';
 }
