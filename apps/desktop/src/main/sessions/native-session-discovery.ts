@@ -5,6 +5,7 @@ import { join, basename, dirname, resolve } from 'node:path';
 import type { ProviderId } from '@codeagent-studio/protocol';
 import type { SessionService } from './session-service.js';
 import type { WorkspaceService } from '../workspace/workspace-service.js';
+import { resolvePiSessionsDir } from '../providers/pi-paths.js';
 
 type DiscoveredMessage = { role: 'user' | 'agent'; content: string; sequence: number };
 const textOf = (value: unknown): string => { if (typeof value === 'string') return value; if (!Array.isArray(value)) return ''; return value.map((part) => typeof part === 'string' ? part : (part && typeof part === 'object' && 'text' in part ? String((part as { text?: unknown }).text ?? '') : '')).filter(Boolean).join('\n'); };
@@ -27,13 +28,12 @@ export async function discoverNativeSessions(service: SessionService, workspace?
   const codexHome = process.env.CODEX_HOME || join(homedir(), '.codex');
   const claudeHome = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
   const cursorHome = process.env.CURSOR_HOME || join(homedir(), '.cursor');
-  const piHome = process.env.CODEAGENT_PI_HOME || join(homedir(), '.pi', 'agent');
   const roots: Array<[ProviderId, string]> = [
     ['claude', join(claudeHome, 'projects')],
     ['claude', join(claudeHome, 'sessions')],
     ['codex', join(codexHome, 'sessions')],
     ['codex', join(codexHome, 'archived_sessions')],
-    ['pi', process.env.CODEAGENT_PI_SESSION_DIR ?? join(piHome, 'sessions')],
+    ['pi', resolvePiSessionsDir()],
   ];
   for (const [provider, root] of roots) for (const path of await files(root, '.jsonl')) { const messages = await parseJsonl(path); if (!messages.length) continue; const nativeId = basename(path, '.jsonl'); const id = stableId(provider, nativeId); const cwd = await nativeCwd(path); const project = await projectForSession(provider, nativeId, cwd); const projectFields = project ? { projectId: project.id, projectRoot: project.rootPath, projectName: project.name } : undefined; const existing = service.list().find((session) => session.id === id); if (!existing) { service.create({ id, provider, scope: project ? 'project' : 'personal', ...(projectFields ?? {}), nativeId, nativeSessionFile: path }); for (const message of messages) service.importMessage({ id: `${id}:native:${message.sequence}`, sessionId: id, role: message.role, content: message.content, sequence: message.sequence, createdAt: Date.now() + message.sequence }); imported++; } else if (existing.scope !== (project ? 'project' : 'personal') || (project && existing.projectId !== project.id) || (!project && (existing.projectId || existing.projectRoot || existing.projectName))) service.updateScope(id, project ? 'project' : 'personal', projectFields); }
   const cursorFiles = await files(join(cursorHome, 'chats'), 'prompt_history.json');
