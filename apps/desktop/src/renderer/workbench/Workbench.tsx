@@ -933,7 +933,7 @@ export function Workbench() {
       <main className="main">
         <header className="topbar">
           <div className="topbar-title">
-            {activeTab.kind === "chat" &&
+            {selectedProvider && activeTab.kind === "chat" &&
               activeTab.scope === "project" &&
               projectName !== "未选择项目" && (
                 <>
@@ -941,12 +941,18 @@ export function Workbench() {
                   <span className="topbar-sep">/</span>
                 </>
               )}
-            <span className="topbar-name">{activeTitle}</span>
-            <span className="topbar-meta">
-              {activeTab.kind === "chat"
-                ? `${activeStats.rounds} 轮对话 · 约 ${activeStats.tokens.toLocaleString()} tokens`
-                : "编辑器"}
+            <span className="topbar-name">
+              {activeTab.kind === "chat" && !selectedProvider
+                ? "未选择 Agent"
+                : activeTitle}
             </span>
+            {selectedProvider && (
+              <span className="topbar-meta">
+                {activeTab.kind === "chat"
+                  ? `${activeStats.rounds} 轮对话 · 约 ${activeStats.tokens.toLocaleString()} tokens`
+                  : "编辑器"}
+              </span>
+            )}
           </div>
           <div className="topbar-actions">
             {activeTab.kind === "chat" && (
