@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { WorkspaceService, WorkspaceError } from './workspace-service.js';
+import { WorkspaceService, WorkspaceError, type RegisteredProject } from './workspace-service.js';
 
 const temporaryDirectories: string[] = [];
 
@@ -38,6 +38,16 @@ describe('WorkspaceService', () => {
     await mkdir(join(directory, 'src'));
     await expect(service.findProject(join(directory, 'src'))).resolves.toMatchObject({ id: project.id });
     expect(service.listProjects()).toHaveLength(1);
+  });
+
+  it('hides native agent workspaces from the user project list and lookup', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'codeagent-native-'));
+    temporaryDirectories.push(directory);
+    const nativeProject: RegisteredProject = { id: 'native-1', name: 'Agent home', rootPath: directory, source: 'native' };
+    const service = new WorkspaceService({ list: () => [nativeProject], save: () => undefined });
+
+    expect(service.listProjects()).toEqual([]);
+    await expect(service.findProject(directory)).resolves.toBeUndefined();
   });
 
   it('rejects paths escaping the registered project root', async () => {

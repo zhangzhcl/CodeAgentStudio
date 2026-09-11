@@ -4,7 +4,7 @@ CodeAgent开发平台：独立打包的本地桌面工作台，统一接入 Clau
 
 ## 当前状态
 
-已完成协议、项目文件沙箱、Workbench、文件树、编辑器状态模型、聊天流式状态、CLI Provider 适配层、Pi Transport、Provider 生命周期、发现与日志基础能力。真实 Electron 壳与 Monaco runtime 集成仍在后续任务中。
+已完成协议、项目文件沙箱、Workbench、文件树、编辑器状态模型、聊天流式状态、CLI Provider 适配层、Pi Transport、Provider 生命周期、原生会话发现与日志基础能力。项目目录与 Agent 默认工作区已分离：只有用户显式选择的目录会进入项目列表，原生会话默认归入个人会话。
 
 ## 开发运行
 
@@ -15,7 +15,15 @@ pnpm install
 pnpm --filter @codeagent-studio/protocol test
 pnpm --filter @codeagent-studio/desktop test -- --run
 pnpm --filter @codeagent-studio/desktop typecheck
+
+# Electron 开发模式
+pnpm --filter @codeagent-studio/desktop start
+
+# Windows/macOS/Linux 打包
+pnpm --filter @codeagent-studio/desktop package
 ```
+
+如果本机 Node.js 主版本与 `better-sqlite3` 的预编译模块不一致，请先执行 `pnpm rebuild better-sqlite3`，再运行测试或 Electron。
 
 ## 合规边界
 

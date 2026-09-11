@@ -1,4 +1,4 @@
-import { access, lstat, mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { access, lstat, mkdir, open, readdir, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { createReadStream } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
@@ -14,7 +14,8 @@ export class WorkspaceError extends Error {
   }
 }
 
-export type RegisteredProject = { id: string; name: string; rootPath: string };
+export type ProjectSource = 'user' | 'native';
+export type RegisteredProject = { id: string; name: string; rootPath: string; source: ProjectSource };
 type ProjectStore = { list(): RegisteredProject[]; save(project: RegisteredProject): unknown };
 
 function isWithinRoot(rootPath: string, targetPath: string): boolean {
@@ -27,16 +28,18 @@ export class WorkspaceService {
   private readonly projects = new Map<string, RegisteredProject>();
   constructor(private readonly store?: ProjectStore) { for (const project of store?.list() ?? []) this.projects.set(project.id, project); }
 
-  listProjects(): RegisteredProject[] { return [...this.projects.values()]; }
+  listProjects(): RegisteredProject[] { return [...this.projects.values()].filter((project) => project.source === 'user'); }
   /** Look up a project the user explicitly registered without creating one. */
   async findProject(rootPath: string): Promise<RegisteredProject | undefined> {
     const canonicalRoot = await realpath(rootPath).catch(() => undefined);
     if (!canonicalRoot) return undefined;
     return [...this.projects.values()]
+      .filter((project) => project.source === 'user')
       .filter((project) => isWithinRoot(project.rootPath, canonicalRoot))
       .sort((a, b) => b.rootPath.length - a.rootPath.length)[0];
   }
-  async ensureProject(rootPath: string): Promise<RegisteredProject> { const canonicalRoot = await realpath(rootPath).catch(() => rootPath); const existing = [...this.projects.values()].find((project) => resolve(project.rootPath) === resolve(canonicalRoot)); return existing ?? this.registerProject(canonicalRoot); }
+  /** @deprecated Use registerProject for an explicit user-selected project. */
+  async ensureProject(rootPath: string): Promise<RegisteredProject> { return this.registerProject(rootPath); }
   browseWorkspace(projectId: string, relativePath = '') { return this.listProjectFiles(projectId, relativePath); }
   async openFileStream(projectId: string, relativePath: string) { const { path } = await this.resolvePath(projectId, relativePath); return createReadStream(path); }
 
@@ -48,7 +51,14 @@ export class WorkspaceService {
     if (!metadata.isDirectory()) {
       throw new WorkspaceError('INVALID_ENTRY', 'Project root must be a directory');
     }
-    const project = { id: randomUUID(), name: basename(canonicalRoot), rootPath: canonicalRoot };
+    const existing = [...this.projects.values()].find((item) => resolve(item.rootPath) === resolve(canonicalRoot));
+    if (existing) {
+      const promoted = { ...existing, source: 'user' as const };
+      this.projects.set(existing.id, promoted);
+      this.store?.save(promoted);
+      return promoted;
+    }
+    const project = { id: randomUUID(), name: basename(canonicalRoot), rootPath: canonicalRoot, source: 'user' as const };
     this.projects.set(project.id, project);
     this.store?.save(project);
     return project;
@@ -94,15 +104,29 @@ export class WorkspaceService {
 
   async readTextFile(projectId: string, relativePath: string): Promise<string> {
     const { path } = await this.resolvePath(projectId, relativePath);
-    const info = await stat(path);
-    if (!info.isFile()) throw new WorkspaceError('INVALID_ENTRY', 'Only files can be read as text');
-    if (info.size > MAX_TEXT_PREVIEW_BYTES) throw new WorkspaceError('FILE_TOO_LARGE', `Text preview exceeds ${MAX_TEXT_PREVIEW_BYTES} bytes`);
-    return readFile(path, 'utf8');
+    const flags = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0);
+    const handle = await open(path, flags);
+    try {
+      const info = await handle.stat();
+      if (!info.isFile()) throw new WorkspaceError('INVALID_ENTRY', 'Only files can be read as text');
+      if (info.size > MAX_TEXT_PREVIEW_BYTES) throw new WorkspaceError('FILE_TOO_LARGE', `Text preview exceeds ${MAX_TEXT_PREVIEW_BYTES} bytes`);
+      return await handle.readFile('utf8');
+    } finally {
+      await handle.close();
+    }
   }
 
   async saveTextFile(projectId: string, relativePath: string, content: string): Promise<void> {
     const { path } = await this.resolvePath(projectId, relativePath, true);
-    await writeFile(path, content, 'utf8');
+    const flags = constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | (constants.O_NOFOLLOW ?? 0);
+    const handle = await open(path, flags, 0o644);
+    try {
+      const info = await handle.stat();
+      if (!info.isFile()) throw new WorkspaceError('INVALID_ENTRY', 'Only files can be written');
+      await handle.writeFile(content, 'utf8');
+    } finally {
+      await handle.close();
+    }
   }
 
   async createEntry(projectId: string, parentRelativePath: string, name: string, kind: 'file' | 'directory'): Promise<void> {

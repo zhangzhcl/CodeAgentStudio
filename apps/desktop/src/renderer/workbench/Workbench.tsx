@@ -431,6 +431,24 @@ export function Workbench() {
     setTabs((items) => [...items, tab]);
     setActiveTab(tab);
   };
+  useEffect(() => {
+    const menu = (window as Window & { codeagentMenu?: { subscribe: (listener: (event: string) => void) => () => void } }).codeagentMenu;
+    if (!menu) return;
+    return menu.subscribe((event) => {
+      if (event === "menu:new-project-session") {
+        setActivity("sessions");
+        setSessionView("projects");
+        newSession("project");
+      } else if (event === "menu:new-personal-session") {
+        setActivity("sessions");
+        setSessionView("sessions");
+        newSession("personal");
+      } else if (event === "menu:choose-project") {
+        setActivity("files");
+        window.setTimeout(() => document.getElementById("project-picker")?.click(), 0);
+      }
+    });
+  }, [selectedProvider, projectId]);
   const changeProvider = (value: string) => {
     const provider = providerId(value);
     setSelectedProvider(provider);
@@ -557,6 +575,7 @@ export function Workbench() {
               </header>
               <button
                 type="button"
+                id="project-picker"
                 className="project-picker"
                 onClick={() => {
                   const choose = (
