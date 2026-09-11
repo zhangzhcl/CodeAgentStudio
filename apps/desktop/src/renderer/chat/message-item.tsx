@@ -4,6 +4,7 @@ import type { ChatMessage } from "./chat-state.js";
 import {
   IconCheck,
   IconCopy,
+  IconPencil,
   IconRefresh,
   IconSparkle,
   IconThumbDown,
@@ -173,23 +174,20 @@ export function MessageItem({
               </button>
             </div>
           )}
-        <div className="message-actions msg-actions">
-          <button
-            className="act"
-            type="button"
-            aria-label="复制消息"
-            onClick={() => onCopy(message.id, message.content)}
-          >
-            {copied ? (
-              <>
-                <IconCheck size={15} /> 已复制
-              </>
-            ) : (
-              <>
-                <IconCopy size={15} /> 复制
-              </>
-            )}
-          </button>
+        <div
+          className={`message-actions msg-actions${message.role === "user" ? " msg-user-meta" : ""}`}
+        >
+          {message.role === "agent" && (
+            <button
+              className={`act${copied ? " is-ok" : ""}`}
+              type="button"
+              aria-label={copied ? "已复制" : "复制消息"}
+              title={copied ? "已复制" : "复制消息"}
+              onClick={() => onCopy(message.id, message.content)}
+            >
+              {copied ? <IconCheck size={15} /> : <IconCopy size={15} />}
+            </button>
+          )}
           {message.role === "user" && onEditResend && !editing && (
             <button
               className="act"
@@ -200,7 +198,7 @@ export function MessageItem({
                 setEditing(true);
               }}
             >
-              编辑
+              <IconPencil size={14} />
             </button>
           )}
           {message.role === "agent" && (
@@ -212,7 +210,7 @@ export function MessageItem({
                 onClick={onRegenerate}
                 disabled={sending}
               >
-                <IconRefresh size={15} /> 重新生成
+                <IconRefresh size={15} />
               </button>
               <button
                 className="act"
@@ -220,7 +218,7 @@ export function MessageItem({
                 aria-label="赞"
                 onClick={onFeedback}
               >
-                <IconThumbUp size={15} /> 赞
+                <IconThumbUp size={15} />
               </button>
               <button
                 className="act"
@@ -228,7 +226,7 @@ export function MessageItem({
                 aria-label="踩"
                 onClick={onFeedback}
               >
-                <IconThumbDown size={15} /> 踩
+                <IconThumbDown size={15} />
               </button>
             </>
           )}{" "}
