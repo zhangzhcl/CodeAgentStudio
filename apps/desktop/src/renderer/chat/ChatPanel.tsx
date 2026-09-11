@@ -307,7 +307,8 @@ export function ChatPanel({
               <div className="chat-empty welcome">
                 {scope === "project" && projectName && (
                   <div className="project-context-strip welcome-context">
-                    项目上下文 · {projectName}
+                    <span className="conv-head-dot" aria-hidden="true" />
+                    已挂载项目「{projectName}」的共享上下文
                   </div>
                 )}
                 <div className="empty-mark welcome-mark">
