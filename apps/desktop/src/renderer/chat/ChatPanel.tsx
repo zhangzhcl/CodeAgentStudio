@@ -220,7 +220,8 @@ export function ChatPanel({
   };
   const copyMessage = async (id: string, content: string) => {
     try {
-      await navigator.clipboard?.writeText(content);
+      if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(content);
+      else throw new Error("clipboard-unavailable");
       setCopiedMessage(id);
       window.setTimeout(
         () =>
@@ -228,7 +229,19 @@ export function ChatPanel({
         1400,
       );
     } catch {
-      setComposerNotice("当前环境不支持复制");
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = content;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+        setCopiedMessage(id);
+      } catch {
+        setComposerNotice("当前环境不支持复制");
+      }
     }
   };
   return (
