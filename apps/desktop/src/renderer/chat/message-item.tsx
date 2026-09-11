@@ -161,8 +161,9 @@ export function MessageItem({
               </button>
             </div>
           )}
-        <div className="message-actions">
+        <div className="message-actions msg-actions">
           <button
+            className="act"
             type="button"
             aria-label="复制消息"
             onClick={() => onCopy(message.id, message.content)}
@@ -171,6 +172,7 @@ export function MessageItem({
           </button>
           {message.role === "user" && onEditResend && !editing && (
             <button
+              className="act"
               type="button"
               aria-label="编辑并重发"
               onClick={() => {
@@ -184,6 +186,7 @@ export function MessageItem({
           {message.role === "agent" && (
             <>
               <button
+                className="act"
                 type="button"
                 aria-label="重新生成"
                 onClick={onRegenerate}
@@ -191,10 +194,20 @@ export function MessageItem({
               >
                 重新生成
               </button>
-              <button type="button" aria-label="赞" onClick={onFeedback}>
+              <button
+                className="act"
+                type="button"
+                aria-label="赞"
+                onClick={onFeedback}
+              >
                 赞
               </button>
-              <button type="button" aria-label="踩" onClick={onFeedback}>
+              <button
+                className="act"
+                type="button"
+                aria-label="踩"
+                onClick={onFeedback}
+              >
                 踩
               </button>
             </>
