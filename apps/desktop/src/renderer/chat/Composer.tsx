@@ -402,7 +402,8 @@ export function Composer({
             ))}
           </div>
         )}
-        <div className="composer-hint">
+      </form>
+      <div className="composer-hint">
           {sending ? (
             <span className="composer-hint-state">
               Agent 正在生成，可点击“停止”中断
@@ -423,8 +424,7 @@ export function Composer({
               </span>
             </>
           )}
-        </div>
-      </form>
+      </div>
     </div>
   );
 }
