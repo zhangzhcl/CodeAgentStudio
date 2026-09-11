@@ -19,6 +19,7 @@ import { openDatabase } from './database.js';
 describe('database', () => {
   it('creates all tables and migrates an empty database to the current schema', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'cas-db-')); const db = openDatabase(join(dir, 'app.db'));
+    expect(String((db.prepare('PRAGMA journal_mode').get() as { journal_mode?: string }).journal_mode).toLowerCase()).toBe('wal');
     expect((db.prepare('SELECT MAX(version) as version FROM schema_version').get() as { version: number }).version).toBe(6);
     expect((db.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all() as Array<{ name: string }>).map((item) => item.name)).toEqual(['messages', 'projects', 'schema_version', 'sessions']);
     expect((db.prepare('PRAGMA table_info(projects)').all() as Array<{ name: string }>).some((column) => column.name === 'source')).toBe(true);
