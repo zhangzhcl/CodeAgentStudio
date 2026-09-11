@@ -4,6 +4,7 @@ import type { AgentEvent } from "@codeagent-studio/protocol";
 import { applyAgentEvent, type ChatMessage } from "./chat-state.js";
 import { MessageItem } from "./message-item.js";
 import { Composer } from "./Composer.js";
+import { IconSparkle } from "../icons.js";
 
 type Props = {
   sessionId: string;
@@ -278,11 +279,13 @@ export function ChatPanel({
                 项目上下文 · {projectName}
               </div>
             )}
-            <div className="empty-mark welcome-mark">✦</div>
+            <div className="empty-mark welcome-mark">
+              <IconSparkle size={22} />
+            </div>
             <span className="welcome-status welcome-tag">SYSTEM READY</span>
-            <h2 className="welcome-title">今天想让 Agent 做什么？</h2>
+            <h2 className="welcome-title">你好，我是 AGENT-01</h2>
             <p className="welcome-sub">
-              从一个快捷任务开始，或直接描述你的代码问题。
+              可以联网检索、调用工具、编写代码，也能陪你把一个模糊的想法推演成方案。
             </p>
             <div className="quick-prompts welcome-grid">
               <button

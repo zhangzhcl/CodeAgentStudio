@@ -151,6 +151,8 @@ export function Composer({
             resize(event.currentTarget);
           }}
           onKeyDown={(event) => {
+            // 中文输入法确认候选词时也会产生 Enter，不能误触发发送。
+            if (event.isComposing || event.keyCode === 229) return;
             const slashActive = draft.startsWith("/") && !draft.includes(" ");
             const matches = slashActive
               ? commands.filter((command) => command.value.startsWith(draft))
