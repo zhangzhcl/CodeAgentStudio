@@ -301,7 +301,7 @@ export function Composer({
                 onClick={() => setModelOpen((open) => !open)}
                 title={`当前模型：${model}`}
               >
-                {model}
+                <span className="pill-label">{model}</span>
                 <IconChevronDown size={13} className="pill-caret" />
               </button>
               {modelOpen && (
@@ -333,7 +333,7 @@ export function Composer({
               }}
               title="深度思考模式"
             >
-              <IconChip size={15} /> 深度思考
+              <IconChip size={15} /> <span className="pill-label">深度思考</span>
             </button>
             <button
               type="button"
@@ -345,7 +345,7 @@ export function Composer({
               }}
               title="联网搜索模式"
             >
-              <IconGlobe size={15} /> 联网
+              <IconGlobe size={15} /> <span className="pill-label">联网</span>
             </button>
           </div>
           <div className="composer-actions composer-bar-right">
