@@ -208,3 +208,11 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light .model-item.is-current{background:#fff7e6!important;color:#9a6b12!important}
 .codeagent-workbench.theme-light .model-item-tag{color:#74869a!important}
 .codeagent-workbench.theme-light .model-item.is-current .model-item-tag{color:#9a6b12!important}
+
+/* Thinking/status blocks must also switch surfaces and text contrast. */
+.codeagent-workbench.theme-light .think{background:#f5f8fc!important;border-color:#cfd9e8!important;color:#52657b!important}
+.codeagent-workbench.theme-light .think.is-running{border-color:#dfc17a!important}
+.codeagent-workbench.theme-light .think-head{background:#eef3f9!important;color:#52657b!important}
+.codeagent-workbench.theme-light .think-head:hover{background:#e7eef7!important;color:#24364c!important}
+.codeagent-workbench.theme-light .think.is-running .think-head{color:#9a6b12!important}
+.codeagent-workbench.theme-light .think-chevron,.codeagent-workbench.theme-light .think-cost,.codeagent-workbench.theme-light .think-text{color:#74869a!important}
