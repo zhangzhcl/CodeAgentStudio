@@ -76,6 +76,7 @@ export function Workbench() {
   >();
   const [activeStats, setActiveStats] = useState({ rounds: 0, tokens: 0 });
   const [projectError, setProjectError] = useState<string | undefined>();
+  const [sessionActionError, setSessionActionError] = useState<string | undefined>();
   const [pendingDelete, setPendingDelete] = useState<string>();
   const deleteTimer = useRef<number>();
   const providerId = (value?: string) =>
@@ -439,6 +440,7 @@ export function Workbench() {
   }, [selectedProvider, projectId]);
   const changeProvider = (value: string) => {
     if (!value) return;
+    setSessionActionError(undefined);
     const provider = providerId(value);
     setSelectedProvider(provider);
     const isTransientChat =
@@ -693,6 +695,11 @@ export function Workbench() {
                   项目
                 </button>
               </div>
+              {sessionActionError && (
+                <p className="sidebar-status-error" role="alert">
+                  {sessionActionError}
+                </p>
+              )}
               {sessionView === "sessions" ? (
                 <>
                   <div className="conv-list">
@@ -813,9 +820,14 @@ export function Workbench() {
                             className="proj-row-plus"
                             type="button"
                             aria-label={`在 ${group.name} 中新建会话`}
-                            disabled={!selectedProvider}
                             onClick={(event) => {
                               event.stopPropagation();
+                              if (!selectedProvider) {
+                                setSessionActionError("请先在右上角选择 Agent，再创建项目会话。");
+                                document.querySelector<HTMLSelectElement>(".topbar-provider")?.focus();
+                                return;
+                              }
+                              setSessionActionError(undefined);
                               const registered = registeredProjects.find(
                                 (project) => project.id === key,
                               );
