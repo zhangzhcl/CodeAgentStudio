@@ -116,6 +116,13 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
     {showCommandMenu && <div className="command-menu" role="listbox">
       {commands.map((command, index) => <button key={command.value} type="button" className={index === commandIndex ? 'is-active' : ''} onClick={() => { const element = document.querySelector<HTMLTextAreaElement>('.chat-composer textarea') ?? document.createElement('textarea'); applyDraft(`${command.value} `, element); setShowCommandMenu(false); }}>{command.value} <span>{command.label}</span></button>)}
     </div>}
-    <span className="composer-hint">{sending ? 'Agent 正在生成，可点击“停止”中断' : externalNotice || notice || hint}</span>
+    <div className="composer-hint">
+      {sending ? <span className="composer-hint-state">Agent 正在生成，可点击“停止”中断</span> : <>
+        <span><kbd>Enter</kbd> 发送</span>
+        <span><kbd>Shift</kbd> + <kbd>Enter</kbd> 换行</span>
+        <span><kbd>/</kbd> 唤起命令</span>
+        <span className="composer-hint-note">{externalNotice || notice || '内容由 AI 生成，请注意甄别'}</span>
+      </>}
+    </div>
   </form>;
 }
