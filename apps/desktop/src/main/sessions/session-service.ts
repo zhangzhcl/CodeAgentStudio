@@ -39,4 +39,10 @@ export class SessionService {
   markStatus(sessionId: string, status: SessionRecord['status']): SessionRecord { const updated = { ...this.get(sessionId), status, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
   updateNative(sessionId: string, native: Pick<SessionRecord, 'nativeId' | 'nativeSessionFile'>): SessionRecord { const updated = { ...this.get(sessionId), ...native, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
   updateProject(sessionId: string, project: Pick<SessionRecord, 'projectId' | 'projectRoot' | 'projectName'>): SessionRecord { const updated = { ...this.get(sessionId), ...project, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
+  updateScope(sessionId: string, scope: SessionScope, project?: Pick<SessionRecord, 'projectId' | 'projectRoot' | 'projectName'>): SessionRecord {
+    const updated = { ...this.get(sessionId), scope, ...(project ?? { projectId: undefined, projectRoot: undefined, projectName: undefined }), updatedAt: Date.now() };
+    this.sessions.set(sessionId, updated);
+    this.store?.save(updated);
+    return updated;
+  }
 }

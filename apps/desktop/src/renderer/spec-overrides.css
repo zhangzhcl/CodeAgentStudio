@@ -120,3 +120,36 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.03;ba
 .codeagent-workbench .topbar-clear,.codeagent-workbench .topbar-detect{display:inline-flex;align-items:center;gap:6px}
 .command-menu-head{padding:5px 8px 6px;border-bottom:1px solid #22262f;color:#f5a524;font:10px 'IBM Plex Mono','Cascadia Code',monospace;letter-spacing:.08em}.command-menu-foot{padding:6px 8px 3px;border-top:1px solid #22262f;color:#646b78;font:10px 'IBM Plex Mono','Cascadia Code',monospace}.command-menu-foot kbd{margin:0 2px}.theme-light .command-menu-head{border-color:#e3e9f0;color:#9a6b12}.theme-light .command-menu-foot{border-color:#e3e9f0;color:#74869a}
 .queue-promote svg{transform:rotate(180deg)}
+
+/* Welcome cards are data-driven in ChatPanel; keep the reference's responsive
+   two-column composition instead of inheriting the legacy inline prompt row. */
+.codeagent-workbench .quick-prompts.welcome-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;width:min(100%,882px);margin:26px auto 0;justify-content:stretch}
+.codeagent-workbench .quick-prompts.welcome-grid .welcome-card{display:block!important;width:100%;min-height:100px;padding:16px 22px!important;border:1px solid #2e333e!important;border-radius:14px!important;background:#13161d!important;color:#9ba1ad!important;text-align:left!important;font-size:14px!important;line-height:1.65!important;white-space:normal!important}
+.codeagent-workbench .quick-prompts.welcome-grid .welcome-card:hover,.codeagent-workbench .quick-prompts.welcome-grid .welcome-card:focus-visible{border-color:#f5a524!important;background:#1a1e27!important;color:#e9e6dc!important;transform:translateY(-2px)}
+.theme-light .codeagent-workbench .quick-prompts.welcome-grid .welcome-card{border-color:#d7e0ea!important;background:#fff!important;color:#52657b!important}
+.theme-light .codeagent-workbench .quick-prompts.welcome-grid .welcome-card:hover,.theme-light .codeagent-workbench .quick-prompts.welcome-grid .welcome-card:focus-visible{border-color:#c38a1d!important;background:#fffaf0!important;color:#24364c!important}
+
+/* Output tabs are neutral workspace tabs; amber remains reserved for actions
+   and status, not a persistent yellow outline around every open transcript. */
+.codeagent-workbench .chat-tabs .chat-tab,.codeagent-workbench .chat-tabs .chat-tab.is-active{border-color:transparent!important;box-shadow:none!important}
+.codeagent-workbench .chat-tabs .chat-tab{background:#13161d!important;color:#646b78!important}
+.codeagent-workbench .chat-tabs .chat-tab:hover{background:#1a1e27!important;color:#e9e6dc!important}
+.codeagent-workbench .chat-tabs .chat-tab.is-active{background:#0d0f14!important;color:#e9e6dc!important}
+.theme-light .codeagent-workbench .chat-tabs .chat-tab{background:#fff!important;color:#74869a!important}
+.theme-light .codeagent-workbench .chat-tabs .chat-tab:hover,.theme-light .codeagent-workbench .chat-tabs .chat-tab.is-active{background:#f7f9fc!important;color:#24364c!important}
+
+/* Theme is applied at the document boundary as well as the workbench so the
+   transcript, editor, empty state and scrollbar never retain dark leftovers. */
+html[data-theme="dark"],html[data-theme="dark"] body{background-color:#08090c;color:#e9e6dc;color-scheme:dark}
+html[data-theme="light"],html[data-theme="light"] body{background-color:#f7f9fc;color:#24364c;color-scheme:light}
+html[data-theme="light"] body{background-image:linear-gradient(rgba(36,54,76,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(36,54,76,.035) 1px,transparent 1px);background-size:40px 40px}
+html[data-theme="light"] body::after{opacity:.012}
+.codeagent-workbench.theme-light,.codeagent-workbench.theme-light main,.codeagent-workbench.theme-light .main,.codeagent-workbench.theme-light .list-wrap,.codeagent-workbench.theme-light .list-viewport,.codeagent-workbench.theme-light .chat-transcript{background:#f7f9fc!important;color:#24364c!important}
+.codeagent-workbench.theme-light main{background:#f7f9fc!important}
+.codeagent-workbench.theme-light .chat-tabs{background:#f7f9fc!important;border-color:#d7e0ea!important}
+.codeagent-workbench.theme-light .chat-empty,.codeagent-workbench.theme-light .welcome{color:#24364c!important}
+.codeagent-workbench.theme-light .welcome-title,.codeagent-workbench.theme-light .welcome-sub{color:#24364c!important}
+.codeagent-workbench.theme-light .welcome-sub{color:#52657b!important}
+.codeagent-workbench.theme-light .chat-message-agent,.codeagent-workbench.theme-light .msg-agent-text{color:#35495f!important}
+.codeagent-workbench.theme-light .chat-composer,.codeagent-workbench.theme-light .composer{background:#fff!important;color:#24364c!important;border-color:#cfd9e8!important}
+@media (max-width:760px){.codeagent-workbench .quick-prompts.welcome-grid{grid-template-columns:1fr;gap:10px}.codeagent-workbench .quick-prompts.welcome-grid .welcome-card{min-height:0}}

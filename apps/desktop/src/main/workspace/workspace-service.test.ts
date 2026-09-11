@@ -30,6 +30,16 @@ describe('WorkspaceService', () => {
     expect(await service.readTextFile(project.id, 'src/main.ts')).toBe('export const ok = true;');
   });
 
+  it('finds only explicitly registered project roots without creating one', async () => {
+    const { directory, project, service } = await createProject();
+
+    await expect(service.findProject(directory)).resolves.toMatchObject({ id: project.id });
+    await expect(service.findProject(join(directory, 'missing'))).resolves.toBeUndefined();
+    await mkdir(join(directory, 'src'));
+    await expect(service.findProject(join(directory, 'src'))).resolves.toMatchObject({ id: project.id });
+    expect(service.listProjects()).toHaveLength(1);
+  });
+
   it('rejects paths escaping the registered project root', async () => {
     const { project, service } = await createProject();
 

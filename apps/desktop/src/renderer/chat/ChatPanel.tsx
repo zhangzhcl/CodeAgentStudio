@@ -21,8 +21,16 @@ type Props = {
   onTitleChange?: (title: string) => void;
   onStatsChange?: (stats: { rounds: number; tokens: number }) => void;
   onSelectBranch?: (messageId: string, index: number) => void;
+  quickPrompts?: string[];
 };
 type ChatAttachment = { name: string; size: number; type: string };
+
+export const DEFAULT_WELCOME_PROMPTS = [
+  "帮我搜索本周 AI 领域的重要新闻，并总结成三条要点",
+  "用 TypeScript 写一个防抖函数，要求带完整注释",
+  "头脑风暴：给一家主打深夜营业的咖啡品牌起 10 个名字",
+  "把这句话翻译成英文：工欲善其事，必先利其器",
+];
 
 export function ChatPanel({
   sessionId,
@@ -39,6 +47,7 @@ export function ChatPanel({
   onTitleChange,
   onStatsChange,
   onSelectBranch,
+  quickPrompts = DEFAULT_WELCOME_PROMPTS,
 }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [provider, setProvider] = useState(providerName);
@@ -322,13 +331,8 @@ export function ChatPanel({
                     已挂载项目「{projectName}」的共享上下文，本会话与项目内其他会话共享项目资料
                   </div>
                 )}
-                <div className="quick-prompts welcome-grid">
-                  {[
-                    "帮我搜索本周 AI 领域的重要新闻，并总结成三条要点",
-                    "用 TypeScript 写一个防抖函数，要求带完整注释",
-                    "头脑风暴：给一家主打深夜营业的咖啡品牌起 10 个名字",
-                    "把这句话翻译成英文：工欲善其事，必先利其器",
-                  ].map((prompt) => (
+                <div className="quick-prompts welcome-grid" aria-label="快捷任务">
+                  {quickPrompts.map((prompt) => (
                     <button key={prompt} className="welcome-card" type="button" onClick={() => useQuickPrompt(prompt)}>
                       {prompt}
                     </button>
