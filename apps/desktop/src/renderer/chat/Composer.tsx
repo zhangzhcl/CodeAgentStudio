@@ -129,6 +129,7 @@ export function Composer({
           </div>
         )}
         <textarea
+          className="composer-input"
           aria-label="消息"
           placeholder="给 AGENT-01 下达指令，输入 / 唤起命令面板"
           value={draft}
@@ -206,8 +207,8 @@ export function Composer({
           }}
           disabled={false}
         />
-        <div className="composer-toolbar">
-          <div className="composer-tools">
+        <div className="composer-toolbar composer-bar">
+          <div className="composer-tools composer-bar-left">
             <input
               ref={attachmentInput}
               type="file"
@@ -232,7 +233,7 @@ export function Composer({
             <button
               type="button"
               aria-label="添加附件"
-              className="toolbar-icon"
+              className="toolbar-icon pill pill-icon"
               onClick={() => attachmentInput.current?.click()}
             >
               ⌕
@@ -240,7 +241,7 @@ export function Composer({
             <button
               type="button"
               aria-label="查看 Token 统计"
-              className="token-chip"
+              className="token-chip pill"
               onClick={() =>
                 setNotice("Token 统计为当前草稿和会话文本的估算值。")
               }
@@ -265,7 +266,7 @@ export function Composer({
             <button
               type="button"
               aria-label="引用文件"
-              className="toolbar-icon"
+              className="toolbar-icon pill pill-icon"
               onClick={() => {
                 setNotice("请在左侧文件资源管理器点击文件，即可打开并引用。");
                 onDraftChange(
@@ -280,7 +281,7 @@ export function Composer({
             </button>
             <button
               type="button"
-              className={`composer-toggle${deepThink ? " is-on" : ""}`}
+              className={`composer-toggle pill${deepThink ? " is-on" : ""}`}
               aria-pressed={deepThink}
               onClick={() => {
                 setDeepThink((value) => !value);
@@ -292,7 +293,7 @@ export function Composer({
             </button>
             <button
               type="button"
-              className={`composer-toggle${webSearch ? " is-on" : ""}`}
+              className={`composer-toggle pill${webSearch ? " is-on" : ""}`}
               aria-pressed={webSearch}
               onClick={() => {
                 setWebSearch((value) => !value);
@@ -303,11 +304,11 @@ export function Composer({
               ⌁ 联网
             </button>
           </div>
-          <div className="composer-actions">
+          <div className="composer-actions composer-bar-right">
             <div className="composer-model-wrap" ref={modelRef}>
               <button
                 type="button"
-                className={`composer-model${modelOpen ? " is-open" : ""}`}
+                className={`composer-model pill${modelOpen ? " is-open" : ""}`}
                 aria-haspopup="listbox"
                 aria-expanded={modelOpen}
                 onClick={() => setModelOpen((open) => !open)}
@@ -367,7 +368,7 @@ export function Composer({
             {sending && !draft.trim() && attachments.length === 0 ? (
               <button
                 type="button"
-                className="stop-action"
+                className="stop-action send-btn is-stop"
                 aria-label="停止"
                 onClick={onStop}
               >
@@ -376,7 +377,7 @@ export function Composer({
             ) : (
               <button
                 type="submit"
-                className="send-action"
+                className="send-action send-btn"
                 aria-label="发送"
                 disabled={!draft.trim() && attachments.length === 0}
               >
