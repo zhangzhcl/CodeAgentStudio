@@ -85,6 +85,7 @@ export function ChatPanel({
     let active = true;
     sequencer.current = new EventSequencer();
     setMessages([]);
+    onStatsChange?.({ rounds: 0, tokens: 0 });
     if (loadMessages)
       void loadMessages()
         .then((loaded) => {
