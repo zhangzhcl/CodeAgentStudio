@@ -628,6 +628,22 @@ export function Workbench() {
               >
                 <IconPlus size={15} /> 新建会话
               </button>
+              {sessionView === "projects" && (
+                <button
+                  type="button"
+                  className="side-new-row project-new-row"
+                  title="选择已有文件夹，或在系统窗口中先新建文件夹"
+                  onClick={() => {
+                    setActivity("files");
+                    window.setTimeout(
+                      () => document.getElementById("project-picker")?.click(),
+                      0,
+                    );
+                  }}
+                >
+                  <IconPlus size={15} /> 新建项目
+                </button>
+              )}
               <div
                 className="nested-sidebar-tabs"
                 role="tablist"

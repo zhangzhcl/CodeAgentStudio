@@ -32,6 +32,8 @@ describe('Workbench', () => {
     await waitFor(() => expect(screen.getByRole('tabpanel', { name: '聊天' })).toBeInTheDocument());
 
     expect(screen.getByRole('tab', { name: '项目' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: '项目' }));
+    expect(screen.getByRole('button', { name: '新建项目' })).toBeInTheDocument();
   });
 
   it('does not show a fake example-file action', async () => {
