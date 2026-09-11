@@ -46,7 +46,7 @@ app.whenReady().then(async () => {
   }
 
   registerWorkspaceIpc(workspace);
-  registerSessionIpc(sessions, workspace);
+  registerSessionIpc(sessions, workspace, () => discoverNativeSessions(sessions, workspace));
   registerAgentIpc(registry, sessions, workspace);
 
   try {

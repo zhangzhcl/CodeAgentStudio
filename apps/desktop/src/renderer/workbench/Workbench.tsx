@@ -187,8 +187,7 @@ export function Workbench() {
         };
       }
     ).codeagentSessions?.list;
-    if (list)
-      void list().then((sessions) => {
+    const refreshSessions = () => list?.().then((sessions) => {
         setPersonalSessions(
           sessions.filter((session) => session.scope === "personal"),
         );
@@ -196,6 +195,10 @@ export function Workbench() {
           sessions.filter((session) => session.scope === "project"),
         );
       });
+    void refreshSessions();
+    const timer = window.setInterval(() => void refreshSessions(), 10_000);
+    window.addEventListener("focus", refreshSessions);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", refreshSessions); };
   }, []);
   const detectProviders = () => {
     const detect = (
