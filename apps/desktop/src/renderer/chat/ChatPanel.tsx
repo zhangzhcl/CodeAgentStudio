@@ -317,9 +317,9 @@ export function ChatPanel({
                   可以联网检索、调用工具、编写代码，也能陪你把一个模糊的想法推演成方案。
                 </p>
                 {scope === "project" && projectName && (
-                  <div className="project-context-strip welcome-context">
+                  <div className="welcome-context">
                     <span className="conv-head-dot" aria-hidden="true" />
-                    已挂载项目「{projectName}」的共享上下文
+                    已挂载项目「{projectName}」的共享上下文，本会话与项目内其他会话共享项目资料
                   </div>
                 )}
                 <div className="quick-prompts welcome-grid">
