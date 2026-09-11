@@ -23,6 +23,17 @@ export function ChatPanel({ sessionId, providerName = 'Claude', scope = 'persona
   const transcriptRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   useEffect(() => { setProvider(providerName); }, [providerName]);
+  useEffect(() => {
+    const clear = (event: Event) => {
+      const detail = (event as CustomEvent<{ sessionId?: string }>).detail;
+      if (detail.sessionId === sessionId) {
+        setMessages([]);
+        setComposerNotice('当前会话已清空');
+      }
+    };
+    window.addEventListener('codeagent:clear-session', clear);
+    return () => window.removeEventListener('codeagent:clear-session', clear);
+  }, [sessionId]);
   useEffect(() => subscribe?.((event) => {
     if (event.sessionId !== sessionId || !sequencer.current.accept(event)) return;
     setMessages((current) => applyAgentEvent(current, event));

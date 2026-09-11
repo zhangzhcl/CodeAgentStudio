@@ -422,6 +422,12 @@ export function Workbench() {
     if (deleteTimer.current) window.clearTimeout(deleteTimer.current);
     deleteTimer.current = window.setTimeout(() => setPendingDelete(undefined), 2200);
   };
+  const activeSession = activeTab.kind === "chat"
+    ? [...personalSessions, ...projectSessions].find((session) => session.id === activeTab.sessionId)
+    : undefined;
+  const activeTitle = activeTab.kind === "chat"
+    ? sessionTitle(activeTab.sessionId, activeSession?.nativeId, activeSession?.title)
+    : tabName(activeTab);
 
   return (
     <div className={`codeagent-workbench theme-${theme}`}>
@@ -713,6 +719,26 @@ export function Workbench() {
         </div>
       </aside>
       <main>
+        <header className="topbar">
+          <div className="topbar-title">
+            {activeTab.kind === "chat" && activeTab.scope === "project" && projectName !== "未选择项目" && <>
+              <span className="topbar-project">{projectName}</span>
+              <span className="topbar-sep">/</span>
+            </>}
+            <span className="topbar-name">{activeTitle}</span>
+            <span className="topbar-meta">{activeTab.kind === "chat" ? `${providerLabel(activeProvider)} · 本地会话` : "编辑器"}</span>
+          </div>
+          <div className="topbar-actions">
+            {activeTab.kind === "chat" && <select className="topbar-provider" aria-label="选择 Agent" value={activeProvider} onChange={(event) => changeProvider(event.target.value)}>{["claude", "cursor", "codex", "pi", "opencode"].map((id) => <option key={id} value={id}>{providerLabel(id)}</option>)}</select>}
+            <span className="agent-status-summary" aria-label="Agent 状态">
+              <span className={detectingProviders ? "status-dot is-busy" : "status-dot"} />
+              {detectingProviders ? "检测中…" : providerStatuses.filter((status) => status.installed).length ? `${providerStatuses.filter((status) => status.installed).length} 个 Agent 就绪` : "Agent 未就绪"}
+            </span>
+            <button type="button" className="topbar-detect" onClick={detectProviders} disabled={detectingProviders}>{detectingProviders ? "检测中" : "检测"}</button>
+            <button type="button" className="theme-toggle" aria-label={theme === "dark" ? "切换浅色主题" : "切换深色主题"} onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>{theme === "dark" ? "☼" : "◐"}</button>
+            <button type="button" className="topbar-clear" onClick={() => { if (activeTab.kind === "chat") window.dispatchEvent(new CustomEvent("codeagent:clear-session", { detail: { sessionId: activeTab.sessionId } })); }} disabled={activeTab.kind !== "chat"}>清空</button>
+          </div>
+        </header>
         <div role="tablist" aria-label="打开的标签">
           {tabs.length === 0 && (
             <span className="tabs-empty">
@@ -754,42 +780,6 @@ export function Workbench() {
               </span>
             </button>
           ))}
-          <div className="agent-status-summary" aria-label="Agent 状态">
-            <button
-              type="button"
-              className="theme-toggle"
-              aria-label={theme === "dark" ? "切换浅色主题" : "切换深色主题"}
-              onClick={() =>
-                setTheme((current) => (current === "dark" ? "light" : "dark"))
-              }
-            >
-              {theme === "dark" ? "☼" : "◐"}
-            </button>
-            <span>
-              {detectingProviders
-                ? "Agent 检测中…"
-                : providerStatuses.filter((status) => status.installed).length
-                  ? `${providerStatuses.filter((status) => status.installed).length} 个 Agent 就绪`
-                  : "Agent 未就绪"}
-            </span>
-            {activeTab.kind === "chat" &&
-              activeTab.sessionId !== "new-chat" && (
-                <button
-                  type="button"
-                  className="session-delete-action"
-                  onClick={deleteActiveSession}
-                >
-                  删除会话
-                </button>
-              )}
-            <button
-              type="button"
-              onClick={detectProviders}
-              disabled={detectingProviders}
-            >
-              {detectingProviders ? "检测中…" : "检测 Agent"}
-            </button>
-          </div>
         </div>
         {activeTab.kind === "chat" ? (
           <section role="tabpanel" aria-label="聊天">
