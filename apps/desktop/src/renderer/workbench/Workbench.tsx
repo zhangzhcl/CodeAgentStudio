@@ -472,8 +472,9 @@ export function Workbench() {
             <small className="brand-sub">对话控制台</small>
           </span>
         </div>
-        <div role="tablist" aria-label="工作区入口">
+        <div className="side-tabs" role="tablist" aria-label="工作区入口">
           <button
+            className={`side-tab${activity === "files" ? " is-on" : ""}`}
             role="tab"
             aria-selected={activity === "files"}
             onClick={() => setActivity("files")}
@@ -481,6 +482,7 @@ export function Workbench() {
             文件
           </button>
           <button
+            className={`side-tab${activity === "sessions" ? " is-on" : ""}`}
             role="tab"
             aria-selected={activity === "sessions"}
             onClick={() => setActivity("sessions")}
