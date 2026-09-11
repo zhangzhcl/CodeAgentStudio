@@ -1022,6 +1022,7 @@ export function Workbench() {
                 activeTab.scope === "project" ? projectName : undefined
               }
               providerName={providerLabel(activeProvider)}
+              providerLocked={activeTab.sessionId !== "new-chat"}
               onProviderChange={changeProvider}
               onStatsChange={setActiveStats}
               disabledProviders={providerStatuses

@@ -11,6 +11,7 @@ type PromptSendOptions = { repeat?: boolean };
 type Props = {
   sessionId: string;
   providerName?: string;
+  providerLocked?: boolean;
   scope?: "personal" | "project";
   projectName?: string;
   providers?: string[];
@@ -36,6 +37,7 @@ export const DEFAULT_WELCOME_PROMPTS = [
 export function ChatPanel({
   sessionId,
   providerName = "Claude",
+  providerLocked = false,
   scope = "personal",
   projectName,
   providers = ["Claude", "Cursor", "Codex", "Pi", "OpenCode"],
@@ -276,6 +278,8 @@ export function ChatPanel({
           <select
             aria-label="选择 Provider"
             value={provider}
+            disabled={providerLocked}
+            title={providerLocked ? "已有会话的 Agent 不可切换，请新建会话" : "选择 Agent"}
             onChange={(event) => {
               setProvider(event.target.value);
               onProviderChange?.(event.target.value);
