@@ -5,6 +5,7 @@ import { applyAgentEvent, type ChatMessage } from "./chat-state.js";
 import { MessageItem } from "./message-item.js";
 import { Composer } from "./Composer.js";
 import { IconArrowDown, IconSparkle } from "../icons.js";
+import { getAgentPresentation } from "../agent-presentation.js";
 
 type Props = {
   sessionId: string;
@@ -51,6 +52,7 @@ export function ChatPanel({
 }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [provider, setProvider] = useState(providerName);
+  const agentPresentation = getAgentPresentation(provider);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [queued, setQueued] = useState<string[]>([]);
@@ -321,9 +323,9 @@ export function ChatPanel({
                   <IconSparkle size={22} />
                 </div>
                 <span className="welcome-status welcome-tag">SYSTEM READY</span>
-                <h1 className="welcome-title">你好，我是 AGENT-01</h1>
+                <h1 className="welcome-title">{agentPresentation.greeting}</h1>
                 <p className="welcome-sub">
-                  可以联网检索、调用工具、编写代码，也能陪你把一个模糊的想法推演成方案。
+                  {agentPresentation.description}
                 </p>
                 {scope === "project" && projectName && (
                   <div className="welcome-context">

@@ -15,6 +15,7 @@ import {
   IconThumbDown,
   IconThumbUp,
 } from "../icons.js";
+import { getAgentPresentation } from "../agent-presentation.js";
 
 type Props = {
   message: ChatMessage;
@@ -131,7 +132,7 @@ export function MessageItem({
             <strong
               className={message.role === "agent" ? "agent-name" : undefined}
             >
-              {message.role === "tool" ? "工具调用" : "AGENT-01"}
+              {message.role === "tool" ? "工具调用" : getAgentPresentation(provider).name}
             </strong>
             {message.role === "agent" && (
               <span className="message-model-badge agent-model">

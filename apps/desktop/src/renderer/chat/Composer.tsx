@@ -12,6 +12,7 @@ import {
   IconStop,
   IconX,
 } from "../icons.js";
+import { getAgentPresentation } from "../agent-presentation.js";
 
 type Props = {
   draft: string;
@@ -54,6 +55,7 @@ export function Composer({
   const [webSearch, setWebSearch] = useState(false);
   const [model, setModel] = useState("GLM-4.7");
   const [modelOpen, setModelOpen] = useState(false);
+  const agentPresentation = getAgentPresentation(provider);
   const modelRef = useRef<HTMLDivElement>(null);
   const history = useRef<string[]>([]);
   const historyIndex = useRef(-1);
@@ -180,7 +182,7 @@ export function Composer({
           placeholder={
             sending
               ? "正在输出，输入内容将排队发送…"
-              : "给 AGENT-01 下达指令，输入 / 唤起命令面板"
+              : `给 ${agentPresentation.name} 下达指令，输入 / 唤起命令面板`
           }
           value={draft}
           onFocus={() => setHint("Enter 发送 · Shift + Enter 换行")}

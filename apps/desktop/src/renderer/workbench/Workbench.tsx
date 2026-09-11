@@ -524,8 +524,8 @@ export function Workbench() {
             <IconSparkle size={13} />
           </span>
           <span className="brand-text">
-            <strong className="brand-name">AGENT-01</strong>
-            <small className="brand-sub">对话控制台</small>
+            <strong className="brand-name">CodeAgent Studio</strong>
+            <small className="brand-sub">开发工作台</small>
           </span>
         </div>
         <div className="side-tabs" role="tablist" aria-label="工作区入口">
