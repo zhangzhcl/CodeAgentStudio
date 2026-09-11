@@ -969,6 +969,11 @@ export function Workbench() {
               }
               role="tab"
               aria-label={tabName(tab)}
+              title={
+                tab.kind === "chat" && tab.scope === "project"
+                  ? `${projectName} / ${tabName(tab)}`
+                  : tabName(tab)
+              }
               aria-selected={isSameTab(activeTab, tab)}
               onClick={() => setActiveTab(tab)}
             >
