@@ -88,15 +88,20 @@ export function Workbench() {
   const activeProvider = providerId(
     activeTab.kind === "chat" ? activeTab.provider : undefined,
   );
-  const [selectedProvider, setSelectedProvider] = useState(activeProvider);
-  useEffect(() => {
-    setSelectedProvider(activeProvider);
-  }, [activeProvider]);
+  // Agent selection is explicit.  Do not silently default the workspace to
+  // the first provider (or let a file tab change the selected Agent).
+  const [selectedProvider, setSelectedProvider] = useState<
+    ReturnType<typeof providerId> | undefined
+  >();
   const visiblePersonalSessions = personalSessions.filter(
-    (session) => providerId(session.provider) === selectedProvider,
+    (session) =>
+      selectedProvider !== undefined &&
+      providerId(session.provider) === selectedProvider,
   );
   const visibleProjectSessions = projectSessions.filter(
-    (session) => providerId(session.provider) === selectedProvider,
+    (session) =>
+      selectedProvider !== undefined &&
+      providerId(session.provider) === selectedProvider,
   );
   const projectGroups = visibleProjectSessions.reduce((groups, session) => {
     const registeredByRoot = session.projectRoot
@@ -391,6 +396,7 @@ export function Workbench() {
     setActiveTab(tab);
   };
   const newSession = (scope: "personal" | "project") => {
+    if (!selectedProvider) return;
     const id = `${scope}-${crypto.randomUUID()}`;
     const provider = selectedProvider;
     const sessionProjectId = scope === "project" ? projectId : undefined;
@@ -441,15 +447,20 @@ export function Workbench() {
     });
   }, [selectedProvider, projectId]);
   const changeProvider = (value: string) => {
+    if (!value) return;
     const provider = providerId(value);
     setSelectedProvider(provider);
-    if (activeTab.kind === "chat" && activeTab.sessionId !== "new-chat") {
+    const isTransientChat =
+      activeTab.kind === "chat" &&
+      (activeTab.sessionId === "new-chat" ||
+        activeTab.sessionId.startsWith("new-chat-"));
+    if (activeTab.kind === "chat" && !isTransientChat) {
       const nextTab: WorkbenchTab = { kind: "chat", sessionId: `new-chat-${provider}-${crypto.randomUUID()}`, scope: activeTab.scope, provider, projectId: activeTab.scope === "project" ? projectId : undefined };
       setTabs((items) => [...items, nextTab]);
       setActiveTab(nextTab);
       return;
     }
-    if (activeTab.kind !== "chat" || activeTab.sessionId === "new-chat")
+    if (activeTab.kind !== "chat" || isTransientChat)
       setActiveTab((tab) => (tab.kind === "chat" ? { ...tab, provider } : tab));
   };
   const closeTab = (tab: WorkbenchTab) => {
@@ -462,7 +473,7 @@ export function Workbench() {
             kind: "chat" as const,
             sessionId: "new-chat",
             scope: "personal" as const,
-            provider: selectedProvider,
+            provider: selectedProvider ?? "claude",
           };
         setActiveTab(fallback);
       }
@@ -616,6 +627,7 @@ export function Workbench() {
               <button
                 type="button"
                 className="side-new-row"
+                disabled={!selectedProvider}
                 onClick={() =>
                   newSession(
                     sessionView === "projects" ? "project" : "personal",
@@ -652,7 +664,11 @@ export function Workbench() {
                   <h3 className="session-section-label">个人会话</h3>
                   <div className="conv-list">
                     {visiblePersonalSessions.length === 0 ? (
-                      <p className="conv-empty">暂无 {providerLabel(selectedProvider)} 个人会话</p>
+                      <p className="conv-empty">
+                        {selectedProvider
+                          ? `暂无 ${providerLabel(selectedProvider)} 个人会话`
+                          : "请先选择 Agent"}
+                      </p>
                     ) : (
                       visiblePersonalSessions.map(
                       ({
@@ -725,7 +741,11 @@ export function Workbench() {
                 <>
                   <div className="conv-list">
                     {projectGroups.size === 0 ? (
-                      <p className="conv-empty">暂无 {providerLabel(selectedProvider)} 项目</p>
+                      <p className="conv-empty">
+                        {selectedProvider
+                          ? `暂无 ${providerLabel(selectedProvider)} 项目`
+                          : "请先选择 Agent"}
+                      </p>
                     ) : (
                       [...projectGroups.entries()].map(([key, group]) => (
                       <div
@@ -760,6 +780,7 @@ export function Workbench() {
                             className="proj-row-plus"
                             type="button"
                             aria-label={`在 ${group.name} 中新建会话`}
+                            disabled={!selectedProvider}
                             onClick={(event) => {
                               event.stopPropagation();
                               const registered = registeredProjects.find(
@@ -928,9 +949,12 @@ export function Workbench() {
               <select
                 className="topbar-provider"
                 aria-label="选择 Agent"
-                value={selectedProvider}
+                value={selectedProvider ?? ""}
                 onChange={(event) => changeProvider(event.target.value)}
               >
+                <option value="" disabled>
+                  选择 Agent
+                </option>
                 {["claude", "cursor", "codex", "pi", "opencode"].map((id) => (
                   <option key={id} value={id}>
                     {providerLabel(id)}
@@ -968,12 +992,14 @@ export function Workbench() {
           </div>
         </header>
         <div className="chat-tabs" role="tablist" aria-label="打开的标签">
-          {tabs.length === 0 && (
+          {tabs.filter((tab) => tab.kind === "file" || tab.provider === selectedProvider).length === 0 && (
             <span className="chat-tabs-empty">
-              没有打开的会话，可从左侧选择或新建
+              {selectedProvider ? "没有打开的会话，可从左侧选择或新建" : "请选择 Agent"}
             </span>
           )}
-          {tabs.map((tab) => (
+          {tabs
+            .filter((tab) => tab.kind === "file" || tab.provider === selectedProvider)
+            .map((tab) => (
             <button
               className={`chat-tab${isSameTab(activeTab, tab) ? " is-active" : ""}`}
               key={
@@ -1018,11 +1044,12 @@ export function Workbench() {
                 <IconX size={12} />
               </span>
             </button>
-          ))}
+            ))}
         </div>
         {activeTab.kind === "chat" ? (
-          <section role="tabpanel" aria-label="聊天">
-            <ChatPanel
+          selectedProvider ? (
+            <section role="tabpanel" aria-label="聊天">
+              <ChatPanel
               sessionId={activeTab.sessionId}
               scope={activeTab.scope}
               projectName={
@@ -1109,8 +1136,17 @@ export function Workbench() {
                   text,
                 });
               }}
-            />
-          </section>
+              />
+            </section>
+          ) : (
+            <section className="agent-selection-empty" role="tabpanel" aria-label="聊天">
+              <div>
+                <IconSparkle size={22} />
+                <h2>请选择 Agent</h2>
+                <p>从右上角选择 Agent 后开始或恢复会话。</p>
+              </div>
+            </section>
+          )
         ) : (
           <section role="tabpanel" aria-label={tabName(activeTab)}>
             <EditorTab

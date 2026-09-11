@@ -182,6 +182,12 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light .composer-model-menu button,.codeagent-workbench.theme-light .tool-call-block pre,.codeagent-workbench.theme-light .task-list-item{color:#52657b!important}
 .codeagent-workbench.theme-light .chat-tabs .chat-tab-title,.codeagent-workbench.theme-light .chat-tabs .chat-tab-close{color:inherit!important}
 .codeagent-workbench.theme-light .chat-tabs .chat-tab-dot{background:#c38a1d!important}
+.agent-selection-empty{display:grid!important;place-items:center;min-height:0;color:#74869a;text-align:center}
+.agent-selection-empty>div{display:grid;justify-items:center;gap:10px}
+.agent-selection-empty svg{color:#c38a1d}
+.agent-selection-empty h2{margin:0;color:#e9e6dc;font:600 20px 'Chakra Petch','PingFang SC','Microsoft YaHei',sans-serif}
+.agent-selection-empty p{margin:0;font-size:12px}
+.theme-light .agent-selection-empty h2{color:#24364c}
 .codeagent-workbench.theme-light .file-explorer,.codeagent-workbench.theme-light .file-explorer-toolbar,.codeagent-workbench.theme-light .file-project-row,.codeagent-workbench.theme-light .file-explorer [role="tree"]{color:#52657b!important}
 .codeagent-workbench.theme-light .file-explorer [role="tree"] li button{background:transparent!important;color:#52657b!important}
 .codeagent-workbench.theme-light .file-explorer [role="tree"] li button:hover{background:#eef3f9!important;color:#24364c!important}

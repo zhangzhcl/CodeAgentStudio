@@ -11,6 +11,20 @@ describe('Workbench', () => {
     expect(screen.getByRole('tab', { name: '文件' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: '会话' })).toBeInTheDocument();
     expect(screen.getByRole('tabpanel', { name: '聊天' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: '选择 Agent' })).toHaveValue('');
+    expect(screen.getByRole('heading', { name: '请选择 Agent' })).toBeInTheDocument();
+  });
+
+  it('requires an explicit Agent before creating a session', async () => {
+    render(<Workbench />);
+    const create = await screen.findByRole('button', { name: '新建会话' });
+    expect(create).toBeDisabled();
+
+    fireEvent.change(screen.getByRole('combobox', { name: '选择 Agent' }), {
+      target: { value: 'pi' },
+    });
+    expect(create).not.toBeDisabled();
+    expect(screen.getByRole('combobox', { name: '选择 Agent' })).toHaveValue('pi');
   });
 
   it('switches the sidebar to sessions and exposes personal and project groups', async () => {
