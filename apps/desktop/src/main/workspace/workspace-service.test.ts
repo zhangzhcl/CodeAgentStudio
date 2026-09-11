@@ -1,5 +1,6 @@
 import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
+import { resolve } from 'node:path';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { WorkspaceService, WorkspaceError, type RegisteredProject } from './workspace-service.js';
@@ -52,6 +53,17 @@ describe('WorkspaceService', () => {
 
     expect(service.listProjects()).toEqual([]);
     await expect(service.findProject(directory)).resolves.toBeUndefined();
+  });
+
+  it('does not expose home or app runtime roots as projects', () => {
+    const projects: RegisteredProject[] = [
+      { id: 'home', name: 'zcl', rootPath: homedir(), source: 'user' },
+      { id: 'app', name: 'codeagent-studio', rootPath: process.cwd(), source: 'user' },
+      { id: 'real', name: 'real-project', rootPath: resolve(tmpdir(), 'real-project'), source: 'user' },
+    ];
+    const service = new WorkspaceService({ list: () => projects, save: () => undefined });
+
+    expect(service.listProjects().map((project) => project.id)).toEqual(['real']);
   });
 
   it('rejects paths escaping the registered project root', async () => {

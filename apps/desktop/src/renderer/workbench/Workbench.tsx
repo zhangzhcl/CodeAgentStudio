@@ -154,15 +154,6 @@ export function Workbench() {
       .projects()
       .then((projects) => {
         setRegisteredProjects(projects);
-        if (projects[0]) {
-          setProjectId(projects[0].id);
-          setProjectName(
-            projects[0].name ??
-              projects[0].rootPath?.split(/[\\/]/).pop() ??
-              "项目",
-          );
-          setProjectRoot(projects[0].rootPath);
-        }
       })
       .catch(() => setProjectError("项目列表加载失败，请重新选择项目。"));
   }, []);

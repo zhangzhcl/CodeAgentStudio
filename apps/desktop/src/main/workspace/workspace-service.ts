@@ -2,6 +2,7 @@ import { access, lstat, mkdir, open, readdir, realpath, rename, rm, stat } from 
 import { constants } from 'node:fs';
 import { createReadStream } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
+import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import type { WorkspaceEntry } from '@codeagent-studio/protocol';
 
@@ -28,13 +29,23 @@ export class WorkspaceService {
   private readonly projects = new Map<string, RegisteredProject>();
   constructor(private readonly store?: ProjectStore) { for (const project of store?.list() ?? []) this.projects.set(project.id, project); }
 
-  listProjects(): RegisteredProject[] { return [...this.projects.values()].filter((project) => project.source === 'user'); }
+  listProjects(): RegisteredProject[] {
+    // The user's home directory and the app's own checkout are runtime roots,
+    // not projects. They can exist in older databases after an accidental
+    // project selection and must never appear in the project picker.
+    const runtimeRoots = new Set([resolve(homedir()), resolve(process.cwd())]);
+    return [...this.projects.values()]
+      .filter((project) => project.source === 'user')
+      .filter((project) => !runtimeRoots.has(resolve(project.rootPath)));
+  }
   /** Look up a project the user explicitly registered without creating one. */
   async findProject(rootPath: string): Promise<RegisteredProject | undefined> {
     const canonicalRoot = await realpath(rootPath).catch(() => undefined);
     if (!canonicalRoot) return undefined;
+    const runtimeRoots = new Set([resolve(homedir()), resolve(process.cwd())]);
     return [...this.projects.values()]
       .filter((project) => project.source === 'user')
+      .filter((project) => !runtimeRoots.has(resolve(project.rootPath)))
       .filter((project) => isWithinRoot(project.rootPath, canonicalRoot))
       .sort((a, b) => b.rootPath.length - a.rootPath.length)[0];
   }
