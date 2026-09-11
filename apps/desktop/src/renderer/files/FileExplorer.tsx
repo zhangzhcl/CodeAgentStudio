@@ -9,9 +9,9 @@ type Props = {
   initialEntries?: WorkspaceEntry[];
 };
 
-// Keep the explorer focused on editable project sources. These are generated
-// or local reference directories and should not clutter the default tree.
-const IGNORED = new Set(['.git', 'node_modules', '.vite', 'dist', 'out', 'release', 'reference-claudecodeui', '.DS_Store', 'Thumbs.db']);
+// Hide only VCS internals and OS metadata. Project folders such as node_modules,
+// dist and build outputs remain visible, matching the reference explorer.
+const IGNORED = new Set(['.git', '.DS_Store', 'Thumbs.db']);
 
 export function FileExplorer({ projectId, projectName = '项目', listEntries, onOpenFile, initialEntries = [] }: Props) {
   const resolvedList = listEntries ?? (projectId ? async (path: string) => { const api = (window as Window & { codeagent?: { workspace?: { list: (id: string, path?: string) => Promise<WorkspaceEntry[]> } } }).codeagent?.workspace; return api ? api.list(projectId, path) : []; } : async () => []);
