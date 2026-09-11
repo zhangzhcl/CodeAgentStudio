@@ -1,7 +1,7 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { homedir } from 'node:os';
-import { join, basename, dirname } from 'node:path';
+import { join, basename, dirname, resolve } from 'node:path';
 import type { ProviderId } from '@codeagent-studio/protocol';
 import type { SessionService } from './session-service.js';
 import type { WorkspaceService } from '../workspace/workspace-service.js';
@@ -17,7 +17,8 @@ async function parseCursorHistory(path: string): Promise<DiscoveredMessage[]> { 
 async function cursorMeta(path: string): Promise<{ cwd?: string; title?: string }> { try { return JSON.parse(await readFile(join(dirname(path), 'meta.json'), 'utf8')) as { cwd?: string; title?: string }; } catch { return {}; } }
 export async function discoverNativeSessions(service: SessionService, workspace?: WorkspaceService): Promise<number> {
   let imported = 0;
-  const projectForCwd = async (cwd: string | undefined) => cwd && workspace ? workspace.findProject(cwd).catch(() => undefined) : undefined;
+  const platformRoots = new Set([resolve(process.cwd()), resolve(homedir())]);
+  const projectForCwd = async (cwd: string | undefined) => cwd && workspace && !platformRoots.has(resolve(cwd)) ? workspace.findProject(cwd).catch(() => undefined) : undefined;
   // A native session without an explicit project id belongs to the Agent's
   // default workspace. Keep it personal across restarts even when its native
   // cwd happens to sit below a previously discovered directory.
