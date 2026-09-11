@@ -149,9 +149,8 @@ export function ChatPanel({
       if (!onPrompt) throw new Error("Agent 接口不可用，请重启应用");
       await onPrompt(text, selectedProvider);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Agent 请求失败");
-    } finally {
       setSending(false);
+      setError(cause instanceof Error ? cause.message : "Agent 请求失败");
     }
   };
   const send = async () => {
@@ -199,9 +198,8 @@ export function ChatPanel({
     try {
       await onPrompt(text, provider);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Agent 请求失败");
-    } finally {
       setSending(false);
+      setError(cause instanceof Error ? cause.message : "Agent 请求失败");
     }
   };
   const copyMessage = async (id: string, content: string) => {
