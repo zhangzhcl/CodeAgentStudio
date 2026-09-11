@@ -49,5 +49,5 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
     if (!provider) throw new Error(`Unknown provider: ${input.provider}`);
     await provider.prompt(input.sessionId, input.text);
   });
-  ipcMain.handle('agent:abort', (_event, sessionId: unknown) => runtime.stop(z.string().min(1).parse(sessionId)));
+  ipcMain.handle('agent:abort', async (_event, sessionId: unknown) => { const id = z.string().min(1).parse(sessionId); const stopped = await runtime.stop(id); if (stopped && sessions) { try { sessions.markStatus(id, 'aborted'); } catch { /* session may have been deleted */ } } return stopped; });
 }
