@@ -47,7 +47,7 @@ describe('WorkspaceService', () => {
   it('hides native agent workspaces from the user project list and lookup', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'codeagent-native-'));
     temporaryDirectories.push(directory);
-    const nativeProject: RegisteredProject = { id: 'native-1', name: 'Agent home', rootPath: directory, source: 'native' };
+    const nativeProject: RegisteredProject = { id: 'native-1', name: 'Agent home', rootPath: directory, source: 'native-discovered' };
     const service = new WorkspaceService({ list: () => [nativeProject], save: () => undefined });
 
     expect(service.listProjects()).toEqual([]);

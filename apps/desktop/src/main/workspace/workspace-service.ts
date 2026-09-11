@@ -14,7 +14,7 @@ export class WorkspaceError extends Error {
   }
 }
 
-export type ProjectSource = 'user' | 'native';
+export type ProjectSource = 'user' | 'native-discovered';
 export type RegisteredProject = { id: string; name: string; rootPath: string; source: ProjectSource };
 type ProjectStore = { list(): RegisteredProject[]; save(project: RegisteredProject): unknown };
 
