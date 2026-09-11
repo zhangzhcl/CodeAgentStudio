@@ -9,6 +9,7 @@ import {
   IconPencil,
   IconRefresh,
   IconSparkle,
+  IconSpinner,
   IconThumbDown,
   IconThumbUp,
 } from "../icons.js";
@@ -29,7 +30,7 @@ type Props = {
 function AgentMarkdown({ content }: { content: string }) {
   const lines = content.split(/\r?\n/);
   const taskLines = lines.filter((line) =>
-    /^\s*[-*]\s+\[[ xX]\]\s+/.test(line),
+    /^\s*[-*]\s+\[[ xX~]\]\s+/.test(line),
   );
   if (taskLines.length < 2) return <MarkdownLite content={content} />;
   const taskSet = new Set(taskLines);
@@ -50,16 +51,17 @@ function AgentMarkdown({ content }: { content: string }) {
         <ul className="tasks-list">
           {taskLines.map((line, index) => {
             const complete = /\[[xX]\]/.test(line);
+            const running = /\[~\]/.test(line);
             return (
               <li
-                className={`task-item is-${complete ? "done" : "pending"}`}
+                className={`task-item is-${complete ? "done" : running ? "running" : "pending"}`}
                 key={`${line}-${index}`}
               >
                 <span className="task-check">
-                  {complete && <IconCheck size={11} />}
+                  {complete ? <IconCheck size={11} /> : running ? <IconSpinner size={11} /> : null}
                 </span>
                 <span className="task-content">
-                  {line.replace(/^\s*[-*]\s+\[[ xX]\]\s+/, "")}
+                  {line.replace(/^\s*[-*]\s+\[[ xX~]\]\s+/, "")}
                 </span>
               </li>
             );
