@@ -275,7 +275,7 @@ export function MessageItem({
               )}
             </time>
           )}
-          {message.role === "agent" && (
+          {message.role === "agent" && message.content.length > 0 && (
             <button
               className={`act${copied ? " is-ok" : ""}`}
               type="button"
@@ -299,7 +299,7 @@ export function MessageItem({
               <IconPencil size={14} />
             </button>
           )}
-          {message.role === "agent" && (
+          {message.role === "agent" && message.content.length > 0 && (
             <>
               <button
                 className="act"
