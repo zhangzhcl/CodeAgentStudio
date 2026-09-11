@@ -350,14 +350,7 @@ export function Composer({
           </div>
           <div className="composer-actions composer-bar-right">
             <span className="token-count" title="按估算规则粗略折算">
-              {Math.max(
-                1,
-                Math.ceil(
-                  (draft.length +
-                    messages.reduce((total, item) => total + item.content.length, 0)) /
-                    4,
-                ),
-              )}K tokens
+              {draft.length} 字 · 约 {Math.ceil(draft.length * 0.6)} tokens
             </span>
             {sending && !draft.trim() && attachments.length === 0 ? (
               <button
