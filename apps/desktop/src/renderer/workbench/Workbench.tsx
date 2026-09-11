@@ -155,7 +155,7 @@ export function Workbench() {
       .then((projects) => {
         setRegisteredProjects(projects);
       })
-      .catch(() => setProjectError("项目列表加载失败，请重新选择项目。"));
+      .catch(() => setProjectError("项目列表加载失败，请重新打开文件夹。"));
   }, []);
   useEffect(
     () => () => {
@@ -583,7 +583,7 @@ export function Workbench() {
                     }
                   ).codeagent?.workspace?.chooseProject;
                   if (!choose) {
-                    setProjectError("项目选择接口不可用，请重启应用。");
+                    setProjectError("打开文件夹接口不可用，请重启应用。");
                     return;
                   }
                   setProjectError(undefined);
@@ -600,11 +600,11 @@ export function Workbench() {
                       }
                     })
                     .catch(() =>
-                      setProjectError("项目选择失败，请确认目录可访问。"),
+                      setProjectError("打开文件夹失败，请确认目录可访问。"),
                     );
                 }}
               >
-                选择项目
+                打开文件夹
               </button>
               {projectError && <p role="alert">{projectError}</p>}
               <FileExplorer

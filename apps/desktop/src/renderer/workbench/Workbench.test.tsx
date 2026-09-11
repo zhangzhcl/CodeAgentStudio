@@ -52,9 +52,9 @@ describe('Workbench', () => {
     render(<Workbench />);
 
     fireEvent.click(screen.getByRole('tab', { name: '文件' }));
-    fireEvent.click(screen.getByRole('button', { name: '选择项目' }));
+    fireEvent.click(screen.getByRole('button', { name: '打开文件夹' }));
 
-    await waitFor(() => expect(screen.getAllByRole('alert').some((element) => element.textContent?.includes('项目选择接口不可用'))).toBe(true));
+    await waitFor(() => expect(screen.getAllByRole('alert').some((element) => element.textContent?.includes('打开文件夹接口不可用'))).toBe(true));
   });
 
   it('switches and persists the global color theme', async () => {

@@ -155,7 +155,7 @@ export function FileExplorer({
       <div role="tree">
         {entries.length === 0 ? (
           <p className="file-empty">
-            {projectId ? "项目中暂无可显示的文件" : "请选择一个项目"}
+            {projectId ? "文件夹中暂无可显示的文件" : "请点击“打开文件夹”选择目录"}
           </p>
         ) : (
           <ul>{renderEntries(entries)}</ul>
