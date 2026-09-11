@@ -33,7 +33,7 @@ describe('database', () => {
   });
 
   it('backs up a corrupt database before recreating it', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'cas-db-')); const file = join(dir, 'broken.db'); await writeFile(file, 'not a sqlite database');
-    const db = openDatabase(file); db.close(); expect((await readFile(file)).length).toBeGreaterThan(0); expect((await readdir(dir)).filter((item) => item.startsWith('broken.db.corrupt-'))).toHaveLength(1); await rm(dir, { recursive: true, force: true });
+    const dir = await mkdtemp(join(tmpdir(), 'cas-db-')); const file = join(dir, 'broken.db'); await writeFile(file, 'not a sqlite database'); await writeFile(`${file}-wal`, 'wal'); await writeFile(`${file}-shm`, 'shm');
+    const db = openDatabase(file); db.close(); expect((await readFile(file)).length).toBeGreaterThan(0); const backups = (await readdir(dir)).filter((item) => item.startsWith('broken.db.corrupt-')); expect(backups.some((item) => !item.endsWith('-wal') && !item.endsWith('-shm'))).toBe(true); await rm(dir, { recursive: true, force: true });
   });
 });
