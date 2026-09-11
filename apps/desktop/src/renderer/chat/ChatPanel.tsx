@@ -372,7 +372,10 @@ export function ChatPanel({
             )}
           </div>
         </div>
-        <nav className="conversation-rail" aria-label="提问定位">
+        <nav className="conversation-rail" aria-label="提问定位" onWheel={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}>
           <div className="conversation-rail-content" style={{ "--rail-content-height": `${Math.max(100, userMessages.length * 28)}px` } as CSSProperties}>
             <span className="conversation-rail-track" aria-hidden="true" />
             {userMessages.map((message, index) => {
