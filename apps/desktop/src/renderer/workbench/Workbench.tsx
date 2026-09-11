@@ -430,13 +430,13 @@ export function Workbench() {
     : tabName(activeTab);
 
   return (
-    <div className={`codeagent-workbench theme-${theme}`}>
-      <aside aria-label="活动栏">
-        <div className="agent-brand">
-          <span className="agent-brand-mark">✦</span>
-          <span>
-            <strong>AGENT-01</strong>
-            <small>对话控制台</small>
+    <div className={`codeagent-workbench app theme-${theme}`}>
+      <aside className="sidebar" aria-label="活动栏">
+        <div className="agent-brand brand">
+          <span className="agent-brand-mark brand-mark">✦</span>
+          <span className="brand-text">
+            <strong className="brand-name">AGENT-01</strong>
+            <small className="brand-sub">对话控制台</small>
           </span>
         </div>
         <div role="tablist" aria-label="工作区入口">
@@ -718,7 +718,7 @@ export function Workbench() {
           <span>本地工作区 · {providerLabel(activeProvider)}</span>
         </div>
       </aside>
-      <main>
+      <main className="main">
         <header className="topbar">
           <div className="topbar-title">
             {activeTab.kind === "chat" && activeTab.scope === "project" && projectName !== "未选择项目" && <>
@@ -739,7 +739,7 @@ export function Workbench() {
             <button type="button" className="topbar-clear" onClick={() => { if (activeTab.kind === "chat") window.dispatchEvent(new CustomEvent("codeagent:clear-session", { detail: { sessionId: activeTab.sessionId } })); }} disabled={activeTab.kind !== "chat"}>清空</button>
           </div>
         </header>
-        <div role="tablist" aria-label="打开的标签">
+        <div className="chat-tabs" role="tablist" aria-label="打开的标签">
           {tabs.length === 0 && (
             <span className="tabs-empty">
               没有打开的标签，可从左侧选择会话或文件
@@ -747,6 +747,7 @@ export function Workbench() {
           )}
           {tabs.map((tab) => (
             <button
+              className={`chat-tab${isSameTab(activeTab, tab) ? " is-active" : ""}`}
               key={
                 tab.kind === "chat"
                   ? tab.sessionId
@@ -758,11 +759,12 @@ export function Workbench() {
               onClick={() => setActiveTab(tab)}
             >
               {tab.kind === "file" && <span className="tab-kind-icon">▤</span>}
-              {tabName(tab)}
+              {tab.kind === "chat" && tab.scope === "project" && <span className="chat-tab-dot" />}
+              <span className="chat-tab-title">{tabName(tab)}</span>
               <span
                 role="button"
                 tabIndex={0}
-                className="tab-close"
+                className="tab-close chat-tab-close"
                 aria-label={`关闭 ${tabName(tab)}`}
                 onClick={(event) => {
                   event.stopPropagation();

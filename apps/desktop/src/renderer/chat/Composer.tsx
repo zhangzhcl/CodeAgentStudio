@@ -50,7 +50,7 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
   };
 
   const submit = () => { if (!draft.trim() && attachments.length === 0) return; if (draft.trim() && history.current.at(-1) !== draft.trim()) history.current.push(draft.trim()); historyIndex.current = -1; onSend(); setAttachments([]); };
-  return <form className="chat-composer" aria-busy={sending} data-sending={sending ? 'true' : 'false'} onSubmit={(event) => { event.preventDefault(); submit(); }}>
+  return <div className="composer"><form className="chat-composer composer-box" aria-busy={sending} data-sending={sending ? 'true' : 'false'} onSubmit={(event) => { event.preventDefault(); submit(); }}>
     {queued.length > 0 && <div className="composer-queue"><div className="composer-queue-head">排队中 · {queued.length} 条<span>当前回复结束后自动发送</span></div>{queued.map((item, index) => <div className="composer-queue-item" key={`${item}-${index}`}><b>{String(index + 1).padStart(2, '0')}</b><span title={item}>{item}</span><button type="button" aria-label={`立即发送 ${index + 1}`} onClick={() => onPromoteQueued(index)}>↑</button><button type="button" aria-label={`编辑排队消息 ${index + 1}`} onClick={() => onEditQueued(index)}>✎</button><button type="button" aria-label={`取消排队消息 ${index + 1}`} onClick={() => onCancelQueued(index)}>×</button></div>)}</div>}
     <textarea
       aria-label="消息"
@@ -124,5 +124,5 @@ export function Composer({ draft, messages, provider, sending, onDraftChange, on
         <span className="composer-hint-note">{externalNotice || notice || '内容由 AI 生成，请注意甄别'}</span>
       </>}
     </div>
-  </form>;
+  </form></div>;
 }
