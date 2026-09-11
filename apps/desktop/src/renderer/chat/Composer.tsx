@@ -63,8 +63,6 @@ export function Composer({
     { value: "/代码", label: "生成 TypeScript 代码" },
     { value: "/搜索", label: "联网搜索并汇总" },
     { value: "/头脑风暴", label: "围绕主题发散思考" },
-    { value: "/help", label: "查看可用命令" },
-    { value: "/clear", label: "清空当前会话" },
   ];
   useEffect(() => {
     if (!modelOpen) return;
