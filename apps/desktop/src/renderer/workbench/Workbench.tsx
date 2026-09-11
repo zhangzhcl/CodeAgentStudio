@@ -6,6 +6,7 @@ import { EditorTab } from "../editor/EditorTab.js";
 import {
   IconArrowDown,
   IconChat,
+  IconFile,
   IconPlus,
   IconSparkle,
   IconTrash,
@@ -930,7 +931,9 @@ export function Workbench() {
               aria-selected={isSameTab(activeTab, tab)}
               onClick={() => setActiveTab(tab)}
             >
-              {tab.kind === "file" && <span className="tab-kind-icon">▤</span>}
+              {tab.kind === "file" && (
+                <IconFile size={13} className="tab-kind-icon" />
+              )}
               {tab.kind === "chat" && tab.scope === "project" && (
                 <span className="chat-tab-dot" />
               )}
