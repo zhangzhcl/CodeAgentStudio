@@ -272,3 +272,8 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light .chat-message-user.msg-user .msg-bubble{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:inherit!important;padding:0!important}
 .codeagent-workbench .chat-message-user.msg-user .msg-bubble p,
 .codeagent-workbench.theme-light .chat-message-user.msg-user .msg-bubble p{background:transparent!important;border:0!important;color:inherit!important;padding:0!important}
+
+/* The composer wrapper only provides width/padding. Its visual surface must
+   come from the inner .composer-box, otherwise light mode creates a second
+   white bordered panel around the actual input. */
+.codeagent-workbench .composer{background:transparent!important;border:0!important;box-shadow:none!important}
