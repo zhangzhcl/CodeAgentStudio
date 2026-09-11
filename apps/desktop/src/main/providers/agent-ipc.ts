@@ -47,7 +47,13 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
     if (!runtime.isActive(input.sessionId)) { const record = sessions?.get(input.sessionId); const provider = providers.get(input.provider); if (record?.nativeId && provider?.capabilities.supportsResume) { await provider.resumeSession(record.nativeId, record.nativeSessionFile, input.sessionId); runtime.activate(input.sessionId, input.provider); } else { const created = await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId, projectRoot: input.projectRoot }); if (created.nativeId || created.nativeSessionFile) sessions?.updateNative(input.sessionId, { nativeId: created.nativeId, nativeSessionFile: created.nativeSessionFile }); } }
     const provider = providers.get(input.provider);
     if (!provider) throw new Error(`Unknown provider: ${input.provider}`);
-    await provider.prompt(input.sessionId, input.text);
+    try {
+      await provider.prompt(input.sessionId, input.text);
+    } catch (error) {
+      runtime.complete(input.sessionId, 'error');
+      if (sessions) { try { sessions.markStatus(input.sessionId, 'error'); } catch { /* session may have been deleted */ } }
+      throw error;
+    }
   });
   ipcMain.handle('agent:abort', async (_event, sessionId: unknown) => { const id = z.string().min(1).parse(sessionId); const stopped = await runtime.stop(id); if (stopped && sessions) { try { sessions.markStatus(id, 'aborted'); } catch { /* session may have been deleted */ } } return stopped; });
 }
