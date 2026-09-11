@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "./chat-state.js";
 import {
+  IconCheck,
   IconChip,
+  IconChevronDown,
+  IconFile,
   IconGlobe,
   IconPaperclip,
   IconSend,
   IconStop,
+  IconX,
 } from "../icons.js";
 
 type Props = {
@@ -286,7 +290,7 @@ export function Composer({
                 );
               }}
             >
-              ▢
+              <IconFile size={15} />
             </button>
             <button
               type="button"
@@ -324,9 +328,7 @@ export function Composer({
                 title={`当前模型：${model}`}
               >
                 {model}
-                <span className="pill-caret" aria-hidden="true">
-                  ⌄
-                </span>
+                <IconChevronDown size={13} className="pill-caret" />
               </button>
               {modelOpen && (
                 <div
@@ -367,9 +369,7 @@ export function Composer({
                         ))}
                       </span>
                       {item === model && (
-                        <span className="model-check" aria-hidden="true">
-                          ✓
-                        </span>
+                        <IconCheck size={13} className="model-check" />
                       )}
                     </button>
                   ))}
@@ -422,7 +422,7 @@ export function Composer({
                     )
                   }
                 >
-                  ×
+                  <IconX size={11} />
                 </button>
               </span>
             ))}
