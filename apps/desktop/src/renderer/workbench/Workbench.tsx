@@ -359,6 +359,7 @@ export function Workbench() {
     sessionProjectName?: string,
     sessionProjectRoot?: string,
   ) => {
+    setSelectedProvider(providerId(provider));
     if (scope === "project") {
       const registered = sessionProjectId
         ? registeredProjects.find((project) => project.id === sessionProjectId)
@@ -442,6 +443,12 @@ export function Workbench() {
   const changeProvider = (value: string) => {
     const provider = providerId(value);
     setSelectedProvider(provider);
+    if (activeTab.kind === "chat" && activeTab.sessionId !== "new-chat") {
+      const nextTab: WorkbenchTab = { kind: "chat", sessionId: `new-chat-${provider}-${crypto.randomUUID()}`, scope: activeTab.scope, provider, projectId: activeTab.scope === "project" ? projectId : undefined };
+      setTabs((items) => [...items, nextTab]);
+      setActiveTab(nextTab);
+      return;
+    }
     if (activeTab.kind !== "chat" || activeTab.sessionId === "new-chat")
       setActiveTab((tab) => (tab.kind === "chat" ? { ...tab, provider } : tab));
   };
@@ -921,7 +928,7 @@ export function Workbench() {
               <select
                 className="topbar-provider"
                 aria-label="选择 Agent"
-                value={activeProvider}
+                value={selectedProvider}
                 onChange={(event) => changeProvider(event.target.value)}
               >
                 {["claude", "cursor", "codex", "pi", "opencode"].map((id) => (
@@ -1022,7 +1029,7 @@ export function Workbench() {
                 activeTab.scope === "project" ? projectName : undefined
               }
               providerName={providerLabel(activeProvider)}
-              providerLocked={activeTab.sessionId !== "new-chat"}
+              providerLocked={activeTab.sessionId !== "new-chat" && !activeTab.sessionId.startsWith("new-chat-")}
               onProviderChange={changeProvider}
               onStatsChange={setActiveStats}
               disabledProviders={providerStatuses
