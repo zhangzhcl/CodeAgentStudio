@@ -240,7 +240,7 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light aside>section[aria-label="侧栏"]::-webkit-scrollbar-thumb{background:rgba(184,197,212,.9)}
 
 /* Message composition: one visual surface per turn. */
-.codeagent-workbench .chat-transcript.list{gap:16px!important}
+.codeagent-workbench .chat-transcript.list .list-inner{gap:16px!important}
 .codeagent-workbench .chat-message-agent.msg-agent{border:0!important;background:transparent!important;padding:0!important;margin:0!important}
 .codeagent-workbench .chat-message-agent.msg-agent .msg-agent-body{padding-left:30px!important}
 .codeagent-workbench .chat-message-user.msg-user{position:relative;z-index:0;margin:0!important}
@@ -254,6 +254,6 @@ html[data-theme="light"] body::after{opacity:.012}
 
 /* Hard reset the legacy card shell at the list boundary. This keeps a stale
    generic .chat-message rule from reintroducing white outer panels or shadows. */
-.codeagent-workbench .chat-transcript.list>article.msg.chat-message{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important}
-.codeagent-workbench .chat-transcript.list>article.msg.msg-user{display:flex!important;align-items:flex-end!important}
-.codeagent-workbench .chat-transcript.list>article.msg.msg-agent{display:block!important}
+.codeagent-workbench .chat-transcript.list .list-inner>article.msg.chat-message{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important}
+.codeagent-workbench .chat-transcript.list .list-inner>article.msg.msg-user{display:flex!important;align-items:flex-end!important}
+.codeagent-workbench .chat-transcript.list .list-inner>article.msg.msg-agent{display:block!important}
