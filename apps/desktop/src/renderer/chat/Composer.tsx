@@ -256,31 +256,36 @@ export function Composer({
             >
               <IconPaperclip size={16} />
             </button>
-            <button
-              type="button"
-              aria-label="查看 Token 统计"
-              className="token-chip pill"
-              onClick={() =>
-                setNotice("Token 统计为当前草稿和会话文本的估算值。")
-              }
-            >
-              ⌁{" "}
-              <strong>
-                {Math.max(
-                  1,
-                  Math.ceil(
-                    (draft.length +
-                      messages.reduce(
-                        (total, item) => total + item.content.length,
-                        0,
-                      )) /
-                      4,
-                  ),
-                )}
-                K
-              </strong>{" "}
-              tokens
-            </button>
+            <div className="composer-model-wrap" ref={modelRef}>
+              <button
+                type="button"
+                className={`composer-model pill${modelOpen ? " is-open" : ""}`}
+                aria-haspopup="listbox"
+                aria-expanded={modelOpen}
+                onClick={() => setModelOpen((open) => !open)}
+                title={`当前模型：${model}`}
+              >
+                {model}
+                <IconChevronDown size={13} className="pill-caret" />
+              </button>
+              {modelOpen && (
+                <div className="composer-model-menu" role="listbox" aria-label="选择模型">
+                  {[
+                    ["GLM-4.7", "通用", 3],
+                    ["Claude Sonnet", "代码", 2],
+                    ["GPT-5.5", "推理", 2],
+                    ["DeepSeek V4", "长上下文", 1],
+                  ].map(([item, tag, speed]) => (
+                    <button key={String(item)} type="button" role="option" aria-selected={item === model}
+                      onClick={() => { setModel(String(item)); setModelOpen(false); setNotice(`已切换模型：${item}`); }}>
+                      <span className="model-option-main"><strong>{String(item)}</strong><small>{String(tag)}</small></span>
+                      <span className="model-speed" aria-label={`速度 ${speed}/3`}>{[0, 1, 2].map((bar) => <i key={bar} className={bar < Number(speed) ? "is-on" : ""} />)}</span>
+                      {item === model && <IconCheck size={13} className="model-check" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               type="button"
               aria-label="引用文件"
@@ -323,64 +328,7 @@ export function Composer({
             </button>
           </div>
           <div className="composer-actions composer-bar-right">
-            <div className="composer-model-wrap" ref={modelRef}>
-              <button
-                type="button"
-                className={`composer-model pill${modelOpen ? " is-open" : ""}`}
-                aria-haspopup="listbox"
-                aria-expanded={modelOpen}
-                onClick={() => setModelOpen((open) => !open)}
-                title={`当前模型：${model}`}
-              >
-                {model}
-                <IconChevronDown size={13} className="pill-caret" />
-              </button>
-              {modelOpen && (
-                <div
-                  className="composer-model-menu"
-                  role="listbox"
-                  aria-label="选择模型"
-                >
-                  {[
-                    ["GLM-4.7", "通用", 3],
-                    ["Claude Sonnet", "代码", 2],
-                    ["GPT-5.5", "推理", 2],
-                    ["DeepSeek V4", "长上下文", 1],
-                  ].map(([item, tag, speed]) => (
-                    <button
-                      key={String(item)}
-                      type="button"
-                      role="option"
-                      aria-selected={item === model}
-                      onClick={() => {
-                        setModel(String(item));
-                        setModelOpen(false);
-                        setNotice(`已切换模型：${item}`);
-                      }}
-                    >
-                      <span className="model-option-main">
-                        <strong>{String(item)}</strong>
-                        <small>{String(tag)}</small>
-                      </span>
-                      <span
-                        className="model-speed"
-                        aria-label={`速度 ${speed}/3`}
-                      >
-                        {[0, 1, 2].map((bar) => (
-                          <i
-                            key={bar}
-                            className={bar < Number(speed) ? "is-on" : ""}
-                          />
-                        ))}
-                      </span>
-                      {item === model && (
-                        <IconCheck size={13} className="model-check" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {draft.length > 0 && <span className="token-count" title="按估算规则粗略折算">{Math.max(1, Math.ceil((draft.length + messages.reduce((total, item) => total + item.content.length, 0)) / 4))}K tokens</span>}
             {sending && !draft.trim() && attachments.length === 0 ? (
               <button
                 type="button"
