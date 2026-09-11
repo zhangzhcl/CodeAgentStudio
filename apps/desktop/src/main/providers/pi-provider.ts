@@ -8,7 +8,8 @@ export type PiTransport = { createSession(input: CreateSessionInput & { sessionF
 
 export class PiProvider implements AgentProvider {
   readonly id = 'pi' as const;
-  readonly capabilities = { maxConcurrentSessions: 4, supportsResume: true, supportsAttachments: true, supportsImages: false, supportsThinking: false, supportsWebSearch: false, supportsProjectScope: true, supportsAbort: true };
+  // transport 的 prompt 不消费 PromptOptions，附件能力先声明为 false 保持与行为一致
+  readonly capabilities = { maxConcurrentSessions: 4, supportsResume: true, supportsAttachments: false, supportsImages: false, supportsThinking: false, supportsWebSearch: false, supportsProjectScope: true, supportsAbort: true };
   private readonly nativeSessions = new Map<string, string>();
   constructor(private readonly transport: PiTransport, private readonly sessionsDir = resolvePiSessionsDir()) {}
   detect() { return this.transport.detect(); }

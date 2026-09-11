@@ -36,8 +36,6 @@ export class CliProvider implements AgentProvider {
   async createSession(input: CreateSessionInput) { if (input.projectRoot && input.sessionId) this.sessionCwds.set(input.sessionId, input.projectRoot); return {}; }
   async resumeSession(_nativeId: string) { throw new Error(`${this.id} does not support resume`); }
   async prompt(sessionId: string, text: string, model?: string, options?: PromptOptions) {
-    if (options?.thinking && !this.capabilities.supportsThinking) throw new Error(`${this.id} 不支持深度思考选项`);
-    if (options?.webSearch && !this.capabilities.supportsWebSearch) throw new Error(`${this.id} 不支持联网选项`);
     if (options?.attachments?.length) text += `\n\n附件（请使用项目工作区工具读取）：\n${options.attachments.map((item) => `- ${item.relativePath}`).join('\n')}`;
     await new Promise<void>((resolve, reject) => {
       const runMessageId = `${sessionId}:${crypto.randomUUID()}`;
