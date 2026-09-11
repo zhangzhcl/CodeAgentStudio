@@ -132,6 +132,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.03;ba
 /* Output tabs are neutral workspace tabs; amber remains reserved for actions
    and status, not a persistent yellow outline around every open transcript. */
 .codeagent-workbench .chat-tabs .chat-tab,.codeagent-workbench .chat-tabs .chat-tab.is-active{border-color:transparent!important;box-shadow:none!important}
+.codeagent-workbench .chat-tabs .chat-tab,.codeagent-workbench .chat-tabs .chat-tab.is-active{border-top:0!important;border-right:0!important;border-left:0!important}
 .codeagent-workbench .chat-tabs .chat-tab{background:#13161d!important;color:#646b78!important}
 .codeagent-workbench .chat-tabs .chat-tab:hover{background:#1a1e27!important;color:#e9e6dc!important}
 .codeagent-workbench .chat-tabs .chat-tab.is-active{background:#0d0f14!important;color:#e9e6dc!important}
@@ -145,6 +146,15 @@ html[data-theme="light"],html[data-theme="light"] body{background-color:#f7f9fc;
 html[data-theme="light"] body{background-image:linear-gradient(rgba(36,54,76,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(36,54,76,.035) 1px,transparent 1px);background-size:40px 40px}
 html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light,.codeagent-workbench.theme-light main,.codeagent-workbench.theme-light .main,.codeagent-workbench.theme-light .list-wrap,.codeagent-workbench.theme-light .list-viewport,.codeagent-workbench.theme-light .chat-transcript{background:#f7f9fc!important;color:#24364c!important}
+.codeagent-workbench.theme-light aside,.codeagent-workbench.theme-light .sidebar{background:#fff!important;border-color:#d7e0ea!important;color:#24364c!important}
+.codeagent-workbench.theme-light .agent-brand,.codeagent-workbench.theme-light .brand-name,.codeagent-workbench.theme-light .brand-sub,.codeagent-workbench.theme-light .sidebar-heading h2,.codeagent-workbench.theme-light .session-sidebar-heading h2{color:#24364c!important}
+.codeagent-workbench.theme-light .side-tabs,.codeagent-workbench.theme-light .nested-sidebar-tabs{background:#f7f9fc!important;border-color:#d7e0ea!important}
+.codeagent-workbench.theme-light .side-tab,.codeagent-workbench.theme-light .nested-sidebar-tabs button{color:#52657b!important}
+.codeagent-workbench.theme-light .side-tab.is-on,.codeagent-workbench.theme-light .nested-sidebar-tabs button[aria-selected="true"]{background:#fff!important;color:#9a6b12!important;box-shadow:inset 0 0 0 1px #d7e0ea!important}
+.codeagent-workbench.theme-light .session-section-label,.codeagent-workbench.theme-light .project-group-header h3,.codeagent-workbench.theme-light aside p{color:#74869a!important}
+.codeagent-workbench.theme-light aside .session-section-label~button,.codeagent-workbench.theme-light aside .session-project-group>button{background:#fff!important;border-color:#d7e0ea!important;color:#52657b!important}
+.codeagent-workbench.theme-light aside .session-section-label~button[aria-current="true"],.codeagent-workbench.theme-light aside .session-project-group>button[aria-current="true"]{background:#fffaf0!important;color:#9a6b12!important}
+.codeagent-workbench.theme-light .sidebar-status-card{background:#fff!important;border-color:#d7e0ea!important;color:#74869a!important}
 .codeagent-workbench.theme-light main{background:#f7f9fc!important}
 .codeagent-workbench.theme-light .chat-tabs{background:#f7f9fc!important;border-color:#d7e0ea!important}
 .codeagent-workbench.theme-light .chat-empty,.codeagent-workbench.theme-light .welcome{color:#24364c!important}

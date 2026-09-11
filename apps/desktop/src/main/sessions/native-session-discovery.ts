@@ -18,6 +18,11 @@ async function cursorMeta(path: string): Promise<{ cwd?: string; title?: string 
 export async function discoverNativeSessions(service: SessionService, workspace?: WorkspaceService): Promise<number> {
   let imported = 0;
   const projectForCwd = async (cwd: string | undefined) => cwd && workspace ? workspace.findProject(cwd).catch(() => undefined) : undefined;
+  // A native session without an explicit project id belongs to the Agent's
+  // default workspace. Keep it personal across restarts even when its native
+  // cwd happens to sit below a previously discovered directory.
+  const legacyNativeIds = new Set(service.list().filter((session) => session.nativeId && !session.projectId).map((session) => session.nativeId as string));
+  const projectForSession = async (nativeId: string, cwd: string | undefined) => legacyNativeIds.has(nativeId) ? undefined : projectForCwd(cwd);
   const roots: Array<[ProviderId, string]> = [
     ['claude', join(homedir(), '.claude', 'projects')],
     ['codex', join(homedir(), '.codex', 'sessions')],
@@ -37,5 +42,11 @@ export async function discoverNativeSessions(service: SessionService, workspace?
   } catch { /* OpenCode is optional and may not have a local database */ }
   for (const [provider, root] of roots) for (const path of await files(root, '.jsonl')) { const firstUser = (await parseJsonl(path)).find((message) => message.role === 'user'); if (firstUser) service.ensureTitle(stableId(provider, basename(path, '.jsonl')), firstUser.content); }
   for (const path of cursorFiles) { const firstUser = (await parseCursorHistory(path))[0]; if (firstUser) service.ensureTitle(stableId('cursor', basename(join(path, '..'))), firstUser.content); }
+  // Sessions imported by older builds were incorrectly marked as project
+  // sessions without a project id. They are Agent default-workspace sessions,
+  // so migrate them to the personal list on the next discovery pass.
+  for (const session of service.list()) {
+    if (session.nativeId && legacyNativeIds.has(session.nativeId)) service.updateScope(session.id, 'personal');
+  }
   return imported;
 }
