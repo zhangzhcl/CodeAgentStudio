@@ -1,4 +1,4 @@
-import { access, lstat, mkdir, open, readdir, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { access, lstat, mkdir, open, readdir, realpath, rename, rm, stat } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { createReadStream } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
@@ -148,7 +148,10 @@ export class WorkspaceService {
       if (error instanceof WorkspaceError) throw error;
     });
     if (kind === 'directory') await mkdir(path, { recursive: false });
-    else await writeFile(path, '', { encoding: 'utf8', flag: 'wx' });
+    else {
+      const handle = await open(path, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o644);
+      await handle.close();
+    }
   }
 
   async renameEntry(projectId: string, relativePath: string, newName: string): Promise<void> {
