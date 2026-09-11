@@ -6,12 +6,14 @@ import { ProviderRegistry } from './provider-registry.js';
 import { ProviderRuntime } from './provider-runtime.js';
 import type { SessionService } from '../sessions/session-service.js';
 import type { WorkspaceService } from '../workspace/workspace-service.js';
-import type { AgentProvider } from './contracts.js';
+import { stageAttachments } from '../workspace/attachment-service.js';
+import type { AgentProvider, PromptOptions } from './contracts.js';
 
 const providerUnsubscribers = new WeakMap<AgentProvider, () => void>();
 
-type PromptInput = { sessionId: string; provider: ProviderId; scope: SessionScope; projectId?: string; projectRoot?: string; model?: string; text: string; repeat?: boolean };
-export const PromptInputSchema = z.object({ sessionId: z.string().min(1), provider: ProviderIdSchema, scope: SessionScopeSchema, projectId: z.string().min(1).optional(), projectRoot: z.string().min(1).optional(), model: z.string().min(1).max(200).optional(), text: z.string().min(1).max(1_000_000), repeat: z.boolean().optional() }).strict().superRefine((input, context) => {
+type PromptInput = { sessionId: string; provider: ProviderId; scope: SessionScope; projectId?: string; projectRoot?: string; model?: string; text: string; repeat?: boolean; options?: { thinking?: boolean; webSearch?: boolean; attachments?: Array<{ sourcePath: string; name?: string; mimeType?: string }> } };
+const PromptOptionsSchema = z.object({ thinking: z.boolean().optional(), webSearch: z.boolean().optional(), attachments: z.array(z.object({ sourcePath: z.string().min(1).max(4000), name: z.string().min(1).max(255).optional(), mimeType: z.string().max(200).optional() }).strict()).max(10).optional() }).strict();
+export const PromptInputSchema = z.object({ sessionId: z.string().min(1), provider: ProviderIdSchema, scope: SessionScopeSchema, projectId: z.string().min(1).optional(), projectRoot: z.string().min(1).optional(), model: z.string().min(1).max(200).optional(), text: z.string().min(1).max(1_000_000), repeat: z.boolean().optional(), options: PromptOptionsSchema.optional() }).strict().superRefine((input, context) => {
   if (input.scope === 'project' && !input.projectId) context.addIssue({ code: z.ZodIssueCode.custom, path: ['projectId'], message: 'Project prompts require projectId' });
   if (input.scope === 'project' && !input.projectRoot) context.addIssue({ code: z.ZodIssueCode.custom, path: ['projectRoot'], message: 'Project prompts require projectRoot' });
   if (input.scope === 'personal' && (input.projectId || input.projectRoot)) context.addIssue({ code: z.ZodIssueCode.custom, path: ['scope'], message: 'Personal prompts cannot include project fields' });
@@ -38,6 +40,11 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
   ipcMain.removeHandler('agent:abort');
   ipcMain.handle('agent:prompt', async (_event, rawInput: unknown) => {
     const input: PromptInput = PromptInputSchema.parse(rawInput);
+    if (input.options?.attachments?.length) {
+      if (!input.projectRoot) throw new Error('附件需要项目工作区');
+      const staged = await stageAttachments(input.projectRoot, input.sessionId, input.options.attachments);
+      input.options = { ...input.options, attachments: staged.map((item) => ({ sourcePath: item.relativePath, name: item.name, mimeType: item.mimeType })) };
+    }
     if (input.scope === 'project') {
       const project = workspace && input.projectRoot ? await workspace.findProject(input.projectRoot) : undefined;
       if (!project || project.id !== input.projectId) throw new Error('Project prompt is outside the selected registered project');
@@ -49,7 +56,8 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
     const provider = providers.get(input.provider);
     if (!provider) throw new Error(`Unknown provider: ${input.provider}`);
     try {
-      await provider.prompt(input.sessionId, input.text, input.model);
+      const providerOptions: PromptOptions | undefined = input.options ? { thinking: input.options.thinking, webSearch: input.options.webSearch, attachments: input.options.attachments?.map((item) => ({ name: item.name ?? 'attachment', relativePath: item.sourcePath, mimeType: item.mimeType ?? 'application/octet-stream', size: 0 })) } : undefined;
+      await provider.prompt(input.sessionId, input.text, input.model, providerOptions);
     } catch (error) {
       runtime.complete(input.sessionId, 'error');
       if (sessions) { try { sessions.markStatus(input.sessionId, 'error'); } catch { /* session may have been deleted */ } }

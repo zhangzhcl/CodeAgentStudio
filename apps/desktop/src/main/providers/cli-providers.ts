@@ -3,7 +3,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { AgentEvent, ProviderId } from '@codeagent-studio/protocol';
-import type { AgentProvider, CreateSessionInput, ProviderStatus } from './contracts.js';
+import type { AgentProvider, CreateSessionInput, ProviderStatus, PromptOptions } from './contracts.js';
 import { parseCliEvent } from './cli-event-parser.js';
 import { findAgentCommand, quoteShellArg, resolveAgentCommand as resolveCommand, withUserBinaryPaths, MAX_ARGV_PROMPT_CHARS } from './command-resolver.js';
 import { PiProvider } from './pi-provider.js';
@@ -23,7 +23,7 @@ export const CLI_CONFIGS: Config[] = [
 ];
 
 export class CliProvider implements AgentProvider {
-  readonly capabilities = { maxConcurrentSessions: 1, supportsResume: false, supportsAttachments: false, supportsProjectScope: true, supportsAbort: true };
+  get capabilities() { return { maxConcurrentSessions: 1, supportsResume: false, supportsAttachments: true, supportsImages: this.config.id === 'claude', supportsThinking: false, supportsWebSearch: false, supportsProjectScope: true, supportsAbort: true }; }
   private readonly listeners = new Set<(event: AgentEvent) => void>();
   private readonly processes = new Map<string, ReturnType<typeof spawn>>();
   private readonly aborted = new Set<string>();
@@ -35,7 +35,10 @@ export class CliProvider implements AgentProvider {
   }
   async createSession(input: CreateSessionInput) { if (input.projectRoot && input.sessionId) this.sessionCwds.set(input.sessionId, input.projectRoot); return {}; }
   async resumeSession(_nativeId: string) { throw new Error(`${this.id} does not support resume`); }
-  async prompt(sessionId: string, text: string, model?: string) {
+  async prompt(sessionId: string, text: string, model?: string, options?: PromptOptions) {
+    if (options?.thinking && !this.capabilities.supportsThinking) throw new Error(`${this.id} 不支持深度思考选项`);
+    if (options?.webSearch && !this.capabilities.supportsWebSearch) throw new Error(`${this.id} 不支持联网选项`);
+    if (options?.attachments?.length) text += `\n\n附件（请使用项目工作区工具读取）：\n${options.attachments.map((item) => `- ${item.relativePath}`).join('\n')}`;
     await new Promise<void>((resolve, reject) => {
       const runMessageId = `${sessionId}:${crypto.randomUUID()}`;
       const useStdin = text.length > MAX_ARGV_PROMPT_CHARS;
