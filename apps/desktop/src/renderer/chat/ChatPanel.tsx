@@ -351,7 +351,7 @@ export function ChatPanel({
                 </div>
               </div>
             ) : (
-              messages.map((message) => (
+              messages.map((message, index) => (
                 <MessageItem
                   key={message.id}
                   message={message}
@@ -363,6 +363,10 @@ export function ChatPanel({
                   onFeedback={() => setComposerNotice("已记录反馈")}
                   onEditResend={(text) => void runPrompt(text)}
                   onSuggestion={useQuickPrompt}
+                  isLastAgent={
+                    message.role === "agent" &&
+                    !messages.slice(index + 1).some((item) => item.role === "agent")
+                  }
                 />
               ))
             )}

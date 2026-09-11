@@ -23,6 +23,7 @@ type Props = {
   onFeedback: () => void;
   onEditResend?: (text: string) => void;
   onSuggestion?: (text: string) => void;
+  isLastAgent?: boolean;
 };
 
 function AgentMarkdown({ content }: { content: string }) {
@@ -80,6 +81,7 @@ export function MessageItem({
   onFeedback,
   onEditResend,
   onSuggestion,
+  isLastAgent = true,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [editDraft, setEditDraft] = useState(message.content);
@@ -301,7 +303,7 @@ export function MessageItem({
           )}
           {message.role === "agent" && message.content.length > 0 && (
             <>
-              <button
+              {isLastAgent && <button
                 className="act"
                 type="button"
                 aria-label="重新生成"
@@ -309,7 +311,7 @@ export function MessageItem({
                 disabled={sending}
               >
                 <IconRefresh size={15} />
-              </button>
+              </button>}
               <button
                 className="act"
                 type="button"
