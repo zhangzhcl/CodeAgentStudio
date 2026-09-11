@@ -83,15 +83,29 @@ export function MessageItem({
             </time>
           </div>
         )}
-        {message.role === "agent" && message.status === "streaming" && (
-          <div className="think is-running" aria-label="正在思考">
-            <span className="think-label">正在思考</span>
-            <span className="think-dots" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </span>
-          </div>
+        {message.role === "agent" && message.thinking && (
+          <details
+            className={`think${message.thinking === "running" ? " is-running" : ""}`}
+            open={message.thinking === "running"}
+          >
+            <summary className="think-head">
+              <span className="think-label">
+                {message.thinking === "running" ? "正在思考" : "已完成思考"}
+              </span>
+              {message.thinking === "running" ? (
+                <span className="think-dots" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+              ) : (
+                <span className="think-cost">已完成</span>
+              )}
+            </summary>
+            {message.thinking === "running" && (
+              <div className="think-body" aria-hidden="true" />
+            )}
+          </details>
         )}
         {message.role === "tool" ? (
           <details
