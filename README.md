@@ -25,7 +25,7 @@ pnpm --filter @codeagent-studio/desktop start
 pnpm --filter @codeagent-studio/desktop package
 ```
 
-如果本机 Node.js 主版本与 `better-sqlite3` 的预编译模块不一致，请先执行 `pnpm rebuild better-sqlite3`，再运行测试或 Electron。当前 Node 进程无法加载 Electron ABI 的 native binding 时，SQLite 集成测试会跳过；schema migration 和 12 列插入回归仍由纯单元测试覆盖，Electron 打包会在其运行时加载正确的 native module。
+生产 Electron 使用 `better-sqlite3`，其 native binding 必须与 Electron ABI 匹配；打包流程会准备对应的 native module。SQLite 集成测试在 Node 22 中使用内置 SQLite 兼容适配执行迁移、WAL 和损坏恢复验证，不依赖本机 better-sqlite3 ABI。
 
 真实 Agent E2E（会产生真实模型请求，默认跳过）：
 
