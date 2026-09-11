@@ -325,22 +325,6 @@ export function Composer({
             </div>
             <button
               type="button"
-              aria-label="引用文件"
-              className="toolbar-icon pill pill-icon"
-              onClick={() => {
-                setNotice("请在左侧文件资源管理器点击文件，即可打开并引用。");
-                onDraftChange(
-                  draft || "@",
-                  document.querySelector<HTMLTextAreaElement>(
-                    ".chat-composer textarea",
-                  ) ?? document.createElement("textarea"),
-                );
-              }}
-            >
-              <IconFile size={15} />
-            </button>
-            <button
-              type="button"
               className={`composer-toggle pill${deepThink ? " is-on" : ""}`}
               aria-pressed={deepThink}
               onClick={() => {
