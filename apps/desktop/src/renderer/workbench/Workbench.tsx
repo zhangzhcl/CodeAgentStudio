@@ -641,10 +641,11 @@ export function Workbench() {
               {sessionView === "sessions" ? (
                 <>
                   <h3 className="session-section-label">个人会话</h3>
-                  {visiblePersonalSessions.length === 0 ? (
-                    <p className="conv-empty">暂无 {providerLabel(selectedProvider)} 个人会话</p>
-                  ) : (
-                    visiblePersonalSessions.map(
+                  <div className="conv-list">
+                    {visiblePersonalSessions.length === 0 ? (
+                      <p className="conv-empty">暂无 {providerLabel(selectedProvider)} 个人会话</p>
+                    ) : (
+                      visiblePersonalSessions.map(
                       ({
                         id,
                         provider,
@@ -707,15 +708,17 @@ export function Workbench() {
                           </span>
                         </button>
                       ),
-                    )
-                  )}
+                      )
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
-                  {projectGroups.size === 0 ? (
-                    <p className="conv-empty">暂无 {providerLabel(selectedProvider)} 项目</p>
-                  ) : (
-                    [...projectGroups.entries()].map(([key, group]) => (
+                  <div className="conv-list">
+                    {projectGroups.size === 0 ? (
+                      <p className="conv-empty">暂无 {providerLabel(selectedProvider)} 项目</p>
+                    ) : (
+                      [...projectGroups.entries()].map(([key, group]) => (
                       <div
                         className="session-project-group proj-group"
                         data-expanded={
@@ -858,8 +861,9 @@ export function Workbench() {
                           )
                         )}
                       </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
                 </>
               )}
             </div>
