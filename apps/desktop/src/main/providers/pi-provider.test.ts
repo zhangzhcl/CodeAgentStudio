@@ -5,6 +5,16 @@ import { join } from 'node:path';
 import { PiProvider, type PiTransport } from './pi-provider.js';
 import { buildPiPromptArgs } from './pi-cli-transport.js';
 describe('PiProvider', () => {
+  it('rewrites native transport event ids to the app session id', async () => {
+    let emit: ((event: any) => void) | undefined;
+    const transport: PiTransport = { createSession: vi.fn(async () => ({ nativeId: 'native-1' })), resumeSession: vi.fn(async () => {}), prompt: vi.fn(async () => {}), abort: vi.fn(async () => true), subscribe: (listener) => { emit = listener; return () => {}; }, detect: vi.fn(async () => ({ provider: 'pi' as const, installed: true, authenticated: true })) };
+    const provider = new PiProvider(transport, join(await mkdtemp(join(tmpdir(), 'cas-pi-map-')), 'sessions'));
+    await provider.createSession({ scope: 'personal', sessionId: 'app-session-1' });
+    const received: any[] = [];
+    provider.subscribe((event) => received.push(event));
+    emit?.({ protocolVersion: 1, sessionId: 'native-1', messageId: 'm1', provider: 'pi', type: 'text_delta', sequence: 0, occurredAt: new Date().toISOString(), payload: { text: 'hello' } });
+    expect(received[0]?.sessionId).toBe('app-session-1');
+  });
   it('uses the exact native session file for the next prompt after restoring', () => {
     const args = buildPiPromptArgs('sensenova', 'sensenova-6.8-flash-lite', 'C:\\Users\\me\\.pi\\agent\\sessions\\native.jsonl', 'next', true);
     expect(args).toEqual(['--print', '--mode', 'json', '--provider', 'sensenova', '--model', 'sensenova-6.8-flash-lite', '--session', 'C:\\Users\\me\\.pi\\agent\\sessions\\native.jsonl', 'next']);
