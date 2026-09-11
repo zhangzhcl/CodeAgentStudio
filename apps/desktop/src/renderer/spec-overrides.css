@@ -247,6 +247,8 @@ html[data-theme="light"] body::after{opacity:.012}
 
 /* Message composition: one visual surface per turn. */
 .codeagent-workbench .chat-transcript.list .list-inner{gap:16px!important}
+.codeagent-workbench .chat-transcript.list .list-inner>article.msg{height:auto!important;min-height:0!important;align-self:stretch!important}
+.codeagent-workbench .chat-transcript.list .list-inner>article.msg.msg-user{height:auto!important;min-height:0!important;align-self:stretch!important}
 .codeagent-workbench .chat-message-agent.msg-agent{border:0!important;background:transparent!important;padding:0!important;margin:0!important}
 .codeagent-workbench .chat-message-agent.msg-agent .msg-agent-body{padding-left:30px!important}
 .codeagent-workbench .chat-message-user.msg-user{position:relative;z-index:0;margin:0!important}
