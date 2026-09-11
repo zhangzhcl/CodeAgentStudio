@@ -239,6 +239,12 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light .chat-transcript::-webkit-scrollbar-thumb,
 .codeagent-workbench.theme-light aside>section[aria-label="侧栏"]::-webkit-scrollbar-thumb{background:rgba(184,197,212,.9)}
 
+/* Scroll remains enabled, but the chrome is hidden by default. */
+.codeagent-workbench .chat-transcript,
+.codeagent-workbench aside>section[aria-label="侧栏"]{scrollbar-width:none;-ms-overflow-style:none}
+.codeagent-workbench .chat-transcript::-webkit-scrollbar,
+.codeagent-workbench aside>section[aria-label="侧栏"]::-webkit-scrollbar{display:none;width:0;height:0}
+
 /* Message composition: one visual surface per turn. */
 .codeagent-workbench .chat-transcript.list .list-inner{gap:16px!important}
 .codeagent-workbench .chat-message-agent.msg-agent{border:0!important;background:transparent!important;padding:0!important;margin:0!important}
