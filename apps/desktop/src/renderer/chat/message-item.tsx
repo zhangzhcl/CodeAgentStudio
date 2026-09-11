@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { MarkdownLite } from "./markdown-lite.js";
 import type { ChatMessage } from "./chat-state.js";
+import {
+  IconCheck,
+  IconCopy,
+  IconRefresh,
+  IconThumbDown,
+  IconThumbUp,
+} from "../icons.js";
 
 type Props = {
   message: ChatMessage;
@@ -168,7 +175,15 @@ export function MessageItem({
             aria-label="复制消息"
             onClick={() => onCopy(message.id, message.content)}
           >
-            {copied ? "已复制" : "复制"}
+            {copied ? (
+              <>
+                <IconCheck size={15} /> 已复制
+              </>
+            ) : (
+              <>
+                <IconCopy size={15} /> 复制
+              </>
+            )}
           </button>
           {message.role === "user" && onEditResend && !editing && (
             <button
@@ -192,7 +207,7 @@ export function MessageItem({
                 onClick={onRegenerate}
                 disabled={sending}
               >
-                重新生成
+                <IconRefresh size={15} /> 重新生成
               </button>
               <button
                 className="act"
@@ -200,7 +215,7 @@ export function MessageItem({
                 aria-label="赞"
                 onClick={onFeedback}
               >
-                赞
+                <IconThumbUp size={15} /> 赞
               </button>
               <button
                 className="act"
@@ -208,7 +223,7 @@ export function MessageItem({
                 aria-label="踩"
                 onClick={onFeedback}
               >
-                踩
+                <IconThumbDown size={15} /> 踩
               </button>
             </>
           )}{" "}

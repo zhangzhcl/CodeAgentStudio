@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "./chat-state.js";
+import {
+  IconChip,
+  IconGlobe,
+  IconPaperclip,
+  IconSend,
+  IconStop,
+} from "../icons.js";
 
 type Props = {
   draft: string;
@@ -236,7 +243,7 @@ export function Composer({
               className="toolbar-icon pill pill-icon"
               onClick={() => attachmentInput.current?.click()}
             >
-              ⌕
+              <IconPaperclip size={16} />
             </button>
             <button
               type="button"
@@ -289,7 +296,7 @@ export function Composer({
               }}
               title="深度思考模式"
             >
-              ✦ 深度思考
+              <IconChip size={15} /> 深度思考
             </button>
             <button
               type="button"
@@ -301,7 +308,7 @@ export function Composer({
               }}
               title="联网搜索模式"
             >
-              ⌁ 联网
+              <IconGlobe size={15} /> 联网
             </button>
           </div>
           <div className="composer-actions composer-bar-right">
@@ -315,7 +322,9 @@ export function Composer({
                 title={`当前模型：${model}`}
               >
                 {model}
-                <span aria-hidden="true">⌄</span>
+                <span className="pill-caret" aria-hidden="true">
+                  ⌄
+                </span>
               </button>
               {modelOpen && (
                 <div
@@ -372,7 +381,7 @@ export function Composer({
                 aria-label="停止"
                 onClick={onStop}
               >
-                停止
+                <IconStop size={16} />
               </button>
             ) : (
               <button
@@ -381,7 +390,7 @@ export function Composer({
                 aria-label="发送"
                 disabled={!draft.trim() && attachments.length === 0}
               >
-                ➤
+                <IconSend size={17} />
               </button>
             )}
           </div>
