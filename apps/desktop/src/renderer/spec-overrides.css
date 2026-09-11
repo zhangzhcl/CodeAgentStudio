@@ -251,3 +251,9 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench .think-text{padding:2px 14px 10px 16px!important}
 .codeagent-workbench.theme-light .think{border-left-color:#dfc17a!important;background:#fffaf0!important}
 .codeagent-workbench.theme-light .think-head{background:transparent!important}
+
+/* Hard reset the legacy card shell at the list boundary. This keeps a stale
+   generic .chat-message rule from reintroducing white outer panels or shadows. */
+.codeagent-workbench .chat-transcript.list>article.msg.chat-message{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important}
+.codeagent-workbench .chat-transcript.list>article.msg.msg-user{display:flex!important;align-items:flex-end!important}
+.codeagent-workbench .chat-transcript.list>article.msg.msg-agent{display:block!important}
