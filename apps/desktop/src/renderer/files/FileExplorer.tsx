@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { WorkspaceEntry } from "@codeagent-studio/protocol";
 import {
-  IconArrowDown,
+  IconChevronDown,
   IconChevronRight,
   IconFile,
   IconPlus,
@@ -92,7 +92,7 @@ export function FileExplorer({
             <span className="tree-chevron">
               {entry.isDirectory ? (
                 expanded.has(entry.path) ? (
-                  <IconArrowDown size={12} />
+                  <IconChevronDown size={12} />
                 ) : (
                   <IconChevronRight size={12} />
                 )
@@ -132,7 +132,7 @@ export function FileExplorer({
       </div>
       <div className="file-project-row">
         <span className="tree-chevron">
-          <IconArrowDown size={12} />
+          <IconChevronDown size={12} />
         </span>
         <span className="folder-icon" aria-hidden="true" />
         <strong>{projectName}</strong>
