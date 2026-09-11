@@ -7,6 +7,7 @@ export type ChatMessage = {
   status?: "streaming" | "done" | "error";
   createdAt?: number;
   thinking?: "running" | "done";
+  attachments?: Array<{ name: string; size: number; type?: string }>;
 };
 
 export function applyAgentEvent(

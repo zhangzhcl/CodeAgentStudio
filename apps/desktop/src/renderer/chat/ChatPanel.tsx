@@ -20,6 +20,7 @@ type Props = {
   onProviderChange?: (provider: string) => void;
   onTitleChange?: (title: string) => void;
 };
+type ChatAttachment = { name: string; size: number; type: string };
 
 export function ChatPanel({
   sessionId,
@@ -118,6 +119,7 @@ export function ChatPanel({
   const runPrompt = async (
     text: string,
     selectedProvider: string,
+    attachments: ChatAttachment[] = [],
     optimistic = true,
   ) => {
     lastPrompt.current = { text, provider: selectedProvider };
@@ -138,6 +140,7 @@ export function ChatPanel({
             id: crypto.randomUUID(),
             role: "user",
             content: text,
+            ...(attachments.length > 0 ? { attachments } : {}),
             status: "done",
             createdAt: Date.now(),
           },
@@ -157,7 +160,7 @@ export function ChatPanel({
       setError(cause instanceof Error ? cause.message : "Agent 请求失败");
     }
   };
-  const send = async () => {
+  const send = async (attachments: ChatAttachment[] = []) => {
     const text = draft.trim();
     if (!text) return;
     setDraft("");
@@ -185,12 +188,12 @@ export function ChatPanel({
       setComposerNotice("已显示可用命令");
       return;
     }
-    await runPrompt(text, provider);
+    await runPrompt(text, provider, attachments);
   };
   const retry = async () => {
     const prompt = lastPrompt.current;
     if (!prompt || sending) return;
-    await runPrompt(prompt.text, prompt.provider, false);
+    await runPrompt(prompt.text, prompt.provider, [], false);
   };
   const regenerate = async () => {
     const text = [...messages]
@@ -377,7 +380,7 @@ export function ChatPanel({
         queued={queued}
         notice={composerNotice}
         onDraftChange={(value) => setDraft(value)}
-        onSend={() => void send()}
+        onSend={(_, attachments) => void send(attachments)}
         onStop={() => {
           setSending(false);
           void onAbort?.(sessionId);

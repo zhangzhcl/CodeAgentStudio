@@ -20,7 +20,7 @@ type Props = {
   provider: string;
   sending: boolean;
   onDraftChange: (value: string, element: HTMLTextAreaElement) => void;
-  onSend: () => void;
+  onSend: (text: string, attachments?: Array<{ name: string; size: number; type: string }>) => void;
   onStop: () => void;
   notice?: string;
   queued: string[];
@@ -93,7 +93,7 @@ export function Composer({
     if (draft.trim() && history.current.at(-1) !== draft.trim())
       history.current.push(draft.trim());
     historyIndex.current = -1;
-    onSend();
+    onSend(draft.trim(), attachments);
     setAttachments([]);
   };
   return (
