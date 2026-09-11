@@ -6,6 +6,8 @@ CodeAgent开发平台：独立打包的本地桌面工作台，统一接入 Clau
 
 已完成协议、项目文件沙箱、Workbench、文件树、编辑器状态模型、聊天流式状态、CLI Provider 适配层、Pi Transport、Provider 生命周期、原生会话发现与日志基础能力。项目目录与 Agent 默认工作区已分离：只有用户显式选择的目录会进入项目列表，原生会话默认归入个人会话。
 
+项目表通过 `source` 持久化归属（`user` 或 `native-discovered`）。会话只有在其原生工作目录落入用户已登记项目根目录时才归入项目会话，否则归入对应 Agent 的个人会话；切换 Agent 不会混显示其他 Agent 的会话。
+
 当前本机已完成只读真实冒烟：Claude Code 2.1.267、Cursor Agent 2026.09.08-6caf4ff、Codex CLI 0.153.4、Pi 0.85.1、OpenCode 1.18.30 均能启动并返回 `PING`。四种 CLI 的流式参数已分别接入；只有 Pi 的原生会话恢复已接入，其他 CLI 当前在恢复历史后按新运行降级。
 
 ## 开发运行
