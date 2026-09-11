@@ -10,8 +10,8 @@ import type { AgentProvider } from './contracts.js';
 
 const providerUnsubscribers = new WeakMap<AgentProvider, () => void>();
 
-type PromptInput = { sessionId: string; provider: ProviderId; scope: SessionScope; projectId?: string; projectRoot?: string; model?: string; text: string };
-export const PromptInputSchema = z.object({ sessionId: z.string().min(1), provider: ProviderIdSchema, scope: SessionScopeSchema, projectId: z.string().min(1).optional(), projectRoot: z.string().min(1).optional(), model: z.string().min(1).max(200).optional(), text: z.string().min(1).max(1_000_000) }).strict().superRefine((input, context) => {
+type PromptInput = { sessionId: string; provider: ProviderId; scope: SessionScope; projectId?: string; projectRoot?: string; model?: string; text: string; repeat?: boolean };
+export const PromptInputSchema = z.object({ sessionId: z.string().min(1), provider: ProviderIdSchema, scope: SessionScopeSchema, projectId: z.string().min(1).optional(), projectRoot: z.string().min(1).optional(), model: z.string().min(1).max(200).optional(), text: z.string().min(1).max(1_000_000), repeat: z.boolean().optional() }).strict().superRefine((input, context) => {
   if (input.scope === 'project' && !input.projectId) context.addIssue({ code: z.ZodIssueCode.custom, path: ['projectId'], message: 'Project prompts require projectId' });
   if (input.scope === 'project' && !input.projectRoot) context.addIssue({ code: z.ZodIssueCode.custom, path: ['projectRoot'], message: 'Project prompts require projectRoot' });
   if (input.scope === 'personal' && (input.projectId || input.projectRoot)) context.addIssue({ code: z.ZodIssueCode.custom, path: ['scope'], message: 'Personal prompts cannot include project fields' });
@@ -43,7 +43,8 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
       if (!project || project.id !== input.projectId) throw new Error('Project prompt is outside the selected registered project');
     }
     if (sessions) { try { sessions.get(input.sessionId); } catch { sessions.create({ id: input.sessionId, provider: input.provider, scope: input.scope, projectId: input.projectId }); } }
-    sessions?.appendUserMessage(input.sessionId, input.text);
+    // 重试/重新生成场景下用户消息已经落库，重复追加会在回放时出现同一提问两份记录。
+    if (!input.repeat) sessions?.appendUserMessage(input.sessionId, input.text);
     if (!runtime.isActive(input.sessionId)) { const record = sessions?.get(input.sessionId); const provider = providers.get(input.provider); if (record?.nativeId && provider?.capabilities.supportsResume) { await provider.resumeSession(record.nativeId, record.nativeSessionFile, input.sessionId); runtime.activate(input.sessionId, input.provider); } else { const created = await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId, projectRoot: input.projectRoot }); if (created.nativeId || created.nativeSessionFile) sessions?.updateNative(input.sessionId, { nativeId: created.nativeId, nativeSessionFile: created.nativeSessionFile }); } }
     const provider = providers.get(input.provider);
     if (!provider) throw new Error(`Unknown provider: ${input.provider}`);

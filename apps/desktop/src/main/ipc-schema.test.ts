@@ -13,4 +13,12 @@ describe('IPC runtime schemas', () => {
     expect(() => PromptInputSchema.parse({ sessionId: 's', provider: 'unknown', scope: 'personal', text: 'hello' })).toThrow();
     expect(() => PromptInputSchema.parse({ sessionId: 's', provider: 'claude', scope: 'personal', projectId: 'p', text: 'hello' })).toThrow();
   });
+
+  it('accepts the renderer new-session payload that carries a client-generated id', () => {
+    expect(CreateSessionSchema.parse({ id: 'personal-abc', provider: 'claude', scope: 'personal' })).toMatchObject({ id: 'personal-abc', provider: 'claude', scope: 'personal' });
+  });
+
+  it('accepts repeat prompts used by retry and regenerate flows', () => {
+    expect(PromptInputSchema.parse({ sessionId: 's', provider: 'claude', scope: 'personal', text: 'hello', repeat: true })).toMatchObject({ repeat: true });
+  });
 });

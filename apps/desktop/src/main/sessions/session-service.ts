@@ -7,6 +7,7 @@ type SessionStore = { save(session: SessionRecord): unknown; get?(id: string): S
 export class SessionService {
   private readonly sessions = new Map<string, SessionRecord>();
   private readonly messages = new Map<string, MessageRecord>();
+  private readonly nextSequences = new Map<string, number>();
   constructor(private readonly store?: SessionStore) { for (const session of store?.list?.() ?? []) { this.sessions.set(session.id, session); if (!session.title) { const first = store?.listMessages?.(session.id).find((message) => message.role === 'user' && typeof message.content === 'string' && message.content.trim()); if (first && typeof first.content === 'string') this.setTitleIfMissing(session.id, first.content); } } }
 
   create(input: Omit<SessionRecord, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { id?: string }): SessionRecord {
@@ -17,24 +18,39 @@ export class SessionService {
     return record;
   }
   get(sessionId: string): SessionRecord { const record = this.sessions.get(sessionId) ?? this.store?.get?.(sessionId); if (!record) throw new Error(`Unknown session: ${sessionId}`); this.sessions.set(sessionId, record); return record; }
+  /**
+   * 会话内单调递增的写入序号。Provider 事件的 sequence 每轮运行都会从 0 重新计数，
+   * 用户消息如果固定为 -1，回放时会把所有提问挤到回复之前，因此落库统一改用本序号。
+   */
+  private nextSequence(sessionId: string): number {
+    if (!this.nextSequences.has(sessionId)) {
+      const stored = this.store?.listMessages?.(sessionId) ?? [];
+      const known = stored.length ? stored : [...this.messages.values()].filter((message) => message.sessionId === sessionId);
+      const max = known.reduce((acc, message) => Math.max(acc, message.sequence), -1);
+      this.nextSequences.set(sessionId, max);
+    }
+    const next = (this.nextSequences.get(sessionId) ?? -1) + 1;
+    this.nextSequences.set(sessionId, next);
+    return next;
+  }
   appendEvent(event: AgentEvent): MessageRecord | undefined {
     if (event.type !== 'text_delta') return undefined;
     const id = `${event.sessionId}:${event.messageId}`;
     const existing = this.messages.get(id);
     const message: MessageRecord = existing
-      ? { ...existing, content: typeof existing.content === 'string' ? existing.content + event.payload.text : event.payload.text, sequence: event.sequence }
-      : { id, sessionId: event.sessionId, role: 'agent', content: event.payload.text, sequence: event.sequence, createdAt: Date.now() };
+      ? { ...existing, content: typeof existing.content === 'string' ? existing.content + event.payload.text : event.payload.text }
+      : { id, sessionId: event.sessionId, role: 'agent', content: event.payload.text, sequence: this.nextSequence(event.sessionId), createdAt: Date.now() };
     this.messages.set(id, message);
     this.store?.saveMessage?.(message);
     return message;
   }
-  appendUserMessage(sessionId: string, content: string): MessageRecord { const message: MessageRecord = { id: `${sessionId}:user:${crypto.randomUUID()}`, sessionId, role: 'user', content, sequence: -1, createdAt: Date.now() }; this.messages.set(message.id, message); this.store?.saveMessage?.(message); if (content.trim()) this.setTitleIfMissing(sessionId, content); return message; }
+  appendUserMessage(sessionId: string, content: string): MessageRecord { const message: MessageRecord = { id: `${sessionId}:user:${crypto.randomUUID()}`, sessionId, role: 'user', content, sequence: this.nextSequence(sessionId), createdAt: Date.now() }; this.messages.set(message.id, message); this.store?.saveMessage?.(message); if (content.trim()) this.setTitleIfMissing(sessionId, content); return message; }
   importMessage(message: MessageRecord): void { if (this.messages.has(message.id)) return; this.messages.set(message.id, message); this.store?.saveMessage?.(message); if (message.role === 'user' && typeof message.content === 'string' && message.content.trim()) this.setTitleIfMissing(message.sessionId, message.content); }
   private setTitleIfMissing(sessionId: string, content: string): void { const session = this.sessions.get(sessionId); if (!session || session.title) return; const title = content.trim().replace(/\s+/g, ' ').slice(0, 80); const updated = { ...session, title, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); }
   ensureTitle(sessionId: string, content: string): void { this.setTitleIfMissing(sessionId, content); }
   listMessages(sessionId: string): MessageRecord[] { const stored = this.store?.listMessages?.(sessionId); if (stored?.length) return stored; return [...this.messages.values()].filter((message) => message.sessionId === sessionId).sort((a, b) => a.sequence - b.sequence || a.createdAt - b.createdAt); }
   list(): SessionRecord[] { return [...this.sessions.values()].sort((a, b) => b.updatedAt - a.updatedAt); }
-  delete(sessionId: string): boolean { const existed = this.sessions.delete(sessionId); for (const key of this.messages.keys()) if (key.startsWith(`${sessionId}:`)) this.messages.delete(key); this.store?.delete?.(sessionId); return existed; }
+  delete(sessionId: string): boolean { const existed = this.sessions.delete(sessionId); for (const key of this.messages.keys()) if (key.startsWith(`${sessionId}:`)) this.messages.delete(key); this.nextSequences.delete(sessionId); this.store?.delete?.(sessionId); return existed; }
   replayTranscript(sessionId: string): MessageRecord[] { return this.listMessages(sessionId).map((message) => ({ ...message })); }
   markStatus(sessionId: string, status: SessionRecord['status']): SessionRecord { const updated = { ...this.get(sessionId), status, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }
   updateNative(sessionId: string, native: Pick<SessionRecord, 'nativeId' | 'nativeSessionFile'>): SessionRecord { const updated = { ...this.get(sessionId), ...native, updatedAt: Date.now() }; this.sessions.set(sessionId, updated); this.store?.save(updated); return updated; }

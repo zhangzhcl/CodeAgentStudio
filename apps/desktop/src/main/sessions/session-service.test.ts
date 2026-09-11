@@ -22,4 +22,15 @@ describe('SessionService persistence hydration', () => {
     expect(service.replayTranscript('remove-me')).toEqual([]);
     expect(removed).toEqual(['remove-me']);
   });
+
+  it('keeps multi-turn transcripts interleaved in write order', () => {
+    const service = new SessionService();
+    service.create({ id: 'order', provider: 'claude', scope: 'personal' });
+    const delta = (messageId: string, sequence: number, text: string) => ({ protocolVersion: 1 as const, sessionId: 'order', messageId, provider: 'claude' as const, sequence, occurredAt: new Date().toISOString(), type: 'text_delta' as const, payload: { text } });
+    service.appendUserMessage('order', '第一个问题');
+    service.appendEvent(delta('m1', 0, '回答一'));
+    service.appendUserMessage('order', '第二个问题');
+    service.appendEvent(delta('m2', 0, '回答二'));
+    expect(service.replayTranscript('order').map((message) => `${message.role}:${message.content}`)).toEqual(['user:第一个问题', 'agent:回答一', 'user:第二个问题', 'agent:回答二']);
+  });
 });
