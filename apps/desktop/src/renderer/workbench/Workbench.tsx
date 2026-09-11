@@ -196,7 +196,7 @@ export function Workbench() {
         );
       });
     void refreshSessions();
-    const timer = window.setInterval(() => void refreshSessions(), 10_000);
+    const timer = window.setInterval(() => void refreshSessions(), 60_000);
     window.addEventListener("focus", refreshSessions);
     return () => { window.clearInterval(timer); window.removeEventListener("focus", refreshSessions); };
   }, []);
