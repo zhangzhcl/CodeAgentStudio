@@ -948,7 +948,8 @@ export function Workbench() {
               }}
               disabled={activeTab.kind !== "chat"}
             >
-              清空
+              <IconTrash size={15} />
+              <span>清空</span>
             </button>
           </div>
         </header>
