@@ -96,13 +96,17 @@ export function Workbench() {
     (session) => providerId(session.provider) === selectedProvider,
   );
   const projectGroups = visibleProjectSessions.reduce((groups, session) => {
+    const registeredByRoot = session.projectRoot
+      ? registeredProjects.find((project) => project.rootPath === session.projectRoot)
+      : undefined;
+    const linkedProjectId = session.projectId ?? registeredByRoot?.id;
     const key =
-      session.projectId ??
+      linkedProjectId ??
       session.projectRoot ??
       session.projectName ??
       "unlinked";
-    const registered = session.projectId
-      ? registeredProjects.find((project) => project.id === session.projectId)
+    const registered = linkedProjectId
+      ? registeredProjects.find((project) => project.id === linkedProjectId)
       : undefined;
     const current = groups.get(key) ?? {
       name:
@@ -748,8 +752,16 @@ export function Workbench() {
                                     "项目",
                                 );
                                 setProjectRoot(registered.rootPath);
-                              } else if (group.sessions[0]?.projectId)
-                                setProjectId(group.sessions[0].projectId);
+                              } else {
+                                const linked =
+                                  group.sessions[0]?.projectId ??
+                                  (group.root
+                                    ? registeredProjects.find(
+                                        (project) => project.rootPath === group.root,
+                                      )?.id
+                                    : undefined);
+                                if (linked) setProjectId(linked);
+                              }
                               newSession("project");
                             }}
                           >
