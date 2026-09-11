@@ -11,6 +11,9 @@ import {
   IconSparkle,
   IconTrash,
   IconX,
+  IconMore,
+  IconMoon,
+  IconSun,
 } from "../icons.js";
 
 type Activity = "files" | "sessions";
@@ -532,7 +535,7 @@ export function Workbench() {
               <header className="sidebar-heading">
                 <h2>文件资源管理器</h2>
                 <button type="button" aria-label="侧栏更多操作">
-                  •••
+                  <IconMore size={15} />
                 </button>
               </header>
               <button
@@ -929,7 +932,7 @@ export function Workbench() {
                 setTheme((current) => (current === "dark" ? "light" : "dark"))
               }
             >
-              {theme === "dark" ? "☼" : "◐"}
+              {theme === "dark" ? <IconSun size={15} /> : <IconMoon size={15} />}
             </button>
             <button
               type="button"

@@ -6,6 +6,7 @@ import {
   IconFile,
   IconPlus,
   IconRefresh,
+  IconMore,
 } from "../icons.js";
 
 type Props = {
@@ -99,7 +100,7 @@ export function FileExplorer({
               )}
             </span>
             <span className={entry.isDirectory ? "folder-icon" : "file-icon"}>
-              {entry.isDirectory ? "◆" : <IconFile size={13} />}
+              {entry.isDirectory ? "" : <IconFile size={13} />}
             </span>
             <span>{entry.name}</span>
           </button>
@@ -120,14 +121,14 @@ export function FileExplorer({
       <div className="file-explorer-toolbar">
         <span>资源管理器</span>
         <button type="button" aria-label="资源管理器更多操作">
-          •••
+          <IconMore size={15} />
         </button>
       </div>
       <div className="file-project-row">
         <span className="tree-chevron">
           <IconArrowDown size={12} />
         </span>
-        <span className="folder-icon">◆</span>
+        <span className="folder-icon" aria-hidden="true" />
         <strong>{projectName}</strong>
         <div className="file-project-actions">
           <button type="button" aria-label="新建文件">

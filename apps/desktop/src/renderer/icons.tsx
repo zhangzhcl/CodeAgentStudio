@@ -210,3 +210,22 @@ export const IconSparkle = ({ size = 12, className }: IconProps) => (
     <path d="M12 2c.6 4.9 2.4 6.9 10 10-7.6 3.1-9.4 5.1-10 10-.6-4.9-2.4-6.9-10-10 7.6-3.1 9.4-5.1 10-10Z" />
   </svg>
 );
+
+export const IconMore = ({ size = 16, className }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+    <circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" />
+  </svg>
+);
+
+export const IconSun = ({ size = 16, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+  </svg>
+);
+
+export const IconMoon = ({ size = 16, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z" />
+  </svg>
+);
