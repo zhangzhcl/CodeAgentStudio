@@ -9,17 +9,17 @@ import { findAgentCommand, quoteShellArg, resolveAgentCommand as resolveCommand,
 import { PiProvider } from './pi-provider.js';
 import { PiCliTransport } from './pi-cli-transport.js';
 
-type Config = { id: ProviderId; command: string; commandArgs?: string[]; shell?: boolean; versionArgs?: string[]; promptArgs: (text: string) => string[] };
+type Config = { id: ProviderId; command: string; commandArgs?: string[]; shell?: boolean; versionArgs?: string[]; promptArgs: (text: string, model?: string) => string[] };
 const cursorWindowsPath = join(homedir(), 'AppData', 'Local', 'cursor-agent', 'agent.ps1');
 const cursorDefault = process.platform === 'win32' && existsSync(cursorWindowsPath) ? cursorWindowsPath : findAgentCommand(['agent', 'cursor-agent']);
 const cursorCommand = resolveCommand(process.env.CODEAGENT_CURSOR_AGENT ?? cursorDefault);
 const config = (id: ProviderId, command: string, promptArgs: Config['promptArgs']): Config => ({ id, ...resolveCommand(command), promptArgs });
 const commandFromEnvOrPath = (envKey: string, candidates: string[]) => process.env[envKey] ?? findAgentCommand(candidates);
 export const CLI_CONFIGS: Config[] = [
-  config('claude', commandFromEnvOrPath('CODEAGENT_CLAUDE_COMMAND', ['claude']), (text) => ['-p', '--output-format', 'stream-json', '--include-partial-messages', '--verbose', text]),
-  { id: 'cursor', ...cursorCommand, promptArgs: (text) => ['-p', '--output-format', 'stream-json', '--stream-partial-output', text] },
-  config('codex', commandFromEnvOrPath('CODEAGENT_CODEX_COMMAND', ['codex']), (text) => ['exec', '--json', text]),
-  config('opencode', commandFromEnvOrPath('CODEAGENT_OPENCODE_COMMAND', ['opencode']), (text) => ['run', '--format', 'json', '--model', process.env.CODEAGENT_OPENCODE_MODEL ?? 'sensenova/sensenova-6.8-flash-lite', text]),
+  config('claude', commandFromEnvOrPath('CODEAGENT_CLAUDE_COMMAND', ['claude']), (text, model) => ['-p', '--output-format', 'stream-json', '--include-partial-messages', '--verbose', ...(model ? ['--model', model] : []), text]),
+  { id: 'cursor', ...cursorCommand, promptArgs: (text, model) => ['-p', '--output-format', 'stream-json', '--stream-partial-output', ...(model ? ['--model', model] : []), text] },
+  config('codex', commandFromEnvOrPath('CODEAGENT_CODEX_COMMAND', ['codex']), (text, model) => ['exec', '--json', ...(model ? ['-m', model] : []), text]),
+  config('opencode', commandFromEnvOrPath('CODEAGENT_OPENCODE_COMMAND', ['opencode']), (text, model) => ['run', '--format', 'json', '--model', model ? (model.includes('/') ? model : `sensenova/${model}`) : (process.env.CODEAGENT_OPENCODE_MODEL || 'sensenova/sensenova-6.8-flash-lite'), text]),
 ];
 
 export class CliProvider implements AgentProvider {
@@ -35,9 +35,9 @@ export class CliProvider implements AgentProvider {
   }
   async createSession(input: CreateSessionInput) { if (input.projectRoot && input.sessionId) this.sessionCwds.set(input.sessionId, input.projectRoot); return {}; }
   async resumeSession(_nativeId: string) { throw new Error(`${this.id} does not support resume`); }
-  async prompt(sessionId: string, text: string) {
+  async prompt(sessionId: string, text: string, model?: string) {
     await new Promise<void>((resolve, reject) => {
-      const rawArgs = [...(this.config.commandArgs ?? []), ...this.config.promptArgs(text)]; const args = this.config.shell ? rawArgs.map((arg) => quoteShellArg(arg)) : rawArgs; const child = spawn(this.config.command, args, { shell: this.config.shell, windowsHide: true, cwd: this.sessionCwds.get(sessionId), env: withUserBinaryPaths(process.env), stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0; let pending = '';
+      const rawArgs = [...(this.config.commandArgs ?? []), ...this.config.promptArgs(text, model)]; const args = this.config.shell ? rawArgs.map((arg) => quoteShellArg(arg)) : rawArgs; const child = spawn(this.config.command, args, { shell: this.config.shell, windowsHide: true, cwd: this.sessionCwds.get(sessionId), env: withUserBinaryPaths(process.env), stdio: ['ignore', 'pipe', 'pipe'] }); this.processes.set(sessionId, child); let sequence = 0; let pending = '';
       const consume = (data: Buffer) => { pending += data.toString(); const lines = pending.split(/\r?\n/); pending = lines.pop() ?? ''; lines.forEach((line) => { const event = parseCliEvent(line, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); }); };
       child.stdout?.on('data', consume); child.stderr?.on('data', (data) => { const line = data.toString(); if (/no api key|not logged in|authentication required|rate limit|timed out|error/i.test(line)) { const event = parseCliEvent(line, this.id, sessionId, sequence++); if (event?.type === 'error') this.listeners.forEach((listener) => listener(event)); } }); child.once('error', reject); child.once('close', (code) => { if (pending.trim()) { const event = parseCliEvent(pending, this.id, sessionId, sequence++); if (event) this.listeners.forEach((listener) => listener(event)); } this.processes.delete(sessionId); const wasAborted = this.aborted.delete(sessionId); if (!wasAborted && typeof code === 'number' && code !== 0) { const failure = parseCliEvent(JSON.stringify({ type: 'error', code: 'process_exit', message: `Agent exited with code ${code}` }), this.id, sessionId, sequence++); if (failure) this.listeners.forEach((listener) => listener(failure)); } else if (!wasAborted) { const done = parseCliEvent(JSON.stringify({ type: 'done' }), this.id, sessionId, sequence++); if (done) this.listeners.forEach((listener) => listener(done)); } resolve(); });
     });

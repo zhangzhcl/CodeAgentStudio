@@ -30,7 +30,7 @@ export type AgentProvider = {
   detect(): Promise<ProviderStatus>;
   createSession(input: CreateSessionInput): Promise<{ nativeId?: string; nativeSessionFile?: string }>;
   resumeSession(nativeId: string, nativeSessionFile?: string, appSessionId?: string): Promise<void>;
-  prompt(sessionId: string, text: string): Promise<void>;
+  prompt(sessionId: string, text: string, model?: string): Promise<void>;
   abort(sessionId: string): Promise<boolean>;
   subscribe(listener: (event: AgentEvent) => void): () => void;
 };

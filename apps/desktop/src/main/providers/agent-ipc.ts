@@ -10,8 +10,8 @@ import type { AgentProvider } from './contracts.js';
 
 const providerUnsubscribers = new WeakMap<AgentProvider, () => void>();
 
-type PromptInput = { sessionId: string; provider: ProviderId; scope: SessionScope; projectId?: string; projectRoot?: string; text: string };
-export const PromptInputSchema = z.object({ sessionId: z.string().min(1), provider: ProviderIdSchema, scope: SessionScopeSchema, projectId: z.string().min(1).optional(), projectRoot: z.string().min(1).optional(), text: z.string().min(1).max(1_000_000) }).strict().superRefine((input, context) => {
+type PromptInput = { sessionId: string; provider: ProviderId; scope: SessionScope; projectId?: string; projectRoot?: string; model?: string; text: string };
+export const PromptInputSchema = z.object({ sessionId: z.string().min(1), provider: ProviderIdSchema, scope: SessionScopeSchema, projectId: z.string().min(1).optional(), projectRoot: z.string().min(1).optional(), model: z.string().min(1).max(200).optional(), text: z.string().min(1).max(1_000_000) }).strict().superRefine((input, context) => {
   if (input.scope === 'project' && !input.projectId) context.addIssue({ code: z.ZodIssueCode.custom, path: ['projectId'], message: 'Project prompts require projectId' });
   if (input.scope === 'project' && !input.projectRoot) context.addIssue({ code: z.ZodIssueCode.custom, path: ['projectRoot'], message: 'Project prompts require projectRoot' });
   if (input.scope === 'personal' && (input.projectId || input.projectRoot)) context.addIssue({ code: z.ZodIssueCode.custom, path: ['scope'], message: 'Personal prompts cannot include project fields' });
@@ -48,7 +48,7 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
     const provider = providers.get(input.provider);
     if (!provider) throw new Error(`Unknown provider: ${input.provider}`);
     try {
-      await provider.prompt(input.sessionId, input.text);
+      await provider.prompt(input.sessionId, input.text, input.model);
     } catch (error) {
       runtime.complete(input.sessionId, 'error');
       if (sessions) { try { sessions.markStatus(input.sessionId, 'error'); } catch { /* session may have been deleted */ } }

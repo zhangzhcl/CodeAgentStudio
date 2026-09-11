@@ -1103,7 +1103,7 @@ export function Workbench() {
                   }
                 ).codeagentAgent?.abort(sessionId)
               }
-              onPrompt={(text, provider) => {
+              onPrompt={(text, provider, model) => {
                 const id = providerId(provider);
                 const scope = activeTab.scope;
                 const prompt = (
@@ -1122,6 +1122,7 @@ export function Workbench() {
                   provider: id,
                   scope,
                   ...(scope === "project" ? { projectId, projectRoot } : {}),
+                  ...(model ? { model } : {}),
                   text,
                 });
               }}

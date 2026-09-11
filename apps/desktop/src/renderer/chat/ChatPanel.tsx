@@ -16,7 +16,7 @@ type Props = {
   disabledProviders?: string[];
   loadMessages?: () => Promise<ChatMessage[]>;
   subscribe?: (listener: (event: AgentEvent) => void) => () => void;
-  onPrompt?: (text: string, provider: string) => Promise<void> | void;
+  onPrompt?: (text: string, provider: string, model: string) => Promise<void> | void;
   onAbort?: (sessionId: string) => Promise<unknown> | unknown;
   onProviderChange?: (provider: string) => void;
   onTitleChange?: (title: string) => void;
@@ -59,7 +59,7 @@ export function ChatPanel({
   const [error, setError] = useState<string>();
   const [composerNotice, setComposerNotice] = useState("");
   const [copiedMessage, setCopiedMessage] = useState<string>();
-  const lastPrompt = useRef<{ text: string; provider: string }>();
+  const lastPrompt = useRef<{ text: string; provider: string; model: string }>();
   const [showScrollButton, setShowScrollButton] = useState(false);
   const sequencer = useRef(new EventSequencer());
   const transcriptRef = useRef<HTMLDivElement>(null);
@@ -143,8 +143,9 @@ export function ChatPanel({
     selectedProvider: string,
     attachments: ChatAttachment[] = [],
     optimistic = true,
+    selectedModel = "",
   ) => {
-    lastPrompt.current = { text, provider: selectedProvider };
+    lastPrompt.current = { text, provider: selectedProvider, model: selectedModel };
     setError(undefined);
     if (optimistic) {
       setMessages((current) => {
@@ -172,7 +173,7 @@ export function ChatPanel({
     setSending(true);
     try {
       if (!onPrompt) throw new Error("Agent 接口不可用，请重启应用");
-      await onPrompt(text, selectedProvider);
+      await onPrompt(text, selectedProvider, selectedModel);
       // IPC streaming providers resolve when the run is registered and finish
       // via done/error events. Standalone callers without a stream callback
       // are complete at this point and must unlock the composer immediately.
@@ -182,7 +183,7 @@ export function ChatPanel({
       setError(cause instanceof Error ? cause.message : "Agent 请求失败");
     }
   };
-  const send = async (attachments: ChatAttachment[] = []) => {
+  const send = async (attachments: ChatAttachment[] = [], selectedModel = "") => {
     const text = draft.trim();
     if (!text) return;
     setDraft("");
@@ -210,12 +211,12 @@ export function ChatPanel({
       setComposerNotice("已显示可用命令");
       return;
     }
-    await runPrompt(text, provider, attachments);
+    await runPrompt(text, provider, attachments, true, selectedModel);
   };
   const retry = async () => {
     const prompt = lastPrompt.current;
     if (!prompt || sending) return;
-    await runPrompt(prompt.text, prompt.provider, [], false);
+    await runPrompt(prompt.text, prompt.provider, [], false, prompt.model);
   };
   const regenerate = async () => {
     const text = [...messages]
@@ -225,7 +226,7 @@ export function ChatPanel({
     setError(undefined);
     setSending(true);
     try {
-      await onPrompt(text, provider);
+      await onPrompt(text, provider, lastPrompt.current?.model ?? "");
       if (!subscribe) setSending(false);
     } catch (cause) {
       setSending(false);
@@ -386,7 +387,7 @@ export function ChatPanel({
         queued={queued}
         notice={composerNotice}
         onDraftChange={(value) => setDraft(value)}
-        onSend={(_, attachments) => void send(attachments)}
+        onSend={(_, attachments, model) => void send(attachments, model)}
         onStop={() => {
           setSending(false);
           void onAbort?.(sessionId);

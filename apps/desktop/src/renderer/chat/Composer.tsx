@@ -12,7 +12,7 @@ import {
   IconStop,
   IconX,
 } from "../icons.js";
-import { getAgentPresentation } from "../agent-presentation.js";
+import { getAgentModels, getAgentPresentation } from "../agent-presentation.js";
 
 type Props = {
   draft: string;
@@ -20,7 +20,7 @@ type Props = {
   provider: string;
   sending: boolean;
   onDraftChange: (value: string, element: HTMLTextAreaElement) => void;
-  onSend: (text: string, attachments?: Array<{ name: string; size: number; type: string }>) => void;
+  onSend: (text: string, attachments?: Array<{ name: string; size: number; type: string }>, model?: string) => void;
   onStop: () => void;
   notice?: string;
   queued: string[];
@@ -53,10 +53,12 @@ export function Composer({
   const [commandIndex, setCommandIndex] = useState(0);
   const [deepThink, setDeepThink] = useState(false);
   const [webSearch, setWebSearch] = useState(false);
-  const [model, setModel] = useState("GLM-4.7");
+  const models = getAgentModels(provider);
+  const [model, setModel] = useState(models[0]?.id ?? "");
   const [modelOpen, setModelOpen] = useState(false);
   const agentPresentation = getAgentPresentation(provider);
   const modelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { setModel(getAgentModels(provider)[0]?.id ?? ""); }, [provider]);
   const history = useRef<string[]>([]);
   const historyIndex = useRef(-1);
   const commands = [
@@ -97,7 +99,7 @@ export function Composer({
     if (draft.trim() && history.current.at(-1) !== draft.trim())
       history.current.push(draft.trim());
     historyIndex.current = -1;
-    onSend(draft.trim(), attachments);
+    onSend(draft.trim(), attachments, model);
     setAttachments([]);
   };
   return (
@@ -308,17 +310,13 @@ export function Composer({
               {modelOpen && (
                 <div className="model-pop" role="listbox" aria-label="选择模型">
                   <div className="model-pop-head">选择模型</div>
-                  {[
-                    ["GLM-4.7", "旗舰 · 推理最强", 2],
-                    ["GLM-4.7-Air", "均衡 · 日常首选", 2],
-                    ["GLM-4-Flash", "极速 · 轻量任务", 3],
-                  ].map(([item, tag, speed]) => (
-                    <button key={String(item)} type="button" className={`model-item${item === model ? " is-current" : ""}`} role="option" aria-selected={item === model}
-                      onClick={() => { setModel(String(item)); setModelOpen(false); setNotice(`已切换模型：${item}`); }}>
-                      <span className="model-item-name">{String(item)}</span>
-                      <span className="model-item-tag">{String(tag)}</span>
-                      <span className="model-speed" data-speed={Number(speed)} aria-label={`速度 ${speed}/3`}><i /><i /><i /></span>
-                      {item === model && <IconCheck size={13} className="model-check" />}
+                  {models.map((entry) => (
+                    <button key={entry.id} type="button" className={`model-item${entry.id === model ? " is-current" : ""}`} role="option" aria-selected={entry.id === model}
+                      onClick={() => { setModel(entry.id); setModelOpen(false); setNotice(`已切换模型：${entry.label}`); }}>
+                      <span className="model-item-name">{entry.label}</span>
+                      <span className="model-item-tag">{entry.tag}</span>
+                      <span className="model-speed" data-speed={entry.speed} aria-label={`速度 ${entry.speed}/3`}><i /><i /><i /></span>
+                      {entry.id === model && <IconCheck size={13} className="model-check" />}
                     </button>
                   ))}
                 </div>
