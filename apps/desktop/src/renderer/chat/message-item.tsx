@@ -41,9 +41,11 @@ export function MessageItem({
         {message.role === "user" ? "你" : message.role === "tool" ? "⌘" : "✦"}
       </div>
       <div
-        className={`message-body${message.role === "agent" ? " msg-agent-body" : ""}`}
+        className={`message-body${message.role === "agent" ? " msg-agent-body" : message.role === "user" ? " msg-bubble" : ""}`}
       >
-        <div className="message-heading">
+        <div
+          className={`message-heading${message.role === "agent" ? " msg-agent-head" : ""}`}
+        >
           <strong
             className={message.role === "agent" ? "agent-name" : undefined}
           >
@@ -59,7 +61,7 @@ export function MessageItem({
           {message.status === "streaming" && (
             <span className="streaming-badge">生成中</span>
           )}
-          <time>
+          <time className={message.role === "user" ? "msg-time" : undefined}>
             {new Date(message.createdAt ?? Date.now()).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
