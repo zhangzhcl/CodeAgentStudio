@@ -308,20 +308,20 @@ export function ChatPanel({
           >
             {messages.length === 0 ? (
               <div className="chat-empty welcome">
+                <div className="empty-mark welcome-mark">
+                  <IconSparkle size={22} />
+                </div>
+                <span className="welcome-status welcome-tag">SYSTEM READY</span>
+                <h1 className="welcome-title">你好，我是 AGENT-01</h1>
+                <p className="welcome-sub">
+                  可以联网检索、调用工具、编写代码，也能陪你把一个模糊的想法推演成方案。
+                </p>
                 {scope === "project" && projectName && (
                   <div className="project-context-strip welcome-context">
                     <span className="conv-head-dot" aria-hidden="true" />
                     已挂载项目「{projectName}」的共享上下文
                   </div>
                 )}
-                <div className="empty-mark welcome-mark">
-                  <IconSparkle size={22} />
-                </div>
-                <span className="welcome-status welcome-tag">SYSTEM READY</span>
-                <h2 className="welcome-title">你好，我是 AGENT-01</h2>
-                <p className="welcome-sub">
-                  可以联网检索、调用工具、编写代码，也能陪你把一个模糊的想法推演成方案。
-                </p>
                 <div className="quick-prompts welcome-grid">
                   {[
                     "帮我搜索本周 AI 领域的重要新闻，并总结成三条要点",
