@@ -45,8 +45,11 @@ export function MarkdownLite({ content }: { content: string }) {
           const lines = paragraph.split("\n");
           if (lines.every((line) => /^[-*] \[[ x~>]\] /.test(line)))
             nodes.push(
-              <div className="tasks" key={`tasks-${index}-${partIndex}`}>
-                <div className="tasks-head">
+              <div
+                className="tasks task-list-block"
+                key={`tasks-${index}-${partIndex}`}
+              >
+                <div className="tasks-head task-list-head">
                   <span className="tasks-label">执行计划</span>{" "}
                   <span className="tasks-progress">
                     {lines.filter((line) => /^[-*] \[x\] /i.test(line)).length}/
@@ -63,7 +66,7 @@ export function MarkdownLite({ content }: { content: string }) {
                         : "pending";
                   return (
                     <div
-                      className={`task-item is-${status}`}
+                      className={`task-item task-list-item is-${status} task-${status}`}
                       key={`${line}-${taskIndex}`}
                     >
                       <span className="task-check" aria-hidden="true">
