@@ -148,6 +148,10 @@ export function ChatPanel({
     try {
       if (!onPrompt) throw new Error("Agent 接口不可用，请重启应用");
       await onPrompt(text, selectedProvider);
+      // IPC streaming providers resolve when the run is registered and finish
+      // via done/error events. Standalone callers without a stream callback
+      // are complete at this point and must unlock the composer immediately.
+      if (!subscribe) setSending(false);
     } catch (cause) {
       setSending(false);
       setError(cause instanceof Error ? cause.message : "Agent 请求失败");
@@ -197,6 +201,7 @@ export function ChatPanel({
     setSending(true);
     try {
       await onPrompt(text, provider);
+      if (!subscribe) setSending(false);
     } catch (cause) {
       setSending(false);
       setError(cause instanceof Error ? cause.message : "Agent 请求失败");
