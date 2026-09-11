@@ -637,7 +637,7 @@ export function Workbench() {
                 <>
                   <h3 className="session-section-label">个人会话</h3>
                   {visiblePersonalSessions.length === 0 ? (
-                    <p>暂无 {providerLabel(selectedProvider)} 个人会话</p>
+                    <p className="conv-empty">暂无 {providerLabel(selectedProvider)} 个人会话</p>
                   ) : (
                     visiblePersonalSessions.map(
                       ({
@@ -708,7 +708,7 @@ export function Workbench() {
               ) : (
                 <>
                   {projectGroups.size === 0 ? (
-                    <p>暂无 {providerLabel(selectedProvider)} 项目</p>
+                    <p className="conv-empty">暂无 {providerLabel(selectedProvider)} 项目</p>
                   ) : (
                     [...projectGroups.entries()].map(([key, group]) => (
                       <div
