@@ -596,6 +596,7 @@ export function Workbench() {
                         updatedAt,
                       }) => (
                         <button
+                          className="conv-item"
                           type="button"
                           aria-current={
                             activeTab.kind === "chat" &&
@@ -611,11 +612,13 @@ export function Workbench() {
                             )
                           }
                         >
-                          <span>
+                          <span className="conv-title">
                             {providerLabel(provider)} ·{" "}
                             {sessionTitle(id, nativeId, title)}
                           </span>
-                          <small>{relativeTime(updatedAt)}</small>
+                          <small className="conv-time">
+                            {relativeTime(updatedAt)}
+                          </small>
                           <span
                             role="button"
                             tabIndex={0}
@@ -651,14 +654,14 @@ export function Workbench() {
                   ) : (
                     [...projectGroups.entries()].map(([key, group]) => (
                       <div
-                        className="session-project-group"
+                        className="session-project-group proj-group"
                         data-expanded={
                           expandedProjectId === key ? "true" : "false"
                         }
                         key={key}
                       >
                         <div
-                          className="project-group-header"
+                          className="project-group-header proj-row"
                           role="button"
                           tabIndex={0}
                           aria-expanded={expandedProjectId === key}
@@ -676,14 +679,18 @@ export function Workbench() {
                             }
                           }}
                         >
-                          <h3 title={group.root}>
-                            <span>{group.name}</span>
-                            <small>{group.sessions.length}</small>
+                          <h3 className="proj-row-main" title={group.root}>
+                            <span className="proj-row-dot" aria-hidden="true" />
+                            <span className="proj-row-name">{group.name}</span>
+                            <small className="proj-row-count">
+                              {group.sessions.length}
+                            </small>
                           </h3>
                           <span className="project-caret" aria-hidden="true">
                             ⌄
                           </span>
                           <button
+                            className="proj-row-plus"
                             type="button"
                             aria-label={`在 ${group.name} 中新建会话`}
                             onClick={(event) => {
@@ -724,6 +731,7 @@ export function Workbench() {
                               updatedAt,
                             }) => (
                               <button
+                                className="proj-conv"
                                 type="button"
                                 aria-current={
                                   activeTab.kind === "chat" &&
