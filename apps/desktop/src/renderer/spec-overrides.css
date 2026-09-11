@@ -285,7 +285,11 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light .composer{background:transparent!important;border:0!important;box-shadow:none!important}
 
 /* Conversation overview rail: one fixed-size marker per user turn. */
-.conversation-rail{position:absolute;top:8px;right:0;bottom:8px;width:18px;z-index:30;display:block;pointer-events:none}
+.conversation-rail{position:absolute;top:8px;right:0;bottom:8px;width:18px;z-index:30;display:block;overflow-y:auto;overflow-x:visible;pointer-events:auto;scrollbar-width:thin;scrollbar-color:#596678 transparent}
+.conversation-rail::-webkit-scrollbar{width:4px}
+.conversation-rail::-webkit-scrollbar-track{background:transparent}
+.conversation-rail::-webkit-scrollbar-thumb{border-radius:4px;background:#596678}
+.conversation-rail-content{position:relative;min-height:100%;height:max(100%, var(--rail-content-height, 100%));width:18px}
 .conversation-rail-track{position:absolute;top:0;bottom:0;right:7px;width:2px;border-radius:2px;background:rgba(113,128,150,.28)}
 .conversation-marker{position:absolute;right:4px;width:10px;height:4px;min-height:4px;padding:0!important;transform:translateY(-50%);border:0!important;border-radius:2px!important;background:#718096!important;pointer-events:auto;cursor:pointer;transition:width .14s,background .14s}
 .conversation-marker:hover,.conversation-marker:focus-visible{width:12px;background:#f5a524!important;outline:0}
@@ -293,6 +297,8 @@ html[data-theme="light"] body::after{opacity:.012}
 .conversation-marker:hover::after,.conversation-marker:focus-visible::after{display:block}
 .codeagent-workbench.theme-light .conversation-marker{background:#aab8c8!important}
 .codeagent-workbench.theme-light .conversation-marker:hover,.codeagent-workbench.theme-light .conversation-marker:focus-visible{background:#c38a1d!important}
+.codeagent-workbench.theme-light .conversation-rail{scrollbar-color:#aab8c8 transparent}
+.codeagent-workbench.theme-light .conversation-rail::-webkit-scrollbar-thumb{background:#aab8c8}
 .codeagent-workbench.theme-light .conversation-rail-track{background:rgba(118,137,160,.35)}
 .codeagent-workbench.theme-light .conversation-marker::after{border-color:#d3deea;background:#fff;color:#34465a;box-shadow:0 8px 22px rgba(40,65,95,.16)}
 
