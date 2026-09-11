@@ -98,9 +98,9 @@ export function MessageItem({
             className="tool-call-block tool"
             open={message.status === "streaming"}
           >
-            <summary>
-              <IconChevronRight size={13} className="tool-caret" />
-              <strong>{toolName}</strong>
+            <summary className="tool-line">
+              <IconChevronRight size={13} className="tool-caret tool-icon" />
+              <strong className="tool-name">{toolName}</strong>
               <span
                 className={`tool-status tool-status-${message.status ?? "done"}`}
               >
@@ -111,7 +111,7 @@ export function MessageItem({
                     : "已完成"}
               </span>
             </summary>
-            <pre>{toolDetail}</pre>
+            <pre className="tool-result">{toolDetail}</pre>
           </details>
         ) : message.role === "user" && editing ? (
           <div className="message-edit-box">
