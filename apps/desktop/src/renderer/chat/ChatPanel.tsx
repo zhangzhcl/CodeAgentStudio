@@ -259,108 +259,116 @@ export function ChatPanel({
           </button>
         </div>
       )}
-      <div
-        ref={transcriptRef}
-        className="chat-transcript list"
-        role="log"
-        aria-live="polite"
-        onScroll={(event) => {
-          const element = event.currentTarget;
-          const atBottom =
-            element.scrollHeight - element.scrollTop - element.clientHeight <
-            80;
-          stickToBottom.current = atBottom;
-          setShowScrollButton(
-            !atBottom && element.scrollHeight > element.clientHeight + 80,
-          );
-        }}
-      >
-        {messages.length === 0 ? (
-          <div className="chat-empty welcome">
-            {scope === "project" && projectName && (
-              <div className="project-context-strip welcome-context">
-                项目上下文 · {projectName}
+      <div className="list-wrap">
+        <div className="list-viewport">
+          <div
+            ref={transcriptRef}
+            className="chat-transcript list"
+            role="log"
+            aria-live="polite"
+            onScroll={(event) => {
+              const element = event.currentTarget;
+              const atBottom =
+                element.scrollHeight -
+                  element.scrollTop -
+                  element.clientHeight <
+                80;
+              stickToBottom.current = atBottom;
+              setShowScrollButton(
+                !atBottom && element.scrollHeight > element.clientHeight + 80,
+              );
+            }}
+          >
+            {messages.length === 0 ? (
+              <div className="chat-empty welcome">
+                {scope === "project" && projectName && (
+                  <div className="project-context-strip welcome-context">
+                    项目上下文 · {projectName}
+                  </div>
+                )}
+                <div className="empty-mark welcome-mark">
+                  <IconSparkle size={22} />
+                </div>
+                <span className="welcome-status welcome-tag">SYSTEM READY</span>
+                <h2 className="welcome-title">你好，我是 AGENT-01</h2>
+                <p className="welcome-sub">
+                  可以联网检索、调用工具、编写代码，也能陪你把一个模糊的想法推演成方案。
+                </p>
+                <div className="quick-prompts welcome-grid">
+                  <button
+                    className="welcome-card"
+                    type="button"
+                    onClick={() =>
+                      useQuickPrompt(
+                        "帮我快速了解这个项目的目录结构和主要技术栈",
+                      )
+                    }
+                  >
+                    了解项目
+                  </button>
+                  <button
+                    className="welcome-card"
+                    type="button"
+                    onClick={() =>
+                      useQuickPrompt(
+                        "检查当前项目中最值得优先修复的问题，并给出修复计划",
+                      )
+                    }
+                  >
+                    检查问题
+                  </button>
+                  <button
+                    className="welcome-card"
+                    type="button"
+                    onClick={() =>
+                      useQuickPrompt(
+                        "帮我实现一个小功能，并先说明你准备修改哪些文件",
+                      )
+                    }
+                  >
+                    实现功能
+                  </button>
+                  <button
+                    className="welcome-card"
+                    type="button"
+                    onClick={() =>
+                      useQuickPrompt("阅读当前代码，找出潜在的性能或安全风险")
+                    }
+                  >
+                    代码审查
+                  </button>
+                </div>
               </div>
+            ) : (
+              messages.map((message) => (
+                <MessageItem
+                  key={message.id}
+                  message={message}
+                  provider={provider}
+                  copied={copiedMessage === message.id}
+                  sending={sending}
+                  onCopy={(id, content) => void copyMessage(id, content)}
+                  onRegenerate={() => void regenerate()}
+                  onFeedback={() => setComposerNotice("已记录反馈")}
+                  onEditResend={(text) => void runPrompt(text)}
+                  onSuggestion={useQuickPrompt}
+                />
+              ))
             )}
-            <div className="empty-mark welcome-mark">
-              <IconSparkle size={22} />
-            </div>
-            <span className="welcome-status welcome-tag">SYSTEM READY</span>
-            <h2 className="welcome-title">你好，我是 AGENT-01</h2>
-            <p className="welcome-sub">
-              可以联网检索、调用工具、编写代码，也能陪你把一个模糊的想法推演成方案。
-            </p>
-            <div className="quick-prompts welcome-grid">
-              <button
-                className="welcome-card"
-                type="button"
-                onClick={() =>
-                  useQuickPrompt("帮我快速了解这个项目的目录结构和主要技术栈")
-                }
-              >
-                了解项目
-              </button>
-              <button
-                className="welcome-card"
-                type="button"
-                onClick={() =>
-                  useQuickPrompt(
-                    "检查当前项目中最值得优先修复的问题，并给出修复计划",
-                  )
-                }
-              >
-                检查问题
-              </button>
-              <button
-                className="welcome-card"
-                type="button"
-                onClick={() =>
-                  useQuickPrompt(
-                    "帮我实现一个小功能，并先说明你准备修改哪些文件",
-                  )
-                }
-              >
-                实现功能
-              </button>
-              <button
-                className="welcome-card"
-                type="button"
-                onClick={() =>
-                  useQuickPrompt("阅读当前代码，找出潜在的性能或安全风险")
-                }
-              >
-                代码审查
-              </button>
-            </div>
           </div>
-        ) : (
-          messages.map((message) => (
-            <MessageItem
-              key={message.id}
-              message={message}
-              provider={provider}
-              copied={copiedMessage === message.id}
-              sending={sending}
-              onCopy={(id, content) => void copyMessage(id, content)}
-              onRegenerate={() => void regenerate()}
-              onFeedback={() => setComposerNotice("已记录反馈")}
-              onEditResend={(text) => void runPrompt(text)}
-              onSuggestion={useQuickPrompt}
-            />
-          ))
+        </div>
+        {showScrollButton && (
+          <button
+            type="button"
+            className="scroll-bottom"
+            aria-label="回到底部"
+            title="回到底部"
+            onClick={scrollToBottom}
+          >
+            <IconArrowDown size={15} />
+          </button>
         )}
       </div>
-      {showScrollButton && (
-        <button
-          type="button"
-          className="scroll-bottom"
-          aria-label="回到底部"
-          title="回到底部"
-          onClick={scrollToBottom}
-        >
-          <IconArrowDown size={15} />
-        </button>
-      )}
       <Composer
         draft={draft}
         messages={messages}
