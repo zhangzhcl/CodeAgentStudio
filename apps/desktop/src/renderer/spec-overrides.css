@@ -257,3 +257,10 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench .chat-transcript.list .list-inner>article.msg.chat-message{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important}
 .codeagent-workbench .chat-transcript.list .list-inner>article.msg.msg-user{display:flex!important;align-items:flex-end!important}
 .codeagent-workbench .chat-transcript.list .list-inner>article.msg.msg-agent{display:block!important}
+
+/* User turns are plain right-aligned text in every theme; no speech bubble
+   surface, border, radius or shadow. */
+.codeagent-workbench .chat-message-user.msg-user .msg-bubble,
+.codeagent-workbench.theme-light .chat-message-user.msg-user .msg-bubble{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:inherit!important;padding:0!important}
+.codeagent-workbench .chat-message-user.msg-user .msg-bubble p,
+.codeagent-workbench.theme-light .chat-message-user.msg-user .msg-bubble p{background:transparent!important;border:0!important;color:inherit!important;padding:0!important}
