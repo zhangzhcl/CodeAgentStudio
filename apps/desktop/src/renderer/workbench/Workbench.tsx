@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { WorkbenchTab } from "@codeagent-studio/protocol";
 import { FileExplorer } from "../files/FileExplorer.js";
 import { ChatPanel } from "../chat/ChatPanel.js";
@@ -63,6 +63,8 @@ export function Workbench() {
     string | undefined
   >();
   const [projectError, setProjectError] = useState<string | undefined>();
+  const [pendingDelete, setPendingDelete] = useState<string>();
+  const deleteTimer = useRef<number>();
   const providerId = (value?: string) =>
     (value ?? "claude").toLowerCase() as
       "claude" | "cursor" | "codex" | "pi" | "opencode";
@@ -135,6 +137,7 @@ export function Workbench() {
       })
       .catch(() => setProjectError("项目列表加载失败，请重新选择项目。"));
   }, []);
+  useEffect(() => () => { if (deleteTimer.current) window.clearTimeout(deleteTimer.current); }, []);
   useEffect(() => {
     const list = (
       window as Window & {
@@ -397,6 +400,25 @@ export function Workbench() {
     );
     closeTab(activeTab);
   };
+  const requestDelete = (id: string) => {
+    if (pendingDelete === id) {
+      const remove = (
+        window as Window & {
+          codeagentSessions?: { delete?: (value: string) => Promise<unknown> };
+        }
+      ).codeagentSessions?.delete;
+      if (remove) void remove(id);
+      setPersonalSessions((items) => items.filter((item) => item.id !== id));
+      setProjectSessions((items) => items.filter((item) => item.id !== id));
+      setPendingDelete(undefined);
+      if (deleteTimer.current) window.clearTimeout(deleteTimer.current);
+      if (activeTab.kind === "chat" && activeTab.sessionId === id) closeTab(activeTab);
+      return;
+    }
+    setPendingDelete(id);
+    if (deleteTimer.current) window.clearTimeout(deleteTimer.current);
+    deleteTimer.current = window.setTimeout(() => setPendingDelete(undefined), 2200);
+  };
 
   return (
     <div className={`codeagent-workbench theme-${theme}`}>
@@ -555,6 +577,7 @@ export function Workbench() {
                             {sessionTitle(id, nativeId, title)}
                           </span>
                           <small>{relativeTime(updatedAt)}</small>
+                          <span role="button" tabIndex={0} className={`session-row-delete${pendingDelete === id ? " is-confirm" : ""}`} aria-label={pendingDelete === id ? `再次点击确认删除 ${sessionTitle(id, nativeId, title)}` : `删除会话 ${sessionTitle(id, nativeId, title)}`} onClick={(event) => { event.stopPropagation(); requestDelete(id); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.stopPropagation(); requestDelete(id); } }}>{pendingDelete === id ? "删除" : "×"}</span>
                         </button>
                       ),
                     )
@@ -646,32 +669,11 @@ export function Workbench() {
                                 <span
                                   role="button"
                                   tabIndex={0}
-                                  className="session-row-delete"
-                                  aria-label={`删除会话 ${sessionTitle(id, nativeId, title)}`}
+                                  className={`session-row-delete${pendingDelete === id ? " is-confirm" : ""}`}
+                                  aria-label={pendingDelete === id ? `再次点击确认删除 ${sessionTitle(id, nativeId, title)}` : `删除会话 ${sessionTitle(id, nativeId, title)}`}
                                   onClick={(event) => {
                                     event.stopPropagation();
-                                    if (
-                                      !window.confirm(
-                                        "确定删除当前会话及其历史消息吗？",
-                                      )
-                                    )
-                                      return;
-                                    const remove = (
-                                      window as Window & {
-                                        codeagentSessions?: {
-                                          delete?: (
-                                            value: string,
-                                          ) => Promise<unknown>;
-                                        };
-                                      }
-                                    ).codeagentSessions?.delete;
-                                    if (remove) void remove(id);
-                                    setProjectSessions((items) =>
-                                      items.filter((item) => item.id !== id),
-                                    );
-                                    setPersonalSessions((items) =>
-                                      items.filter((item) => item.id !== id),
-                                    );
+                                    requestDelete(id);
                                   }}
                                   onKeyDown={(event) => {
                                     if (
@@ -686,7 +688,7 @@ export function Workbench() {
                                     }
                                   }}
                                 >
-                                  ×
+                                  {pendingDelete === id ? "删除" : "×"}
                                 </span>
                               </button>
                             ),
