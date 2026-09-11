@@ -647,12 +647,8 @@ export function Workbench() {
                   项目
                 </button>
               </div>
-              <div className="session-sidebar-heading">
-                <h2>{sessionView === "sessions" ? "会话" : "项目"}</h2>
-              </div>
               {sessionView === "sessions" ? (
                 <>
-                  <h3 className="session-section-label">个人会话</h3>
                   <div className="conv-list">
                     {visiblePersonalSessions.length === 0 ? (
                       <p className="conv-empty">

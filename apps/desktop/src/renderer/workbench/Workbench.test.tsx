@@ -31,7 +31,6 @@ describe('Workbench', () => {
     render(<Workbench />);
     await waitFor(() => expect(screen.getByRole('tabpanel', { name: '聊天' })).toBeInTheDocument());
 
-    expect(screen.getByRole('heading', { name: '会话' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: '项目' })).toBeInTheDocument();
   });
 
