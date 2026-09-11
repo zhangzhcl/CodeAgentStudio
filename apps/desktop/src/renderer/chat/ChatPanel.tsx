@@ -363,7 +363,7 @@ export function ChatPanel({
         {showScrollButton && (
           <button
             type="button"
-            className="scroll-bottom"
+            className="jump-bottom scroll-bottom"
             aria-label="回到底部"
             title="回到底部"
             onClick={scrollToBottom}
