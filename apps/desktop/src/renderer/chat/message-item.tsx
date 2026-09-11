@@ -110,10 +110,12 @@ export function MessageItem({
             <strong
               className={message.role === "agent" ? "agent-name" : undefined}
             >
-              {message.role === "tool" ? "工具调用" : provider}
+              {message.role === "tool" ? "工具调用" : "AGENT-01"}
             </strong>
             {message.role === "agent" && (
-              <span className="message-model-badge agent-model">AGENT</span>
+              <span className="message-model-badge agent-model">
+                {provider}
+              </span>
             )}
             {message.status === "streaming" && (
               <span className="streaming-badge">生成中</span>
