@@ -319,48 +319,16 @@ export function ChatPanel({
                   可以联网检索、调用工具、编写代码，也能陪你把一个模糊的想法推演成方案。
                 </p>
                 <div className="quick-prompts welcome-grid">
-                  <button
-                    className="welcome-card"
-                    type="button"
-                    onClick={() =>
-                      useQuickPrompt(
-                        "帮我快速了解这个项目的目录结构和主要技术栈",
-                      )
-                    }
-                  >
-                    了解项目
-                  </button>
-                  <button
-                    className="welcome-card"
-                    type="button"
-                    onClick={() =>
-                      useQuickPrompt(
-                        "检查当前项目中最值得优先修复的问题，并给出修复计划",
-                      )
-                    }
-                  >
-                    检查问题
-                  </button>
-                  <button
-                    className="welcome-card"
-                    type="button"
-                    onClick={() =>
-                      useQuickPrompt(
-                        "帮我实现一个小功能，并先说明你准备修改哪些文件",
-                      )
-                    }
-                  >
-                    实现功能
-                  </button>
-                  <button
-                    className="welcome-card"
-                    type="button"
-                    onClick={() =>
-                      useQuickPrompt("阅读当前代码，找出潜在的性能或安全风险")
-                    }
-                  >
-                    代码审查
-                  </button>
+                  {[
+                    "帮我搜索本周 AI 领域的重要新闻，并总结成三条要点",
+                    "用 TypeScript 写一个防抖函数，要求带完整注释",
+                    "头脑风暴：给一家主打深夜营业的咖啡品牌起 10 个名字",
+                    "把这句话翻译成英文：工欲善其事，必先利其器",
+                  ].map((prompt) => (
+                    <button key={prompt} className="welcome-card" type="button" onClick={() => useQuickPrompt(prompt)}>
+                      {prompt}
+                    </button>
+                  ))}
                 </div>
               </div>
             ) : (
