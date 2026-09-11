@@ -41,7 +41,7 @@ export class WorkspaceService {
   /** @deprecated Use registerProject for an explicit user-selected project. */
   async ensureProject(rootPath: string): Promise<RegisteredProject> { return this.registerProject(rootPath); }
   browseWorkspace(projectId: string, relativePath = '') { return this.listProjectFiles(projectId, relativePath); }
-  async openFileStream(projectId: string, relativePath: string) { const { path } = await this.resolvePath(projectId, relativePath); return createReadStream(path); }
+  async openFileStream(projectId: string, relativePath: string) { const { path } = await this.resolvePath(projectId, relativePath); const handle = await open(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0)); const info = await handle.stat(); if (!info.isFile()) { await handle.close(); throw new WorkspaceError('INVALID_ENTRY', 'Only files can be streamed'); } return createReadStream('', { fd: handle.fd, autoClose: true }); }
 
   async registerProject(rootPath: string): Promise<RegisteredProject> {
     const canonicalRoot = await realpath(rootPath).catch(() => {

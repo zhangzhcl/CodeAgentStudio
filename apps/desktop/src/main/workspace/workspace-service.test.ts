@@ -28,6 +28,10 @@ describe('WorkspaceService', () => {
 
     expect(entries.map((entry) => entry.path)).toEqual(['src']);
     expect(await service.readTextFile(project.id, 'src/main.ts')).toBe('export const ok = true;');
+    const stream = await service.openFileStream(project.id, 'src/main.ts');
+    let streamed = '';
+    for await (const chunk of stream) streamed += chunk.toString();
+    expect(streamed).toBe('export const ok = true;');
   });
 
   it('finds only explicitly registered project roots without creating one', async () => {
