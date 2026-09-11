@@ -34,6 +34,7 @@ describe('Workbench', () => {
     expect(screen.getByRole('tab', { name: '项目' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: '项目' }));
     expect(screen.getByRole('button', { name: '新建项目' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '新建会话' })).not.toBeInTheDocument();
   });
 
   it('does not show a fake example-file action', async () => {

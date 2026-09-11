@@ -616,29 +616,58 @@ export function Workbench() {
             </div>
           ) : (
             <div>
-              <button
-                type="button"
-                className="side-new-row"
-                disabled={!selectedProvider}
-                onClick={() =>
-                  newSession(
-                    sessionView === "projects" ? "project" : "personal",
-                  )
-                }
-              >
-                <IconPlus size={15} /> 新建会话
-              </button>
+              {sessionView === "sessions" && (
+                <button
+                  type="button"
+                  className="side-new-row"
+                  disabled={!selectedProvider}
+                  onClick={() => newSession("personal")}
+                >
+                  <IconPlus size={15} /> 新建会话
+                </button>
+              )}
               {sessionView === "projects" && (
                 <button
                   type="button"
                   className="side-new-row project-new-row"
                   title="选择已有文件夹，或在系统窗口中先新建文件夹"
                   onClick={() => {
-                    setActivity("files");
-                    window.setTimeout(
-                      () => document.getElementById("project-picker")?.click(),
-                      0,
-                    );
+                    const choose = (
+                      window as Window & {
+                        codeagent?: {
+                          workspace?: {
+                            chooseProject: () => Promise<
+                              | { id: string; name?: string; rootPath?: string }
+                              | undefined
+                            >;
+                          };
+                        };
+                      }
+                    ).codeagent?.workspace?.chooseProject;
+                    if (!choose) {
+                      setProjectError("打开文件夹接口不可用，请重启应用。");
+                      return;
+                    }
+                    setProjectError(undefined);
+                    void choose()
+                      .then((project) => {
+                        if (!project) return;
+                        setRegisteredProjects((items) =>
+                          items.some((item) => item.id === project.id)
+                            ? items
+                            : [...items, project],
+                        );
+                        setProjectId(project.id);
+                        setProjectName(
+                          project.name ??
+                            project.rootPath?.split(/[\\/]/).pop() ??
+                            "项目",
+                        );
+                        setProjectRoot(project.rootPath);
+                      })
+                      .catch(() =>
+                        setProjectError("打开文件夹失败，请确认目录可访问。"),
+                      );
                   }}
                 >
                   <IconPlus size={15} /> 新建项目
