@@ -303,6 +303,7 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light .side-tabs .side-tab,.codeagent-workbench.theme-light .side-new-row,.codeagent-workbench.theme-light .nested-sidebar-tabs button,.codeagent-workbench.theme-light .sidebar-status-card,.codeagent-workbench.theme-light .sidebar-status-card>div,.codeagent-workbench.theme-light .sidebar-status-card>span,.codeagent-workbench.theme-light .sidebar-detect{color:#000!important}
 .codeagent-workbench.theme-light .side-tab.is-on,.codeagent-workbench.theme-light .nested-sidebar-tabs button[aria-selected="true"]{color:#000!important}
 .codeagent-workbench.theme-light .sidebar-status-card>div .sidebar-status-value{color:#000!important}
+.codeagent-workbench.theme-light .think-text,.codeagent-workbench.theme-light .think-chevron,.codeagent-workbench.theme-light .think-cost,.codeagent-workbench.theme-light .md-list,.codeagent-workbench.theme-light .markdown-lite li,.codeagent-workbench.theme-light .think-head{color:#000!important}
 
 /* The composer wrapper only provides width/padding. Its visual surface must
    come from the inner .composer-box, otherwise light mode creates a second
