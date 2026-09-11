@@ -387,6 +387,7 @@ export function Composer({
         )}
         {showCommandMenu && (
           <div className="command-menu" role="listbox">
+            <div className="command-menu-head">命令面板</div>
             {commands.map((command, index) => (
               <button
                 key={command.value}
@@ -404,6 +405,7 @@ export function Composer({
                 {command.value} <span>{command.label}</span>
               </button>
             ))}
+            <div className="command-menu-foot"><kbd>Enter</kbd> 补全 · <kbd>Esc</kbd> 取消</div>
           </div>
         )}
       </form>
