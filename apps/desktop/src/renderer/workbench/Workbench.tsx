@@ -361,8 +361,24 @@ export function Workbench() {
     scope: "personal" | "project",
     provider: string,
     sessionProjectId?: string,
+    sessionProjectName?: string,
+    sessionProjectRoot?: string,
   ) => {
-    if (sessionProjectId) setProjectId(sessionProjectId);
+    if (scope === "project") {
+      const registered = sessionProjectId
+        ? registeredProjects.find((project) => project.id === sessionProjectId)
+        : undefined;
+      if (sessionProjectId) setProjectId(sessionProjectId);
+      if (sessionProjectName || sessionProjectRoot || registered) {
+        setProjectName(
+          sessionProjectName ??
+            registered?.name ??
+            sessionProjectRoot?.split(/[\\/]/).pop() ??
+            "项目",
+        );
+        setProjectRoot(sessionProjectRoot ?? registered?.rootPath);
+      }
+    }
     const existing = tabs.find(
       (tab) => tab.kind === "chat" && tab.sessionId === id,
     );
@@ -801,11 +817,13 @@ export function Workbench() {
                                 key={id}
                                 onClick={() =>
                                   openSession(
-                                    id,
-                                    "project",
-                                    provider,
-                                    sessionProjectId,
-                                  )
+                              id,
+                              "project",
+                              provider,
+                              sessionProjectId,
+                              projectName,
+                              projectRoot,
+                            )
                                 }
                               >
                                 <IconChat size={13} className="conv-icon" />
