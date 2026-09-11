@@ -23,6 +23,7 @@ export class PiCliTransport implements PiTransport {
 
   async prompt(nativeId: string, text: string, selectedModel?: string) {
     await new Promise<void>((resolve, reject) => {
+      const runMessageId = `${nativeId}:${crypto.randomUUID()}`;
       const provider = process.env.CODEAGENT_PI_PROVIDER ?? 'sensenova';
       const model = selectedModel || process.env.CODEAGENT_PI_MODEL || 'sensenova-6.8-flash-lite';
       const sessionTarget = this.resumed.get(nativeId) ?? nativeId;
@@ -43,7 +44,7 @@ export class PiCliTransport implements PiTransport {
         const lines = pending.split(/\r?\n/);
         pending = lines.pop() ?? '';
         lines.forEach((line) => {
-          const event = parseCliEvent(line, 'pi', nativeId, sequence++);
+          const event = parseCliEvent(line, 'pi', nativeId, sequence++, runMessageId);
           if (event) this.listeners.forEach((listener) => listener(event));
         });
       };
@@ -51,14 +52,14 @@ export class PiCliTransport implements PiTransport {
       child.stderr?.on('data', (data) => {
         const line = data.toString();
         if (/no api key|not logged in|authentication required|rate limit|timed out|error/i.test(line)) {
-          const event = parseCliEvent(line, 'pi', nativeId, sequence++);
+          const event = parseCliEvent(line, 'pi', nativeId, sequence++, runMessageId);
           if (event?.type === 'error') this.listeners.forEach((listener) => listener(event));
         }
       });
       child.once('error', reject);
       child.once('close', (code) => {
         if (pending.trim()) {
-          const event = parseCliEvent(pending, 'pi', nativeId, sequence++);
+          const event = parseCliEvent(pending, 'pi', nativeId, sequence++, runMessageId);
           if (event) this.listeners.forEach((listener) => listener(event));
         }
         this.running.delete(nativeId);
@@ -69,6 +70,7 @@ export class PiCliTransport implements PiTransport {
             'pi',
             nativeId,
             sequence++,
+            runMessageId,
           );
           if (failure) this.listeners.forEach((listener) => listener(failure));
         }

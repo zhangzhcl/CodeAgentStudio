@@ -20,19 +20,19 @@ function textFrom(raw: RawEvent): string {
   return '';
 }
 
-export function parseCliEvent(line: string, provider: ProviderId, sessionId: string, sequence: number): AgentEvent | undefined {
-  if (/no api key|not logged in|authentication required/i.test(line)) return base(provider, sessionId, sequence, 'error', { code: 'auth', message: line.trim() });
+export function parseCliEvent(line: string, provider: ProviderId, sessionId: string, sequence: number, messageId = `${sessionId}:stream`): AgentEvent | undefined {
+  if (/no api key|not logged in|authentication required/i.test(line)) return base(provider, sessionId, sequence, 'error', { code: 'auth', message: line.trim() }, messageId);
   let raw: RawEvent;
-  try { raw = JSON.parse(line) as RawEvent; } catch { return line.trim() ? base(provider, sessionId, sequence, 'text_delta', { text: line }) : undefined; }
+  try { raw = JSON.parse(line) as RawEvent; } catch { return line.trim() ? base(provider, sessionId, sequence, 'text_delta', { text: line }, messageId) : undefined; }
   const kind = raw.type ?? (typeof raw.event === 'string' ? raw.event : undefined);
-  if (kind === 'text' || kind === 'text_delta' || kind === 'message.delta' || kind === 'stream_event' || kind === 'content_block_delta' || kind === 'assistant' || kind === 'assistant_message' || kind === 'item.delta' || kind === 'item.completed' || kind === 'message.part.updated' || kind === 'message_update' || kind === 'response.output_text.delta') return base(provider, sessionId, sequence, 'text_delta', { text: textFrom(raw) });
-  if (kind === 'tool.started' || kind === 'tool_start') return base(provider, sessionId, sequence, 'tool.started', { toolName: raw.toolName ?? 'tool', input: raw.input });
-  if (kind === 'tool.completed' || kind === 'tool_end') return base(provider, sessionId, sequence, 'tool.completed', { toolName: raw.toolName ?? 'tool', output: raw.output });
-  if (kind === 'error') return base(provider, sessionId, sequence, 'error', { code: raw.code ?? 'unknown', message: typeof raw.message === 'string' ? raw.message : '' });
-  if (kind === 'done' || kind === 'complete' || kind === 'exit' || kind === 'result' || kind === 'agent_end' || kind === 'agent_settled' || kind === 'turn_end' || kind === 'response.completed' || kind === 'turn.completed' || kind === 'session.completed' || kind === 'message.completed') return base(provider, sessionId, sequence, 'done', {});
+  if (kind === 'text' || kind === 'text_delta' || kind === 'message.delta' || kind === 'stream_event' || kind === 'content_block_delta' || kind === 'assistant' || kind === 'assistant_message' || kind === 'item.delta' || kind === 'item.completed' || kind === 'message.part.updated' || kind === 'message_update' || kind === 'response.output_text.delta') return base(provider, sessionId, sequence, 'text_delta', { text: textFrom(raw) }, messageId);
+  if (kind === 'tool.started' || kind === 'tool_start') return base(provider, sessionId, sequence, 'tool.started', { toolName: raw.toolName ?? 'tool', input: raw.input }, messageId);
+  if (kind === 'tool.completed' || kind === 'tool_end') return base(provider, sessionId, sequence, 'tool.completed', { toolName: raw.toolName ?? 'tool', output: raw.output }, messageId);
+  if (kind === 'error') return base(provider, sessionId, sequence, 'error', { code: raw.code ?? 'unknown', message: typeof raw.message === 'string' ? raw.message : '' }, messageId);
+  if (kind === 'done' || kind === 'complete' || kind === 'exit' || kind === 'result' || kind === 'agent_end' || kind === 'agent_settled' || kind === 'turn_end' || kind === 'response.completed' || kind === 'turn.completed' || kind === 'session.completed' || kind === 'message.completed') return base(provider, sessionId, sequence, 'done', {}, messageId);
   return undefined;
 }
 
-function base<T extends AgentEvent['type']>(provider: ProviderId, sessionId: string, sequence: number, type: T, payload: Extract<AgentEvent, { type: T }>['payload']): Extract<AgentEvent, { type: T }> {
-  return { protocolVersion: 1, provider, sessionId, messageId: `${sessionId}:stream`, sequence, occurredAt: new Date().toISOString(), type, payload } as Extract<AgentEvent, { type: T }>;
+function base<T extends AgentEvent['type']>(provider: ProviderId, sessionId: string, sequence: number, type: T, payload: Extract<AgentEvent, { type: T }>['payload'], messageId: string): Extract<AgentEvent, { type: T }> {
+  return { protocolVersion: 1, provider, sessionId, messageId, sequence, occurredAt: new Date().toISOString(), type, payload } as Extract<AgentEvent, { type: T }>;
 }
