@@ -80,5 +80,5 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
       throw error;
     }
   });
-  ipcMain.handle('agent:abort', async (_event, sessionId: unknown) => { const id = z.string().min(1).parse(sessionId); const stopped = await runtime.stop(id); if (stopped && sessions) { try { sessions.markStatus(id, 'aborted'); } catch { /* session may have been deleted */ } } return stopped; });
+  ipcMain.handle('agent:abort', async (_event, rawInput: unknown) => { const input = typeof rawInput === 'string' ? { sessionId: rawInput } : z.object({ sessionId: z.string().min(1), provider: ProviderIdSchema.optional() }).parse(rawInput); const stopped = await runtime.stop(input.sessionId, input.provider); if (stopped && sessions) { try { sessions.markStatus(input.sessionId, 'aborted'); } catch { /* session may have been deleted */ } } return stopped; });
 }

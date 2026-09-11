@@ -24,7 +24,7 @@ export class ProviderRuntime {
     if (count >= provider.capabilities.maxConcurrentSessions) throw new Error(`Provider ${providerId} concurrency limit reached`);
     this.active.set(sessionId, { sessionId, provider: providerId, state: 'running' });
   }
-  async stop(sessionId: string) { const current = this.active.get(sessionId); if (!current) return false; const provider = this.providers.get(current.provider); if (!provider) return false; this.active.set(sessionId, { ...current, state: 'stopping' }); const stopped = await provider.abort(sessionId); this.active.set(sessionId, { ...current, state: 'stopped' }); return stopped; }
+  async stop(sessionId: string, expectedProvider?: AgentProvider['id']) { const current = this.active.get(sessionId); if (!current || (expectedProvider && current.provider !== expectedProvider)) return false; const provider = this.providers.get(current.provider); if (!provider) return false; this.active.set(sessionId, { ...current, state: 'stopping' }); const stopped = await provider.abort(sessionId); this.active.set(sessionId, { ...current, state: 'stopped' }); return stopped; }
   complete(sessionId: string, state: Extract<RuntimeState, 'stopped' | 'error'> = 'stopped') {
     const current = this.active.get(sessionId);
     if (!current) return;

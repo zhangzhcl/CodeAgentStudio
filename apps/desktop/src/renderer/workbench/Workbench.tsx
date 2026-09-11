@@ -378,12 +378,7 @@ export function Workbench() {
       (tab) => tab.kind === "chat" && tab.sessionId === id,
     );
     const tab: WorkbenchTab = existing
-      ? {
-          ...existing,
-          scope,
-          provider: providerId(provider),
-          ...(sessionProjectId ? { projectId: sessionProjectId } : {}),
-        }
+      ? existing
       : {
       kind: "chat",
       sessionId: id,
@@ -447,15 +442,8 @@ export function Workbench() {
   const changeProvider = (value: string) => {
     const provider = providerId(value);
     setSelectedProvider(provider);
-    if (activeTab.kind !== "chat") return;
-    setTabs((items) =>
-      items.map((tab) =>
-        isSameTab(tab, activeTab) && tab.kind === "chat"
-          ? { ...tab, provider }
-          : tab,
-      ),
-    );
-    setActiveTab((tab) => (tab.kind === "chat" ? { ...tab, provider } : tab));
+    if (activeTab.kind !== "chat" || activeTab.sessionId === "new-chat")
+      setActiveTab((tab) => (tab.kind === "chat" ? { ...tab, provider } : tab));
   };
   const closeTab = (tab: WorkbenchTab) => {
     setTabs((items) => {
@@ -1084,10 +1072,10 @@ export function Workbench() {
                 (
                   window as Window & {
                     codeagentAgent?: {
-                      abort: (id: string) => Promise<unknown>;
+                      abort: (input: unknown) => Promise<unknown>;
                     };
                   }
-                ).codeagentAgent?.abort(sessionId)
+                ).codeagentAgent?.abort({ sessionId, provider: activeProvider })
               }
               onPrompt={(text, provider, model, options) => {
                 const id = providerId(provider);
