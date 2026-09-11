@@ -936,6 +936,7 @@ export function Workbench() {
             <button
               type="button"
               className="topbar-clear"
+              title="清空当前会话"
               onClick={() => {
                 if (activeTab.kind === "chat")
                   window.dispatchEvent(
