@@ -314,6 +314,7 @@ export function MessageItem({
               >
                 <IconRefresh size={15} />
               </button>}
+              <span className="act-sep" aria-hidden="true" />
               <button
                 className="act"
                 type="button"
