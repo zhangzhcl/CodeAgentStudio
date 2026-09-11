@@ -359,6 +359,7 @@ export function Composer({
                 type="button"
                 className="stop-action send-btn is-stop"
                 aria-label="停止"
+                title="停止生成"
                 onClick={onStop}
               >
                 <IconStop size={16} />
@@ -368,6 +369,7 @@ export function Composer({
                 type="submit"
                 className="send-action send-btn"
                 aria-label="发送"
+                title={sending ? "排队发送（当前回复结束后自动发出）" : "发送（Enter）"}
                 disabled={!draft.trim() && attachments.length === 0}
               >
                 <IconSend size={17} />
