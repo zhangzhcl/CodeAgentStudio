@@ -337,7 +337,16 @@ export function Composer({
             </button>
           </div>
           <div className="composer-actions composer-bar-right">
-            {draft.length > 0 && <span className="token-count" title="按估算规则粗略折算">{Math.max(1, Math.ceil((draft.length + messages.reduce((total, item) => total + item.content.length, 0)) / 4))}K tokens</span>}
+            <span className="token-count" title="按估算规则粗略折算">
+              {Math.max(
+                1,
+                Math.ceil(
+                  (draft.length +
+                    messages.reduce((total, item) => total + item.content.length, 0)) /
+                    4,
+                ),
+              )}K tokens
+            </span>
             {sending && !draft.trim() && attachments.length === 0 ? (
               <button
                 type="button"
