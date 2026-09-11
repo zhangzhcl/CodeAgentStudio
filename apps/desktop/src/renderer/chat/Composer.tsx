@@ -285,6 +285,7 @@ export function Composer({
             <button
               type="button"
               aria-label="添加附件"
+              title="添加附件"
               className="toolbar-icon pill pill-icon"
               onClick={() => attachmentInput.current?.click()}
             >
