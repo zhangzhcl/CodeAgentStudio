@@ -51,36 +51,37 @@ export function MessageItem({
       <div
         className={`message-body${message.role === "agent" ? " msg-agent-body" : message.role === "user" ? " msg-bubble" : ""}`}
       >
-        <div
-          className={`message-heading${message.role === "agent" ? " msg-agent-head" : ""}`}
-        >
-          {message.role === "agent" && (
-            <span className="agent-mark" aria-hidden="true">
-              <IconSparkle size={11} />
-            </span>
-          )}
-          <strong
-            className={message.role === "agent" ? "agent-name" : undefined}
+        {message.role !== "user" && (
+          <div
+            className={`message-heading${message.role === "agent" ? " msg-agent-head" : ""}`}
           >
-            {message.role === "user"
-              ? "你"
-              : message.role === "tool"
-                ? "工具调用"
-                : provider}
-          </strong>
-          {message.role === "agent" && (
-            <span className="message-model-badge agent-model">AGENT</span>
-          )}
-          {message.status === "streaming" && (
-            <span className="streaming-badge">生成中</span>
-          )}
-          <time className={message.role === "user" ? "msg-time" : undefined}>
-            {new Date(message.createdAt ?? Date.now()).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </time>
-        </div>
+            {message.role === "agent" && (
+              <span className="agent-mark" aria-hidden="true">
+                <IconSparkle size={11} />
+              </span>
+            )}
+            <strong
+              className={message.role === "agent" ? "agent-name" : undefined}
+            >
+              {message.role === "tool" ? "工具调用" : provider}
+            </strong>
+            {message.role === "agent" && (
+              <span className="message-model-badge agent-model">AGENT</span>
+            )}
+            {message.status === "streaming" && (
+              <span className="streaming-badge">生成中</span>
+            )}
+            <time>
+              {new Date(message.createdAt ?? Date.now()).toLocaleTimeString(
+                [],
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                },
+              )}
+            </time>
+          </div>
+        )}
         {message.role === "tool" ? (
           <details
             className="tool-call-block tool"
@@ -177,6 +178,17 @@ export function MessageItem({
         <div
           className={`message-actions msg-actions${message.role === "user" ? " msg-user-meta" : ""}`}
         >
+          {message.role === "user" && (
+            <time className="msg-time">
+              {new Date(message.createdAt ?? Date.now()).toLocaleTimeString(
+                [],
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                },
+              )}
+            </time>
+          )}
           {message.role === "agent" && (
             <button
               className={`act${copied ? " is-ok" : ""}`}
