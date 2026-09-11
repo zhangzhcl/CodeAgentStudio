@@ -285,14 +285,16 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light .composer{background:transparent!important;border:0!important;box-shadow:none!important}
 
 /* Conversation overview rail: one fixed-size marker per user turn. */
-.conversation-rail{position:absolute;top:8px;right:3px;bottom:8px;width:12px;z-index:4;pointer-events:none}
-.conversation-marker{position:absolute;left:2px;width:8px;height:3px;min-height:3px;padding:0!important;transform:translateY(-50%);border:0!important;border-radius:2px!important;background:#718096!important;pointer-events:auto;cursor:pointer;transition:width .14s,background .14s}
+.conversation-rail{position:absolute;top:8px;right:0;bottom:8px;width:18px;z-index:30;display:block;pointer-events:none}
+.conversation-rail-track{position:absolute;top:0;bottom:0;right:7px;width:2px;border-radius:2px;background:rgba(113,128,150,.28)}
+.conversation-marker{position:absolute;right:4px;width:10px;height:4px;min-height:4px;padding:0!important;transform:translateY(-50%);border:0!important;border-radius:2px!important;background:#718096!important;pointer-events:auto;cursor:pointer;transition:width .14s,background .14s}
 .conversation-marker:hover,.conversation-marker:focus-visible{width:12px;background:#f5a524!important;outline:0}
-.conversation-marker span{position:absolute;right:16px;top:50%;display:none;width:220px;transform:translateY(-50%);padding:8px 10px;border:1px solid #2e333e;border-radius:8px;background:#13161d;color:#e9e6dc;text-align:left;font:11px/1.45 'PingFang SC','Microsoft YaHei',sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.35);white-space:normal}
-.conversation-marker:hover span,.conversation-marker:focus-visible span{display:block}
+.conversation-marker::after{content:attr(data-preview);position:absolute;right:16px;top:50%;display:none;width:220px;transform:translateY(-50%);padding:8px 10px;border:1px solid #2e333e;border-radius:8px;background:#13161d;color:#e9e6dc;text-align:left;font:11px/1.45 'PingFang SC','Microsoft YaHei',sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.35);white-space:normal}
+.conversation-marker:hover::after,.conversation-marker:focus-visible::after{display:block}
 .codeagent-workbench.theme-light .conversation-marker{background:#aab8c8!important}
 .codeagent-workbench.theme-light .conversation-marker:hover,.codeagent-workbench.theme-light .conversation-marker:focus-visible{background:#c38a1d!important}
-.codeagent-workbench.theme-light .conversation-marker span{border-color:#d3deea;background:#fff;color:#34465a;box-shadow:0 8px 22px rgba(40,65,95,.16)}
+.codeagent-workbench.theme-light .conversation-rail-track{background:rgba(118,137,160,.35)}
+.codeagent-workbench.theme-light .conversation-marker::after{border-color:#d3deea;background:#fff;color:#34465a;box-shadow:0 8px 22px rgba(40,65,95,.16)}
 
 /* The jump-to-bottom control is anchored to the output pane's lower-right
    edge, immediately above the composer. It is absolute, so queued messages

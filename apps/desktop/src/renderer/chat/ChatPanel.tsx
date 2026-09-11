@@ -346,14 +346,6 @@ export function ChatPanel({
                     </button>
                   ))}
         </div>
-        {userMessages.length > 0 && (
-          <nav className="conversation-rail" aria-label="提问定位">
-            {userMessages.map((message, index) => {
-              const top = userMessages.length === 1 ? 50 : (index / (userMessages.length - 1)) * 100;
-              return <button key={message.id} type="button" className="conversation-marker" style={{ top: `${top}%` }} onClick={() => jumpToMessage(message.id)} title={message.content} aria-label={`定位提问：${message.content.slice(0, 80)}`}><span>{message.content.slice(0, 48)}{message.content.length > 48 ? "…" : ""}</span></button>;
-            })}
-          </nav>
-        )}
       </div>
             ) : (
               <div className="list-inner">
@@ -380,6 +372,14 @@ export function ChatPanel({
             )}
           </div>
         </div>
+        <nav className="conversation-rail" aria-label="提问定位">
+          <span className="conversation-rail-track" aria-hidden="true" />
+          {userMessages.map((message, index) => {
+            const top = userMessages.length === 1 ? 50 : (index / (userMessages.length - 1)) * 100;
+            const preview = `${message.content.slice(0, 48)}${message.content.length > 48 ? "…" : ""}`;
+            return <button key={message.id} type="button" className="conversation-marker" style={{ top: `${top}%` }} onClick={() => jumpToMessage(message.id)} title={preview} data-preview={preview} aria-label={`定位提问：${preview}`} />;
+          })}
+        </nav>
         {showScrollButton && (
           <button
             type="button"
