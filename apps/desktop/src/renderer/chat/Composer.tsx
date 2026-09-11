@@ -292,10 +292,10 @@ export function Composer({
             >
               <IconPaperclip size={16} />
             </button>
-            <div className="composer-model-wrap" ref={modelRef}>
+            <div className="model-menu" ref={modelRef}>
               <button
                 type="button"
-                className={`composer-model pill${modelOpen ? " is-open" : ""}`}
+                className={`pill${modelOpen ? " is-active" : ""}`}
                 aria-haspopup="listbox"
                 aria-expanded={modelOpen}
                 onClick={() => setModelOpen((open) => !open)}
@@ -305,16 +305,18 @@ export function Composer({
                 <IconChevronDown size={13} className="pill-caret" />
               </button>
               {modelOpen && (
-                <div className="composer-model-menu" role="listbox" aria-label="选择模型">
+                <div className="model-pop" role="listbox" aria-label="选择模型">
+                  <div className="model-pop-head">选择模型</div>
                   {[
                     ["GLM-4.7", "旗舰 · 推理最强", 2],
                     ["GLM-4.7-Air", "均衡 · 日常首选", 2],
                     ["GLM-4-Flash", "极速 · 轻量任务", 3],
                   ].map(([item, tag, speed]) => (
-                    <button key={String(item)} type="button" role="option" aria-selected={item === model}
+                    <button key={String(item)} type="button" className={`model-item${item === model ? " is-current" : ""}`} role="option" aria-selected={item === model}
                       onClick={() => { setModel(String(item)); setModelOpen(false); setNotice(`已切换模型：${item}`); }}>
-                      <span className="model-option-main"><strong>{String(item)}</strong><small>{String(tag)}</small></span>
-                      <span className="model-speed" aria-label={`速度 ${speed}/3`}>{[0, 1, 2].map((bar) => <i key={bar} className={bar < Number(speed) ? "is-on" : ""} />)}</span>
+                      <span className="model-item-name">{String(item)}</span>
+                      <span className="model-item-tag">{String(tag)}</span>
+                      <span className="model-speed" data-speed={Number(speed)} aria-label={`速度 ${speed}/3`}><i /><i /><i /></span>
                       {item === model && <IconCheck size={13} className="model-check" />}
                     </button>
                   ))}
