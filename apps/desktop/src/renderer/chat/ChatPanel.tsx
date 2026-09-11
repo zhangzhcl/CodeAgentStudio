@@ -138,6 +138,11 @@ export function ChatPanel({
         ?.focus(),
     );
   };
+  const userMessages = messages.filter((message) => message.role === "user");
+  const jumpToMessage = (messageId: string) => {
+    const target = transcriptRef.current?.querySelector<HTMLElement>(`[data-message-id="${CSS.escape(messageId)}"]`);
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
   const runPrompt = async (
     text: string,
     selectedProvider: string,
@@ -340,8 +345,16 @@ export function ChatPanel({
                       {prompt}
                     </button>
                   ))}
-                </div>
-              </div>
+        </div>
+        {userMessages.length > 0 && (
+          <nav className="conversation-rail" aria-label="提问定位">
+            {userMessages.map((message, index) => {
+              const top = userMessages.length === 1 ? 50 : (index / (userMessages.length - 1)) * 100;
+              return <button key={message.id} type="button" className="conversation-marker" style={{ top: `${top}%` }} onClick={() => jumpToMessage(message.id)} title={message.content} aria-label={`定位提问：${message.content.slice(0, 80)}`}><span>{message.content.slice(0, 48)}{message.content.length > 48 ? "…" : ""}</span></button>;
+            })}
+          </nav>
+        )}
+      </div>
             ) : (
               <div className="list-inner">
                 {messages.map((message, index) => (

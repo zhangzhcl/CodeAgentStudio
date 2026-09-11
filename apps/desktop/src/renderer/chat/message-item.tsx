@@ -111,6 +111,7 @@ export function MessageItem({
     <article
       className={`msg chat-message chat-message-${message.role} ${message.role === "user" ? "msg-user" : message.role === "agent" ? "msg-agent" : ""} ${message.status === "error" ? "is-error" : ""}`}
       data-role={message.role}
+      data-message-id={message.id}
     >
       {message.role !== "agent" && (
         <div className="message-avatar" aria-hidden="true">
