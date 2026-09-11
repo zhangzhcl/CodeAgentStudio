@@ -227,20 +227,23 @@ export function MessageItem({
         {message.role === "agent" &&
           message.status === "done" &&
           onSuggestion && (
-            <div className="message-suggestions">
+            <div className="message-suggestions sugg-row">
               <button
+                className="sugg-chip"
                 type="button"
                 onClick={() => onSuggestion("继续优化刚才的实现")}
               >
                 继续优化
               </button>
               <button
+                className="sugg-chip"
                 type="button"
                 onClick={() => onSuggestion("解释刚才的改动")}
               >
                 解释改动
               </button>
               <button
+                className="sugg-chip"
                 type="button"
                 onClick={() => onSuggestion("运行测试并检查问题")}
               >
