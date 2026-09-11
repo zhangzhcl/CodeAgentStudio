@@ -11,6 +11,7 @@ import {
   IconRefresh,
   IconSparkle,
   IconSpinner,
+  IconTerminal,
   IconThumbDown,
   IconThumbUp,
 } from "../icons.js";
@@ -98,6 +99,7 @@ export function MessageItem({
   onSelectBranch,
 }: Props) {
   const [editing, setEditing] = useState(false);
+  const [toolOpen, setToolOpen] = useState(false);
   const [editDraft, setEditDraft] = useState(message.content);
   const toolParts = message.role === "tool" ? message.content.split("\n") : [];
   const toolName = toolParts[0] || "工具调用";
@@ -174,25 +176,27 @@ export function MessageItem({
           </details>
         )}
         {message.role === "tool" ? (
-          <details
-            className="tool-call-block tool"
-            open={message.status === "streaming"}
+          <div
+            className={`tool${message.status === "streaming" ? " is-running" : ""}${message.status === "error" ? " is-error" : ""}${toolOpen ? " is-open" : ""}`}
           >
-            <summary className="tool-line">
-              <IconChevronRight size={13} className="tool-caret tool-icon" />
-              <strong className="tool-name">{toolName}</strong>
-              <span
-                className={`tool-status tool-status-${message.status ?? "done"}`}
-              >
-                {message.status === "streaming"
-                  ? "执行中"
-                  : message.status === "error"
-                    ? "失败"
-                    : "已完成"}
+            <button type="button" className="tool-line" onClick={() => setToolOpen((open) => !open)} title="展开调用详情">
+              <IconChevronRight size={12} className={`tool-fold${toolOpen ? " is-open" : ""}`} />
+              <IconTerminal size={13} className="tool-icon" />
+              <span className="tool-name">{toolName}</span>
+              <span className="tool-args">{toolParts[1] ?? ""}</span>
+              <span className="tool-status">
+                {message.status === "streaming" ? <><IconSpinner size={12} /><em>执行中</em></> : message.status === "error" ? <em className="tool-err">中断</em> : <><IconCheck size={12} /><em>完成</em></>}
               </span>
-            </summary>
-            <pre className="tool-result">{toolDetail}</pre>
-          </details>
+            </button>
+            {toolOpen && (
+              <div className="tool-detail">
+                <div className="tool-detail-row">
+                  <span className="tool-detail-label">参数</span>
+                  <pre>{toolDetail}</pre>
+                </div>
+              </div>
+            )}
+          </div>
         ) : message.role === "user" && editing ? (
           <div className="message-edit-box">
             <textarea
