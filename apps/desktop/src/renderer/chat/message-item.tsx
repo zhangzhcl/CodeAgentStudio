@@ -34,12 +34,19 @@ export function MessageItem({
       className={`msg chat-message chat-message-${message.role} ${message.role === "user" ? "msg-user" : message.role === "agent" ? "msg-agent" : ""} ${message.status === "error" ? "is-error" : ""}`}
       data-role={message.role}
     >
-      <div className="message-avatar" aria-hidden="true">
+      <div
+        className={`message-avatar${message.role === "agent" ? " agent-mark" : ""}`}
+        aria-hidden="true"
+      >
         {message.role === "user" ? "你" : message.role === "tool" ? "⌘" : "✦"}
       </div>
-      <div className="message-body">
+      <div
+        className={`message-body${message.role === "agent" ? " msg-agent-body" : ""}`}
+      >
         <div className="message-heading">
-          <strong>
+          <strong
+            className={message.role === "agent" ? "agent-name" : undefined}
+          >
             {message.role === "user"
               ? "你"
               : message.role === "tool"
@@ -47,7 +54,7 @@ export function MessageItem({
                 : provider}
           </strong>
           {message.role === "agent" && (
-            <span className="message-model-badge">AGENT</span>
+            <span className="message-model-badge agent-model">AGENT</span>
           )}
           {message.status === "streaming" && (
             <span className="streaming-badge">生成中</span>
