@@ -349,9 +349,11 @@ export function Composer({
             </button>
           </div>
           <div className="composer-actions composer-bar-right">
-            <span className="token-count" title="按估算规则粗略折算">
-              {draft.length} 字 · 约 {Math.ceil(draft.length * 0.6)} tokens
-            </span>
+            {draft.length > 0 && (
+              <span className="token-count" title="按估算规则粗略折算">
+                {draft.length} 字 · 约 {Math.ceil(draft.length * 0.6)} tokens
+              </span>
+            )}
             {sending && !draft.trim() && attachments.length === 0 ? (
               <button
                 type="button"
@@ -374,13 +376,14 @@ export function Composer({
           </div>
         </div>
         {showCommandMenu && (
-          <div className="command-menu" role="listbox">
-            <div className="command-menu-head">命令面板</div>
+          <div className="slash-pop" role="listbox">
+            <div className="slash-head">命令面板</div>
             {commands.map((command, index) => (
               <button
                 key={command.value}
                 type="button"
-                className={index === commandIndex ? "is-active" : ""}
+                className={`slash-item${index === commandIndex ? " is-cursor" : ""}`}
+                onMouseEnter={() => setCommandIndex(index)}
                 onClick={() => {
                   const element =
                     document.querySelector<HTMLTextAreaElement>(
@@ -390,10 +393,11 @@ export function Composer({
                   setShowCommandMenu(false);
                 }}
               >
-                {command.value} <span>{command.label}</span>
+                <span className="slash-cmd">{command.value}</span>
+                <span className="slash-desc">{command.label}</span>
               </button>
             ))}
-            <div className="command-menu-foot"><kbd>Enter</kbd> 补全 · <kbd>Esc</kbd> 取消</div>
+            <div className="slash-foot"><kbd>Enter</kbd> 补全 · <kbd>Esc</kbd> 取消</div>
           </div>
         )}
       </form>
