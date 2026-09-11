@@ -25,7 +25,7 @@ export function Workbench() {
   );
   const [expandedProjectId, setExpandedProjectId] = useState<string>();
   const [tabs, setTabs] = useState<WorkbenchTab[]>([
-    { kind: "chat", sessionId: "new-chat", scope: "personal" },
+    { kind: "chat", sessionId: "new-chat", scope: "personal", provider: "claude" },
   ]);
   const [activeTab, setActiveTab] = useState<WorkbenchTab>(tabs[0]);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
@@ -101,8 +101,15 @@ export function Workbench() {
       session.projectRoot ??
       session.projectName ??
       "unlinked";
+    const registered = session.projectId
+      ? registeredProjects.find((project) => project.id === session.projectId)
+      : undefined;
     const current = groups.get(key) ?? {
-      name: session.projectName ?? "未关联项目",
+      name:
+        session.projectName ??
+        registered?.name ??
+        registered?.rootPath?.split(/[\\/]/).pop() ??
+        "未关联项目",
       root: session.projectRoot,
       sessions: [] as typeof visibleProjectSessions,
     };
@@ -322,7 +329,16 @@ export function Workbench() {
   };
   const tabName = (tab: WorkbenchTab) =>
     tab.kind === "chat"
-      ? `${providerLabel(tab.provider)} · ${sessionTitle(tab.sessionId)}`
+      ? (() => {
+          const session = [...personalSessions, ...projectSessions].find(
+            (item) => item.id === tab.sessionId,
+          );
+          return `${providerLabel(tab.provider ?? session?.provider)} · ${sessionTitle(
+            tab.sessionId,
+            session?.nativeId,
+            session?.title,
+          )}`;
+        })()
       : (tab.path.split("/").pop() ?? tab.path);
   const isSameTab = (left: WorkbenchTab, right: WorkbenchTab) =>
     left.kind === right.kind &&
@@ -342,7 +358,14 @@ export function Workbench() {
     const existing = tabs.find(
       (tab) => tab.kind === "chat" && tab.sessionId === id,
     );
-    const tab: WorkbenchTab = existing ?? {
+    const tab: WorkbenchTab = existing
+      ? {
+          ...existing,
+          scope,
+          provider: providerId(provider),
+          ...(sessionProjectId ? { projectId: sessionProjectId } : {}),
+        }
+      : {
       kind: "chat",
       sessionId: id,
       scope,
@@ -407,6 +430,7 @@ export function Workbench() {
             kind: "chat" as const,
             sessionId: "new-chat",
             scope: "personal" as const,
+            provider: selectedProvider,
           };
         setActiveTab(fallback);
       }
