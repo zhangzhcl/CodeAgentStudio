@@ -4,7 +4,6 @@ import {
   IconCheck,
   IconChip,
   IconChevronDown,
-  IconArrowDown,
   IconFile,
   IconGlobe,
   IconPaperclip,
@@ -103,6 +102,47 @@ export function Composer({
   };
   return (
     <div className="composer">
+      {queued.length > 0 && (
+        <div className="queue-bar">
+          <div className="queue-head">
+            <span className="queue-title">排队中</span>
+            <span className="queue-count">{queued.length} 条 · 当前回复结束后自动发送</span>
+          </div>
+          {queued.map((item, index) => (
+            <div className="queue-item" key={`${item}-${index}`}>
+              <span className="queue-index">{String(index + 1).padStart(2, "0")}</span>
+              <span className="queue-text" title={item}>{item}</span>
+              <button
+                type="button"
+                className="queue-act is-promote"
+                aria-label={`立即发送 ${index + 1}`}
+                title="立即发送（打断当前回复）"
+                onClick={() => onPromoteQueued(index)}
+              >
+                <IconSend size={13} />
+              </button>
+              <button
+                type="button"
+                className="queue-act is-edit"
+                aria-label={`编辑排队消息 ${index + 1}`}
+                title="编辑"
+                onClick={() => onEditQueued(index)}
+              >
+                <IconPencil size={13} />
+              </button>
+              <button
+                type="button"
+                className="queue-act is-cancel"
+                aria-label={`取消排队消息 ${index + 1}`}
+                title="取消"
+                onClick={() => onCancelQueued(index)}
+              >
+                <IconX size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       <form
         className="chat-composer composer-box"
         aria-busy={sending}
@@ -112,43 +152,6 @@ export function Composer({
           submit();
         }}
       >
-        {queued.length > 0 && (
-          <div className="composer-queue">
-            <div className="composer-queue-head">
-              排队中 · {queued.length} 条<span>当前回复结束后自动发送</span>
-            </div>
-            {queued.map((item, index) => (
-              <div className="composer-queue-item" key={`${item}-${index}`}>
-                <b>{String(index + 1).padStart(2, "0")}</b>
-                <span title={item}>{item}</span>
-                <button
-                  type="button"
-                  className="queue-act is-promote queue-promote"
-                  aria-label={`立即发送 ${index + 1}`}
-                  onClick={() => onPromoteQueued(index)}
-                >
-                  <IconArrowDown size={14} />
-                </button>
-                <button
-                  type="button"
-                  className="queue-act is-edit queue-edit"
-                  aria-label={`编辑排队消息 ${index + 1}`}
-                  onClick={() => onEditQueued(index)}
-                >
-                  <IconPencil size={13} />
-                </button>
-                <button
-                  type="button"
-                  className="queue-act is-cancel queue-cancel"
-                  aria-label={`取消排队消息 ${index + 1}`}
-                  onClick={() => onCancelQueued(index)}
-                >
-                  <IconX size={13} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
         <textarea
           className="composer-input"
           rows={1}
