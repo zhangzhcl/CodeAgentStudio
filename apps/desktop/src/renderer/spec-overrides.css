@@ -216,3 +216,9 @@ html[data-theme="light"] body::after{opacity:.012}
 .codeagent-workbench.theme-light .think-head:hover{background:#e7eef7!important;color:#24364c!important}
 .codeagent-workbench.theme-light .think.is-running .think-head{color:#9a6b12!important}
 .codeagent-workbench.theme-light .think-chevron,.codeagent-workbench.theme-light .think-cost,.codeagent-workbench.theme-light .think-text{color:#74869a!important}
+
+/* A user turn is a compact bubble, not a full-width message panel. The
+   legacy .message-body flex rule made the block stretch across the transcript,
+   which visually split input/output into giant cards. */
+.codeagent-workbench .chat-message-user.msg-user .msg-bubble{display:block;width:fit-content!important;max-width:76%!important;flex:0 0 auto!important}
+.codeagent-workbench .chat-message-user.msg-user .msg-bubble p{display:block;width:auto!important;background:transparent!important}
