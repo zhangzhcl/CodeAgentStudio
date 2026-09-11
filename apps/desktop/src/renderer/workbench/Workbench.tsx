@@ -864,10 +864,8 @@ export function Workbench() {
             <span className="sidebar-status-value">{latency}ms</span>
           </div>
           <div>
-            <span>Agent</span>
-            <span className="sidebar-status-value">
-              {providerLabel(activeProvider)}
-            </span>
+            <span>模型</span>
+            <span className="sidebar-status-value">GLM-4.7</span>
           </div>
           <span>本地工作区</span>
         </div>
