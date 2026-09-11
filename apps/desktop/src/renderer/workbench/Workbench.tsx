@@ -668,35 +668,27 @@ export function Workbench() {
                         }
                         key={key}
                       >
-                        <div
-                          className="project-group-header proj-row"
-                          role="button"
-                          tabIndex={0}
-                          aria-expanded={expandedProjectId === key}
-                          onClick={() =>
-                            setExpandedProjectId((current) =>
-                              current === key ? undefined : key,
-                            )
-                          }
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
+                        <div className="project-group-header proj-row">
+                          <button
+                            type="button"
+                            className="proj-row-main"
+                            aria-expanded={expandedProjectId === key}
+                            onClick={() =>
                               setExpandedProjectId((current) =>
                                 current === key ? undefined : key,
-                              );
+                              )
                             }
-                          }}
-                        >
-                          <h3 className="proj-row-main" title={group.root}>
+                            title={group.root}
+                          >
                             <span className="proj-row-dot" aria-hidden="true" />
                             <span className="proj-row-name">{group.name}</span>
                             <small className="proj-row-count">
                               {group.sessions.length}
                             </small>
-                          </h3>
-                          <span className="project-caret" aria-hidden="true">
-                            ⌄
-                          </span>
+                            <span className="project-caret" aria-hidden="true">
+                              ⌄
+                            </span>
+                          </button>
                           <button
                             className="proj-row-plus"
                             type="button"
