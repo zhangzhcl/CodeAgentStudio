@@ -253,31 +253,13 @@ export function MessageItem({
         {message.status === "streaming" && (
           <span className="cursor-block stream-caret" aria-label="正在生成" />
         )}
-        {message.role === "agent" &&
-          message.status === "done" &&
-          onSuggestion && (
+        {message.role === "agent" && message.status === "done" && message.suggestions?.length && onSuggestion && (
             <div className="message-suggestions sugg-row">
-              <button
-                className="sugg-chip"
-                type="button"
-                onClick={() => onSuggestion("继续优化刚才的实现")}
-              >
-                继续优化
-              </button>
-              <button
-                className="sugg-chip"
-                type="button"
-                onClick={() => onSuggestion("解释刚才的改动")}
-              >
-                解释改动
-              </button>
-              <button
-                className="sugg-chip"
-                type="button"
-                onClick={() => onSuggestion("运行测试并检查问题")}
-              >
-                运行测试
-              </button>
+              {message.suggestions.map((suggestion) => (
+                <button key={suggestion} className="sugg-chip" type="button" onClick={() => onSuggestion(suggestion)}>
+                  {suggestion}
+                </button>
+              ))}
             </div>
           )}
         <div
