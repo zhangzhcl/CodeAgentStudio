@@ -63,6 +63,15 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.03;ba
 .codeagent-workbench main>div[role="tablist"] .tab-close{margin-left:7px;color:#646b78!important}.codeagent-workbench main>div[role="tablist"] .tab-close:hover{background:#2e333e;color:#f5a524!important}
 .agent-status-summary{padding-left:8px;font:10px 'IBM Plex Mono','Cascadia Code',monospace;color:#646b78!important}.agent-status-summary button{border-color:#22262f!important;border-radius:7px!important}
 .chat-panel{max-width:100%;gap:12px}.chat-header{padding:2px 0 12px}.chat-header h1{font-size:20px}.chat-transcript{padding-top:16px;padding-bottom:24px}
+/* MessageItem now follows the reference's semantic .msg tree.  Neutralize the
+   legacy chat-card shell so user bubbles and agent blocks use the template's
+   spacing, alignment and background rules exactly. */
+.codeagent-workbench .msg.chat-message{display:block;max-width:none;margin:0;padding:0;border:0;border-radius:0;background:transparent;line-height:inherit}
+.codeagent-workbench .msg.chat-message .message-avatar{display:none}
+.codeagent-workbench .msg.chat-message .message-body{display:block;min-width:0}
+.codeagent-workbench .msg.chat-message.msg-user{display:flex;align-items:flex-end;gap:6px}
+.codeagent-workbench .msg.chat-message.msg-agent{display:block}
+.codeagent-workbench .msg.chat-message.chat-message-tool{display:block}
 .chat-message{border-radius:10px!important;padding:10px 0!important;margin:10px 0!important}.chat-message-user{max-width:76%;margin-left:auto!important;flex-direction:row-reverse;background:#1a1e27!important;border:1px solid #2e333e!important;padding:10px 12px!important}.chat-message-user .message-avatar{display:none}.chat-message-agent{max-width:100%;border-bottom:1px solid #22262f!important}.chat-message-tool{max-width:100%;padding:0!important;border:0!important}
 .chat-composer{position:relative;margin-bottom:0;padding:12px 14px 10px;border-radius:14px}.chat-composer textarea{min-height:42px!important;max-height:220px!important;padding:8px 4px!important}.composer-toolbar{padding-top:8px}.composer-tools{align-items:center;flex-wrap:wrap}.composer-toggle{border-radius:999px!important;padding:5px 9px!important}.composer-toggle.is-on{background:rgba(245,165,36,.13)!important;border-color:rgba(245,165,36,.45)!important;color:#f5a524!important}.composer-model{padding:5px 9px;border:1px solid #22262f;border-radius:7px;color:#9ba1ad}
 .quick-prompts{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:18px}.quick-prompts button{padding:8px 14px!important;border:1px solid #2e333e!important;border-radius:8px!important;background:#13161d!important;color:#9ba1ad!important}.quick-prompts button:hover{border-color:#f5a524!important;color:#f5a524!important}

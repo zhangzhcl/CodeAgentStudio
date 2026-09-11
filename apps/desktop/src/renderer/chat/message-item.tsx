@@ -5,6 +5,7 @@ import {
   IconCheck,
   IconCopy,
   IconRefresh,
+  IconSparkle,
   IconThumbDown,
   IconThumbUp,
 } from "../icons.js";
@@ -41,18 +42,22 @@ export function MessageItem({
       className={`msg chat-message chat-message-${message.role} ${message.role === "user" ? "msg-user" : message.role === "agent" ? "msg-agent" : ""} ${message.status === "error" ? "is-error" : ""}`}
       data-role={message.role}
     >
-      <div
-        className={`message-avatar${message.role === "agent" ? " agent-mark" : ""}`}
-        aria-hidden="true"
-      >
-        {message.role === "user" ? "你" : message.role === "tool" ? "⌘" : "✦"}
-      </div>
+      {message.role !== "agent" && (
+        <div className="message-avatar" aria-hidden="true">
+          {message.role === "user" ? "你" : "⌘"}
+        </div>
+      )}
       <div
         className={`message-body${message.role === "agent" ? " msg-agent-body" : message.role === "user" ? " msg-bubble" : ""}`}
       >
         <div
           className={`message-heading${message.role === "agent" ? " msg-agent-head" : ""}`}
         >
+          {message.role === "agent" && (
+            <span className="agent-mark" aria-hidden="true">
+              <IconSparkle size={11} />
+            </span>
+          )}
           <strong
             className={message.role === "agent" ? "agent-name" : undefined}
           >
