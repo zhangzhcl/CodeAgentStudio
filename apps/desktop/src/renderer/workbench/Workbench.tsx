@@ -3,6 +3,7 @@ import type { WorkbenchTab } from "@codeagent-studio/protocol";
 import { FileExplorer } from "../files/FileExplorer.js";
 import { ChatPanel } from "../chat/ChatPanel.js";
 import { EditorTab } from "../editor/EditorTab.js";
+import { IconArrowDown, IconPlus, IconSparkle, IconX } from "../icons.js";
 
 type Activity = "files" | "sessions";
 export function Workbench() {
@@ -463,7 +464,9 @@ export function Workbench() {
     <div className={`codeagent-workbench app theme-${theme}`}>
       <aside className="sidebar" aria-label="活动栏">
         <div className="agent-brand brand">
-          <span className="agent-brand-mark brand-mark">✦</span>
+          <span className="agent-brand-mark brand-mark">
+            <IconSparkle size={13} />
+          </span>
           <span className="brand-text">
             <strong className="brand-name">AGENT-01</strong>
             <small className="brand-sub">对话控制台</small>
@@ -552,7 +555,7 @@ export function Workbench() {
                   )
                 }
               >
-                ＋ 新建会话
+                <IconPlus size={15} /> 新建会话
               </button>
               <div
                 className="nested-sidebar-tabs"
@@ -686,7 +689,7 @@ export function Workbench() {
                               {group.sessions.length}
                             </small>
                             <span className="project-caret" aria-hidden="true">
-                              ⌄
+                              <IconArrowDown size={13} />
                             </span>
                           </button>
                           <button
@@ -711,7 +714,7 @@ export function Workbench() {
                               newSession("project");
                             }}
                           >
-                            ＋
+                            <IconPlus size={14} />
                           </button>
                         </div>
                         {group.sessions.length === 0 ? (
@@ -930,7 +933,7 @@ export function Workbench() {
                   }
                 }}
               >
-                ×
+                <IconX size={12} />
               </span>
             </button>
           ))}
