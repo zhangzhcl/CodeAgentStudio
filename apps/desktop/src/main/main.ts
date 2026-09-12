@@ -29,9 +29,10 @@ function createWindow() { const { width: screenW, height: screenH } = screen.get
 app.whenReady().then(async () => {
   // The workbench owns project/session/view actions; no duplicate native menu.
   if (process.platform !== 'darwin') app.setAboutPanelOptions?.({ applicationName: 'CodeAgent Studio' });
-  const registry = new ProviderRegistry(createCliProviders());
+  const agentSettings = new AgentSettingsService(app.getPath('userData'));
+  const registry = new ProviderRegistry(createCliProviders(agentSettings));
   registerProviderIpc(registry);
-  registerSettingsIpc(new AgentSettingsService(app.getPath('userData')));
+  registerSettingsIpc(agentSettings);
 
   let workspace: WorkspaceService;
   let sessions: SessionService;
