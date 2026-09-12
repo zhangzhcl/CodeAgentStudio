@@ -4,16 +4,19 @@ import { parseCliEvent } from './cli-event-parser.js';
 import type { AgentEvent } from '@codeagent-studio/protocol';
 import type { CreateSessionInput, ProviderStatus } from './contracts.js';
 import type { PiTransport } from './pi-provider.js';
+import { ensureAgentWorkspace } from './agent-workspace.js';
 
 export class PiCliTransport implements PiTransport {
   private readonly running = new Map<string, ReturnType<typeof spawn>>();
   private readonly listeners = new Set<(event: AgentEvent) => void>();
   private readonly resumed = new Map<string, string>();
   private readonly aborted = new Set<string>();
+  private readonly sessionCwds = new Map<string, string>();
 
   constructor(private readonly command = process.env.CODEAGENT_PI_COMMAND ?? 'pi') {}
 
   async createSession(input: CreateSessionInput & { sessionFile: string }) {
+    this.sessionCwds.set(input.sessionFile, await ensureAgentWorkspace('pi', input.projectRoot));
     return { nativeId: input.sessionFile };
   }
 
@@ -35,6 +38,7 @@ export class PiCliTransport implements PiTransport {
         shell: process.platform === 'win32',
         windowsHide: true,
         env: withUserBinaryPaths(process.env),
+        cwd: this.sessionCwds.get(nativeId),
         stdio: [useStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'],
       });
       if (useStdin && child.stdin) {

@@ -8,6 +8,7 @@ import { parseCliEvent } from './cli-event-parser.js';
 import { findAgentCommand, quoteShellArg, resolveAgentCommand as resolveCommand, withUserBinaryPaths, MAX_ARGV_PROMPT_CHARS } from './command-resolver.js';
 import { PiProvider } from './pi-provider.js';
 import { PiCliTransport } from './pi-cli-transport.js';
+import { ensureAgentWorkspace } from './agent-workspace.js';
 
 type Config = { id: ProviderId; command: string; commandArgs?: string[]; shell?: boolean; versionArgs?: string[]; promptArgs: (model?: string) => string[] };
 const cursorWindowsPath = join(homedir(), 'AppData', 'Local', 'cursor-agent', 'agent.ps1');
@@ -33,7 +34,7 @@ export class CliProvider implements AgentProvider {
   async detect(): Promise<ProviderStatus> {
     return new Promise((resolve) => { const child = spawn(this.config.command, [...(this.config.commandArgs ?? []), ...(this.config.versionArgs ?? ['--version'])], { shell: this.config.shell, windowsHide: true, env: withUserBinaryPaths(process.env) }); let output = ''; let settled = false; const finish = (status: ProviderStatus) => { if (settled) return; settled = true; clearTimeout(timeout); resolve(status); }; const timeout = setTimeout(() => { child.kill(); finish({ provider: this.id, command: this.config.command, installed: false, authenticated: false, errorCode: 'unknown' }); }, 5000); child.stdout?.on('data', (data) => { output += data.toString(); }); child.once('error', () => finish({ provider: this.id, command: this.config.command, installed: false, authenticated: false, errorCode: 'not_installed' })); child.once('close', (code) => finish({ provider: this.id, command: this.config.command, installed: code === 0, authenticated: code === 0, version: output.trim() || undefined, errorCode: code === 0 ? undefined : 'unknown' })); });
   }
-  async createSession(input: CreateSessionInput) { if (input.projectRoot && input.sessionId) this.sessionCwds.set(input.sessionId, input.projectRoot); return {}; }
+  async createSession(input: CreateSessionInput) { if (input.sessionId) this.sessionCwds.set(input.sessionId, await ensureAgentWorkspace(this.id, input.projectRoot)); return {}; }
   async resumeSession(_nativeId: string) { throw new Error(`${this.id} does not support resume`); }
   async prompt(sessionId: string, text: string, model?: string, options?: PromptOptions) {
     if (options?.attachments?.length) text += `\n\n附件（请使用项目工作区工具读取）：\n${options.attachments.map((item) => `- ${item.relativePath}`).join('\n')}`;
