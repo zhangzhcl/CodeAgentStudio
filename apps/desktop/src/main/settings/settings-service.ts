@@ -3,14 +3,17 @@ import { dirname } from 'node:path';
 import { providerConfigCandidates } from './provider-config-paths.js';
 import { parseProviderConfig } from './provider-config-adapters.js';
 import type { AgentConfigSnapshot, AgentProviderId } from './contracts.js';
+import { CredentialStore } from './credential-store.js';
 
 const providers: AgentProviderId[] = ['claude', 'cursor', 'codex', 'pi', 'opencode'];
 
 export class AgentSettingsService {
   private readonly file: string;
   private readonly overrides = new Map<AgentProviderId, { model?: string; baseUrl?: string }>();
+  private readonly credentials: CredentialStore;
   constructor(userDataPath: string) {
     this.file = `${userDataPath}/agent-settings.json`;
+    this.credentials = new CredentialStore(userDataPath);
     this.load();
   }
   private load() {
@@ -31,11 +34,13 @@ export class AgentSettingsService {
     const path = providerConfigCandidates(provider).find((candidate) => existsSync(candidate));
     const native = path ? parseProviderConfig(provider, readFileSync(path, 'utf8'), path) : { provider, sourcePath: providerConfigCandidates(provider)[0]!, credential: { present: false } };
     const override = this.overrides.get(provider);
-    return { ...native, model: override?.model ?? native.model, baseUrl: override?.baseUrl ?? native.baseUrl, sourcePath: native.sourcePath };
+    return { ...native, model: override?.model ?? native.model, baseUrl: override?.baseUrl ?? native.baseUrl, credential: this.credentials.has(provider) ? { present: true, source: 'app' } : native.credential, sourcePath: native.sourcePath };
   }
   save(provider: AgentProviderId, patch: { model?: string; baseUrl?: string }) {
     this.overrides.set(provider, { ...this.overrides.get(provider), ...patch });
     this.persist();
     return this.get(provider);
   }
+  setCredential(provider: AgentProviderId, value: string) { this.credentials.set(provider, value); return this.get(provider); }
+  clearCredential(provider: AgentProviderId) { this.credentials.clear(provider); return this.get(provider); }
 }

@@ -76,6 +76,7 @@ export function Workbench() {
   >();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [agentSettings, setAgentSettings] = useState<Array<{ provider: string; model?: string; baseUrl?: string; credential?: { present: boolean }; sourcePath?: string }>>([]);
+  const [credentialDrafts, setCredentialDrafts] = useState<Record<string, string>>({});
   const [activeStats, setActiveStats] = useState({ rounds: 0, tokens: 0 });
   const [projectError, setProjectError] = useState<string | undefined>();
   const [sessionActionError, setSessionActionError] = useState<string | undefined>();
@@ -989,9 +990,10 @@ export function Workbench() {
                 <label>模型<input value={setting.model ?? ""} placeholder="未配置模型" onChange={(event) => setAgentSettings((items) => items.map((item, i) => i === index ? { ...item, model: event.target.value } : item))} /></label>
                 <label>Base URL<input value={setting.baseUrl ?? ""} placeholder="未配置 Base URL" onChange={(event) => setAgentSettings((items) => items.map((item, i) => i === index ? { ...item, baseUrl: event.target.value } : item))} /></label>
                 <small>{setting.credential?.present ? "已检测到凭据" : "未检测到凭据"}</small>
+                <label>API Key<input type="password" value={credentialDrafts[setting.provider] ?? ""} placeholder={setting.credential?.present ? "已配置，输入新 Key 可替换" : "未配置"} onChange={(event) => setCredentialDrafts((items) => ({ ...items, [setting.provider]: event.target.value }))} /></label>
                 <small className="settings-source">{setting.sourcePath}</small>
                 {setting.provider === "codex" && <em>Codex 原生配置仅支持读取</em>}
-                <div className="settings-actions"><button type="button" onClick={() => void (window as any).codeagent?.settings?.save({ provider: setting.provider, model: setting.model, baseUrl: setting.baseUrl }).then(loadAgentSettings)}>保存应用配置</button>{setting.provider === "claude" && <button type="button" onClick={() => void (window as any).codeagent?.settings?.writeNative({ provider: setting.provider, model: setting.model, baseUrl: setting.baseUrl }).then(loadAgentSettings)}>写入 Claude settings.json</button>}</div>
+                <div className="settings-actions"><button type="button" onClick={() => void (window as any).codeagent?.settings?.save({ provider: setting.provider, model: setting.model, baseUrl: setting.baseUrl }).then(async () => { const key = credentialDrafts[setting.provider]?.trim(); if (key) await (window as any).codeagent?.settings?.setCredential({ provider: setting.provider, value: key }); setCredentialDrafts((items) => ({ ...items, [setting.provider]: "" })); await loadAgentSettings(); })}>保存应用配置</button><button type="button" onClick={() => void (window as any).codeagent?.settings?.clearCredential(setting.provider).then(loadAgentSettings)}>清除 API Key</button>{setting.provider === "claude" && <button type="button" onClick={() => void (window as any).codeagent?.settings?.writeNative({ provider: setting.provider, model: setting.model, baseUrl: setting.baseUrl }).then(loadAgentSettings)}>写入 Claude settings.json</button>}</div>
               </div>
             ))}
           </section>
