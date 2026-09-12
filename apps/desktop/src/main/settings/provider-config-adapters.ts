@@ -8,6 +8,28 @@ function parseJson(text: string): Record<string, any> {
   return JSON.parse(text) as Record<string, any>;
 }
 
+function parseJsonc(text: string): Record<string, any> {
+  let output = '';
+  let quote = false;
+  let escaped = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index]!;
+    const next = text[index + 1];
+    if (quote) {
+      output += char;
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === '"') quote = false;
+      continue;
+    }
+    if (char === '"') { quote = true; output += char; continue; }
+    if (char === '/' && next === '/') { while (index < text.length && text[index] !== '\n') index += 1; output += '\n'; continue; }
+    if (char === '/' && next === '*') { index += 2; while (index < text.length && !(text[index] === '*' && text[index + 1] === '/')) index += 1; index += 1; continue; }
+    output += char;
+  }
+  return JSON.parse(output.replace(/,\s*([}\]])/g, '$1')) as Record<string, any>;
+}
+
 function tomlString(text: string, key: string): string | undefined {
   const match = text.match(new RegExp(`^\\s*${key.replace('.', '\\.') }\\s*=\\s*["']([^"']+)["']`, 'm'));
   return match?.[1];
@@ -35,7 +57,7 @@ export function parseProviderConfig(provider: AgentProviderId, text: string, sou
     const firstModel = first?.models?.[0];
     return { provider, sourcePath, model: firstModel?.id ?? value.defaultModel, baseUrl: first?.baseUrl, credential: credential(Boolean(first?.apiKey)) };
   }
-  const value = parseJson(text.replace(/\/\/.*$/gm, '').replace(/,\s*([}\]])/g, '$1'));
+  const value = parseJsonc(text);
   const providers = value.provider ?? value.providers ?? {};
   const first = Object.values(providers)[0] as any;
   const firstModel = first?.models ? Object.keys(first.models)[0] : undefined;

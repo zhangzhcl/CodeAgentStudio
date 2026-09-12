@@ -28,7 +28,10 @@ export class AgentSettingsService {
     writeFileSync(this.file, JSON.stringify(value, null, 2), 'utf8');
   }
   list(): AgentConfigSnapshot[] {
-    return providers.map((provider) => this.get(provider));
+    return providers.map((provider) => {
+      try { return this.get(provider); }
+      catch (error) { return { provider, sourcePath: providerConfigCandidates(provider)[0]!, credential: { present: false }, error: error instanceof Error ? error.message : '配置解析失败' }; }
+    });
   }
   get(provider: AgentProviderId): AgentConfigSnapshot {
     const path = providerConfigCandidates(provider).find((candidate) => existsSync(candidate));

@@ -18,6 +18,7 @@ export interface AgentConfigSnapshot {
   baseUrl?: string;
   credential: CredentialState;
   sourcePath: string;
+  error?: string;
 }
 
 export const providerCapabilities: Record<AgentProviderId, ProviderCapabilities> = {

@@ -35,4 +35,9 @@ describe('provider config adapters', () => {
     expect(result.credential.present).toBe(true);
     expect(JSON.stringify(result)).not.toContain('secret');
   });
+
+  it('keeps URLs while stripping JSONC comments for OpenCode', () => {
+    const result = parseProviderConfig('opencode', '{\n // comment\n "provider": { "x": { "options": { "baseURL": "https://token.example/v1" }, "models": { "m": {} } } }\n}', 'opencode.jsonc');
+    expect(result.baseUrl).toBe('https://token.example/v1');
+  });
 });
