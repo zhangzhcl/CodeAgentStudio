@@ -43,4 +43,8 @@ export class AgentSettingsService {
   }
   setCredential(provider: AgentProviderId, value: string) { this.credentials.set(provider, value); return this.get(provider); }
   clearCredential(provider: AgentProviderId) { this.credentials.clear(provider); return this.get(provider); }
+  runtime(provider: AgentProviderId) {
+    const snapshot = this.get(provider);
+    return { model: snapshot.model, baseUrl: snapshot.baseUrl, apiKey: this.credentials.get(provider) };
+  }
 }

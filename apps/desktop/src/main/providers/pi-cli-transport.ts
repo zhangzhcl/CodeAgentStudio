@@ -5,6 +5,7 @@ import type { AgentEvent } from '@codeagent-studio/protocol';
 import type { CreateSessionInput, ProviderStatus } from './contracts.js';
 import type { PiTransport } from './pi-provider.js';
 import { ensureAgentWorkspace } from './agent-workspace.js';
+import type { AgentSettingsService } from '../settings/settings-service.js';
 
 export class PiCliTransport implements PiTransport {
   private readonly running = new Map<string, ReturnType<typeof spawn>>();
@@ -13,7 +14,7 @@ export class PiCliTransport implements PiTransport {
   private readonly aborted = new Set<string>();
   private readonly sessionCwds = new Map<string, string>();
 
-  constructor(private readonly command = process.env.CODEAGENT_PI_COMMAND ?? 'pi') {}
+  constructor(private readonly command = process.env.CODEAGENT_PI_COMMAND ?? 'pi', private readonly settings?: AgentSettingsService) {}
 
   async createSession(input: CreateSessionInput & { sessionFile: string }) {
     this.sessionCwds.set(input.sessionFile, await ensureAgentWorkspace('pi', input.projectRoot));
@@ -27,8 +28,9 @@ export class PiCliTransport implements PiTransport {
   async prompt(nativeId: string, text: string, selectedModel?: string) {
     await new Promise<void>((resolve, reject) => {
       const runMessageId = `${nativeId}:${crypto.randomUUID()}`;
+      const runtime = this.settings?.runtime('pi');
       const provider = process.env.CODEAGENT_PI_PROVIDER ?? 'sensenova';
-      const model = selectedModel || process.env.CODEAGENT_PI_MODEL || 'sensenova-6.8-flash-lite';
+      const model = selectedModel || runtime?.model || process.env.CODEAGENT_PI_MODEL || 'sensenova-6.8-flash-lite';
       const sessionTarget = this.resumed.get(nativeId) ?? nativeId;
       const resume = this.resumed.delete(nativeId);
       const useStdin = text.length > MAX_ARGV_PROMPT_CHARS;
@@ -37,7 +39,7 @@ export class PiCliTransport implements PiTransport {
       const child = spawn(this.command, args, {
         shell: process.platform === 'win32',
         windowsHide: true,
-        env: withUserBinaryPaths(process.env),
+        env: withUserBinaryPaths({ ...process.env, ...(runtime?.apiKey ? { SENSENOVA_API_KEY: runtime.apiKey } : {}), ...(runtime?.baseUrl ? { SENSENOVA_BASE_URL: runtime.baseUrl } : {}) }),
         cwd: this.sessionCwds.get(nativeId),
         stdio: [useStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'],
       });

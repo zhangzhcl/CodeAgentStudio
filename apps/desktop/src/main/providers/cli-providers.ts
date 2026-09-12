@@ -9,8 +9,9 @@ import { findAgentCommand, quoteShellArg, resolveAgentCommand as resolveCommand,
 import { PiProvider } from './pi-provider.js';
 import { PiCliTransport } from './pi-cli-transport.js';
 import { ensureAgentWorkspace } from './agent-workspace.js';
+import type { AgentSettingsService } from '../settings/settings-service.js';
 
-type Config = { id: ProviderId; command: string; commandArgs?: string[]; shell?: boolean; versionArgs?: string[]; promptArgs: (model?: string) => string[] };
+type Config = { id: ProviderId; command: string; commandArgs?: string[]; shell?: boolean; versionArgs?: string[]; promptArgs: (model?: string, runtime?: { apiKey?: string; baseUrl?: string }) => string[] };
 const cursorWindowsPath = join(homedir(), 'AppData', 'Local', 'cursor-agent', 'agent.ps1');
 const cursorDefault = process.platform === 'win32' && existsSync(cursorWindowsPath) ? cursorWindowsPath : findAgentCommand(['agent', 'cursor-agent']);
 const cursorCommand = resolveCommand(process.env.CODEAGENT_CURSOR_AGENT ?? cursorDefault);
@@ -18,7 +19,7 @@ const config = (id: ProviderId, command: string, promptArgs: Config['promptArgs'
 const commandFromEnvOrPath = (envKey: string, candidates: string[]) => process.env[envKey] ?? findAgentCommand(candidates);
 export const CLI_CONFIGS: Config[] = [
   config('claude', commandFromEnvOrPath('CODEAGENT_CLAUDE_COMMAND', ['claude']), (model) => ['-p', '--output-format', 'stream-json', '--include-partial-messages', '--verbose', ...(model ? ['--model', model] : [])]),
-  { id: 'cursor', ...cursorCommand, promptArgs: (model) => ['-p', '--output-format', 'stream-json', '--stream-partial-output', ...(model ? ['--model', model] : [])] },
+  { id: 'cursor', ...cursorCommand, promptArgs: (model, runtime) => ['-p', '--output-format', 'stream-json', '--stream-partial-output', ...(model ? ['--model', model] : []), ...(runtime?.apiKey ? ['--api-key', runtime.apiKey] : []), ...(runtime?.baseUrl ? ['--endpoint', runtime.baseUrl] : [])] },
   config('codex', commandFromEnvOrPath('CODEAGENT_CODEX_COMMAND', ['codex']), (model) => ['exec', '--json', ...(model ? ['-m', model] : [])]),
   config('opencode', commandFromEnvOrPath('CODEAGENT_OPENCODE_COMMAND', ['opencode']), (model) => ['run', '--format', 'json', '--model', model ? (model.includes('/') ? model : `sensenova/${model}`) : (process.env.CODEAGENT_OPENCODE_MODEL || 'sensenova/sensenova-6.8-flash-lite')]),
 ];
@@ -29,7 +30,7 @@ export class CliProvider implements AgentProvider {
   private readonly processes = new Map<string, ReturnType<typeof spawn>>();
   private readonly aborted = new Set<string>();
   private readonly sessionCwds = new Map<string, string>();
-  constructor(private readonly config: Config) {}
+  constructor(private readonly config: Config, private readonly settings?: AgentSettingsService) {}
   get id() { return this.config.id; }
   async detect(): Promise<ProviderStatus> {
     return new Promise((resolve) => { const child = spawn(this.config.command, [...(this.config.commandArgs ?? []), ...(this.config.versionArgs ?? ['--version'])], { shell: this.config.shell, windowsHide: true, env: withUserBinaryPaths(process.env) }); let output = ''; let settled = false; const finish = (status: ProviderStatus) => { if (settled) return; settled = true; clearTimeout(timeout); resolve(status); }; const timeout = setTimeout(() => { child.kill(); finish({ provider: this.id, command: this.config.command, installed: false, authenticated: false, errorCode: 'unknown' }); }, 5000); child.stdout?.on('data', (data) => { output += data.toString(); }); child.once('error', () => finish({ provider: this.id, command: this.config.command, installed: false, authenticated: false, errorCode: 'not_installed' })); child.once('close', (code) => finish({ provider: this.id, command: this.config.command, installed: code === 0, authenticated: code === 0, version: output.trim() || undefined, errorCode: code === 0 ? undefined : 'unknown' })); });
@@ -41,7 +42,8 @@ export class CliProvider implements AgentProvider {
     await new Promise<void>((resolve, reject) => {
       const runMessageId = `${sessionId}:${crypto.randomUUID()}`;
       const useStdin = text.length > MAX_ARGV_PROMPT_CHARS;
-      const rawArgs = [...(this.config.commandArgs ?? []), ...this.config.promptArgs(model), ...(useStdin ? [] : [text])]; const args = this.config.shell ? rawArgs.map((arg) => quoteShellArg(arg)) : rawArgs; const child = spawn(this.config.command, args, { shell: this.config.shell, windowsHide: true, cwd: this.sessionCwds.get(sessionId), env: withUserBinaryPaths(process.env), stdio: [useStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'] }); let stderr = ''; if (useStdin && child.stdin) { // 子进程可能先退出，忽略 EPIPE 防止未处理异常
+      const runtime = this.settings?.runtime(this.id);
+      const rawArgs = [...(this.config.commandArgs ?? []), ...this.config.promptArgs(model ?? runtime?.model, runtime), ...(useStdin ? [] : [text])]; const args = this.config.shell ? rawArgs.map((arg) => quoteShellArg(arg)) : rawArgs; const env = withUserBinaryPaths({ ...process.env, ...(runtime?.baseUrl && this.id === 'claude' ? { ANTHROPIC_BASE_URL: runtime.baseUrl } : {}), ...(runtime?.apiKey && this.id === 'claude' ? { ANTHROPIC_API_KEY: runtime.apiKey } : {}), ...(runtime?.baseUrl && this.id === 'codex' ? { OPENAI_BASE_URL: runtime.baseUrl } : {}), ...(runtime?.apiKey && this.id === 'codex' ? { OPENAI_API_KEY: runtime.apiKey } : {}), ...(runtime?.baseUrl && this.id === 'opencode' ? { OPENCODE_BASE_URL: runtime.baseUrl } : {}), ...(runtime?.apiKey && this.id === 'opencode' ? { OPENCODE_API_KEY: runtime.apiKey } : {}) }); const child = spawn(this.config.command, args, { shell: this.config.shell, windowsHide: true, cwd: this.sessionCwds.get(sessionId), env, stdio: [useStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'] }); let stderr = ''; if (useStdin && child.stdin) { // 子进程可能先退出，忽略 EPIPE 防止未处理异常
         child.stdin.on('error', () => undefined); child.stdin.end(text); } this.processes.set(sessionId, child); let sequence = 0; let pending = '';
       const consume = (data: Buffer) => { pending += data.toString(); const lines = pending.split(/\r?\n/); pending = lines.pop() ?? ''; lines.forEach((line) => { const event = parseCliEvent(line, this.id, sessionId, sequence++, runMessageId); if (event) this.listeners.forEach((listener) => listener(event)); }); };
       const flushPlainOutput = () => { const value = pending.trim(); if (!value || value.startsWith('{') && !value.endsWith('}')) return; pending = ''; const event = parseCliEvent(value, this.id, sessionId, sequence++, runMessageId); if (event) this.listeners.forEach((listener) => listener(event)); }; const flushTimer = setInterval(flushPlainOutput, 80);
@@ -51,4 +53,4 @@ export class CliProvider implements AgentProvider {
   async abort(sessionId: string) { const child = this.processes.get(sessionId); if (!child) return false; this.aborted.add(sessionId); child.kill(); this.processes.delete(sessionId); return true; }
   subscribe(listener: (event: AgentEvent) => void) { this.listeners.add(listener); return () => this.listeners.delete(listener); }
 }
-export const createCliProviders = () => [...CLI_CONFIGS.map((config) => new CliProvider(config)), new PiProvider(new PiCliTransport())];
+export const createCliProviders = (settings?: AgentSettingsService) => [...CLI_CONFIGS.map((config) => new CliProvider(config, settings)), new PiProvider(new PiCliTransport(undefined, settings))];
