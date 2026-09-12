@@ -55,6 +55,19 @@ describe('WorkspaceService', () => {
     await expect(service.findProject(directory)).resolves.toBeUndefined();
   });
 
+  it('registers discovered native projects without listing them for users', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'codeagent-native-discovered-'));
+    temporaryDirectories.push(directory);
+    const saved: RegisteredProject[] = [];
+    const service = new WorkspaceService({ list: () => [], save: (project) => saved.push(project) });
+
+    const project = await service.discoverProject(directory);
+
+    expect(project).toMatchObject({ rootPath: directory, source: 'native-discovered' });
+    expect(saved).toEqual([project]);
+    expect(service.listProjects()).toEqual([]);
+  });
+
   it('does not expose home or app runtime roots as projects', () => {
     const projects: RegisteredProject[] = [
       { id: 'home', name: 'zcl', rootPath: homedir(), source: 'user' },

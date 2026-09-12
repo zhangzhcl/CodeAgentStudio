@@ -87,6 +87,24 @@ export class WorkspaceService {
     return project;
   }
 
+  /** Register a project inferred from a native session without exposing it in the user project picker. */
+  async discoverProject(rootPath: string): Promise<RegisteredProject> {
+    const canonicalRoot = await realpath(rootPath).catch(() => {
+      throw new WorkspaceError('PROJECT_NOT_FOUND', `Project does not exist: ${rootPath}`);
+    });
+    const metadata = await stat(canonicalRoot);
+    if (!metadata.isDirectory()) {
+      throw new WorkspaceError('INVALID_ENTRY', 'Project root must be a directory');
+    }
+    const existing = [...this.projects.values()].find((item) => resolve(item.rootPath) === resolve(canonicalRoot));
+    if (existing) return existing;
+
+    const project = { id: randomUUID(), name: basename(canonicalRoot), rootPath: canonicalRoot, source: 'native-discovered' as const };
+    this.projects.set(project.id, project);
+    this.store?.save(project);
+    return project;
+  }
+
   private getProject(projectId: string): RegisteredProject {
     const project = this.projects.get(projectId);
     if (!project) throw new WorkspaceError('PROJECT_NOT_FOUND', `Unknown project: ${projectId}`);
