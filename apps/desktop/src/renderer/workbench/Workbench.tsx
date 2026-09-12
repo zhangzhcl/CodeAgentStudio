@@ -74,6 +74,8 @@ export function Workbench() {
   const [providerDetectionError, setProviderDetectionError] = useState<
     string | undefined
   >();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [agentSettings, setAgentSettings] = useState<Array<{ provider: string; model?: string; baseUrl?: string; credential?: { present: boolean }; sourcePath?: string }>>([]);
   const [activeStats, setActiveStats] = useState({ rounds: 0, tokens: 0 });
   const [projectError, setProjectError] = useState<string | undefined>();
   const [sessionActionError, setSessionActionError] = useState<string | undefined>();
@@ -236,6 +238,11 @@ export function Workbench() {
         ),
       )
       .finally(() => setDetectingProviders(false));
+  };
+  const openAgentSettings = () => {
+    setSettingsOpen(true);
+    const list = (window as any).codeagent?.settings?.list;
+    if (list) void list().then(setAgentSettings).catch(() => setAgentSettings([]));
   };
   useEffect(() => {
     detectProviders();
@@ -963,6 +970,7 @@ export function Workbench() {
           >
             {detectingProviders ? "检测中" : "检测 Agent"}
           </button>
+          <button type="button" className="sidebar-detect" onClick={openAgentSettings}>Agent 设置</button>
           {providerDetectionError && (
             <span className="sidebar-status-error" role="alert">
               {providerDetectionError}
@@ -971,6 +979,24 @@ export function Workbench() {
           <span>本地工作区</span>
         </div>
       </aside>
+      {settingsOpen && (
+        <div className="settings-backdrop" role="presentation" onClick={() => setSettingsOpen(false)}>
+          <section className="settings-panel" role="dialog" aria-label="Agent 设置" onClick={(event) => event.stopPropagation()}>
+            <div className="settings-panel-header"><h2>Agent 设置</h2><button type="button" onClick={() => setSettingsOpen(false)}>关闭</button></div>
+            {agentSettings.map((setting, index) => (
+              <div className="settings-row" key={setting.provider}>
+                <strong>{providerLabel(setting.provider)}</strong>
+                <label>模型<input value={setting.model ?? ""} placeholder="未配置模型" onChange={(event) => setAgentSettings((items) => items.map((item, i) => i === index ? { ...item, model: event.target.value } : item))} /></label>
+                <label>Base URL<input value={setting.baseUrl ?? ""} placeholder="未配置 Base URL" onChange={(event) => setAgentSettings((items) => items.map((item, i) => i === index ? { ...item, baseUrl: event.target.value } : item))} /></label>
+                <small>{setting.credential?.present ? "已检测到凭据" : "未检测到凭据"}</small>
+                <small className="settings-source">{setting.sourcePath}</small>
+                {setting.provider === "codex" && <em>Codex 原生配置仅支持读取</em>}
+                <div className="settings-actions"><button type="button" onClick={() => void (window as any).codeagent?.settings?.save({ provider: setting.provider, model: setting.model, baseUrl: setting.baseUrl }).then(loadAgentSettings)}>保存应用配置</button>{setting.provider === "claude" && <button type="button" onClick={() => void (window as any).codeagent?.settings?.writeNative({ provider: setting.provider, model: setting.model, baseUrl: setting.baseUrl }).then(loadAgentSettings)}>写入 Claude settings.json</button>}</div>
+              </div>
+            ))}
+          </section>
+        </div>
+      )}
       <main className="main">
         <header className="topbar">
           <div className="topbar-title">

@@ -16,6 +16,8 @@ import { createCliProviders } from './providers/cli-providers.js';
 import { registerProviderIpc } from './providers/provider-ipc.js';
 import { registerAgentIpc } from './providers/agent-ipc.js';
 import { discoverNativeSessions } from './sessions/native-session-discovery.js';
+import { AgentSettingsService } from './settings/settings-service.js';
+import { registerSettingsIpc } from './settings/settings-ipc.js';
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 const mainDir = dirname(fileURLToPath(import.meta.url));
 let database: Database.Database | undefined;
@@ -29,6 +31,7 @@ app.whenReady().then(async () => {
   if (process.platform !== 'darwin') app.setAboutPanelOptions?.({ applicationName: 'CodeAgent Studio' });
   const registry = new ProviderRegistry(createCliProviders());
   registerProviderIpc(registry);
+  registerSettingsIpc(new AgentSettingsService(app.getPath('userData')));
 
   let workspace: WorkspaceService;
   let sessions: SessionService;
