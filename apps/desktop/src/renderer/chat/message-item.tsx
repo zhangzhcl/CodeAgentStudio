@@ -134,11 +134,6 @@ export function MessageItem({
             >
               {message.role === "tool" ? "工具调用" : getAgentPresentation(provider).name}
             </strong>
-            {message.role === "agent" && (
-              <span className="message-model-badge agent-model">
-                {provider}
-              </span>
-            )}
             {message.role === "agent" && message.branch && <BranchPicker branch={message.branch} onSelect={onSelectBranch} />}
             {message.status === "streaming" && (
               <span className="streaming-badge">生成中</span>

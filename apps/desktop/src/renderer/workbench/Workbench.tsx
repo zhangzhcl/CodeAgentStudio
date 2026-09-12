@@ -75,7 +75,7 @@ export function Workbench() {
     string | undefined
   >();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [agentSettings, setAgentSettings] = useState<Array<{ provider: string; model?: string; baseUrl?: string; credential?: { present: boolean }; sourcePath?: string; error?: string }>>([]);
+  const [agentSettings, setAgentSettings] = useState<Array<{ provider: string; model?: string; models?: Array<{ id: string; label: string; tag?: string }>; baseUrl?: string; credential?: { present: boolean }; sourcePath?: string; error?: string }>>([]);
   const [credentialDrafts, setCredentialDrafts] = useState<Record<string, string>>({});
   const [activeStats, setActiveStats] = useState({ rounds: 0, tokens: 0 });
   const [projectError, setProjectError] = useState<string | undefined>();
@@ -92,11 +92,20 @@ export function Workbench() {
   const activeProvider = providerId(
     activeTab.kind === "chat" ? activeTab.provider : undefined,
   );
+  const isTransientChatSession = (sessionId: string) =>
+    sessionId === "new-chat" || sessionId.startsWith("new-chat-");
   // Agent selection is explicit.  Do not silently default the workspace to
   // the first provider (or let a file tab change the selected Agent).
   const [selectedProvider, setSelectedProvider] = useState<
     ReturnType<typeof providerId> | undefined
   >();
+  const [selectedSessionId, setSelectedSessionId] = useState<string>();
+  const configuredModel = agentSettings.find(
+    (setting) => providerId(setting.provider) === activeProvider,
+  )?.model;
+  const configuredModels = agentSettings.find(
+    (setting) => providerId(setting.provider) === activeProvider,
+  )?.models;
   const visiblePersonalSessions = personalSessions.filter(
     (session) =>
       selectedProvider !== undefined &&
@@ -246,6 +255,11 @@ export function Workbench() {
     if (list) void list().then(setAgentSettings).catch(() => setAgentSettings([]));
   };
   useEffect(() => {
+    if (!selectedProvider) return;
+    const list = (window as any).codeagent?.settings?.list;
+    if (list) void list().then(setAgentSettings).catch(() => setAgentSettings([]));
+  }, [selectedProvider]);
+  useEffect(() => {
     detectProviders();
   }, []);
   useEffect(() => {
@@ -365,6 +379,7 @@ export function Workbench() {
     sessionProjectRoot?: string,
   ) => {
     setSelectedProvider(providerId(provider));
+    setSelectedSessionId(id);
     if (scope === "project") {
       const registered = sessionProjectId
         ? registeredProjects.find((project) => project.id === sessionProjectId)
@@ -392,14 +407,32 @@ export function Workbench() {
       provider: provider as "claude" | "cursor" | "codex" | "pi" | "opencode",
       projectId: sessionProjectId,
     };
-    if (!existing) setTabs((items) => [...items, tab]);
+    setTabs((items) => [...items.filter((item) => item.kind === "file"), tab]);
     setActiveTab(tab);
   };
-  const newSession = (scope: "personal" | "project") => {
+  const newSession = (
+    scope: "personal" | "project",
+    project?: { id: string; name?: string; rootPath?: string },
+  ) => {
     if (!selectedProvider) return;
+    // 项目会话必须携带项目标识；显式传入的 project 优先，避免读到异步更新前的旧 state
+    const active =
+      project ??
+      (scope === "project" && projectId
+        ? { id: projectId, name: projectName, rootPath: projectRoot }
+        : undefined);
+    if (scope === "project" && !active?.id) {
+      setSessionActionError("请先在左侧选择或打开一个项目，再创建项目会话。");
+      return;
+    }
     const id = `${scope}-${crypto.randomUUID()}`;
     const provider = selectedProvider;
-    const sessionProjectId = scope === "project" ? projectId : undefined;
+    const sessionProjectId = scope === "project" ? active?.id : undefined;
+    if (scope === "project" && active) {
+      setProjectId(active.id);
+      setProjectName(active.name ?? "项目");
+      setProjectRoot(active.rootPath);
+    }
     const create = (
       window as Window & {
         codeagentSessions?: { create: (input: unknown) => Promise<unknown> };
@@ -411,6 +444,11 @@ export function Workbench() {
         provider,
         scope,
         ...(sessionProjectId ? { projectId: sessionProjectId } : {}),
+      }).catch(() => {
+        // 创建失败时回收乐观条目并提示，避免刷新后“凭空消失”
+        setSessionActionError("会话创建失败，请重试。");
+        setPersonalSessions((items) => items.filter((item) => item.id !== id));
+        setProjectSessions((items) => items.filter((item) => item.id !== id));
       });
     scope === "personal"
       ? setPersonalSessions((items) => [...items, { id, provider }])
@@ -425,8 +463,9 @@ export function Workbench() {
       provider,
       ...(sessionProjectId ? { projectId: sessionProjectId } : {}),
     };
-    setTabs((items) => [...items, tab]);
+    setTabs((items) => [...items.filter((item) => item.kind === "file"), tab]);
     setActiveTab(tab);
+    setSelectedSessionId(id);
   };
   useEffect(() => {
     const menu = (window as Window & { codeagentMenu?: { subscribe: (listener: (event: string) => void) => () => void } }).codeagentMenu;
@@ -449,22 +488,12 @@ export function Workbench() {
   const changeProvider = (value: string) => {
     if (!value) return;
     setSessionActionError(undefined);
-    const provider = providerId(value);
-    setSelectedProvider(provider);
-    const isTransientChat =
-      activeTab.kind === "chat" &&
-      (activeTab.sessionId === "new-chat" ||
-        activeTab.sessionId.startsWith("new-chat-"));
-    if (activeTab.kind === "chat" && !isTransientChat) {
-      const nextTab: WorkbenchTab = { kind: "chat", sessionId: `new-chat-${provider}-${crypto.randomUUID()}`, scope: activeTab.scope, provider, projectId: activeTab.scope === "project" ? projectId : undefined };
-      setTabs((items) => [...items, nextTab]);
-      setActiveTab(nextTab);
-      return;
-    }
-    if (activeTab.kind !== "chat" || isTransientChat)
-      setActiveTab((tab) => (tab.kind === "chat" ? { ...tab, provider } : tab));
+    setSelectedProvider(providerId(value));
+    setSelectedSessionId(undefined);
   };
   const closeTab = (tab: WorkbenchTab) => {
+    if (tab.kind === "chat" && selectedSessionId === tab.sessionId)
+      setSelectedSessionId(undefined);
     setTabs((items) => {
       const index = items.findIndex((item) => isSameTab(item, tab));
       const next = items.filter((item) => !isSameTab(item, tab));
@@ -481,37 +510,34 @@ export function Workbench() {
       return next;
     });
   };
+  const deleteSession = async (id: string, tabToClose?: WorkbenchTab) => {
+    const remove = (
+      window as Window & {
+        codeagentSessions?: { delete?: (value: string) => Promise<unknown> };
+      }
+    ).codeagentSessions?.delete;
+    try {
+      if (remove) await remove(id);
+      setPersonalSessions((items) => items.filter((item) => item.id !== id));
+      setProjectSessions((items) => items.filter((item) => item.id !== id));
+      if (tabToClose) closeTab(tabToClose);
+    } catch (error) {
+      setSessionActionError(error instanceof Error ? error.message : "删除会话失败，请重试。");
+    }
+  };
   const deleteActiveSession = () => {
     if (activeTab.kind !== "chat" || activeTab.sessionId === "new-chat") return;
     if (!window.confirm("确定删除当前会话及其历史消息吗？")) return;
-    const remove = (
-      window as Window & {
-        codeagentSessions?: { delete?: (id: string) => Promise<unknown> };
-      }
-    ).codeagentSessions?.delete;
-    if (remove) void remove(activeTab.sessionId);
-    setPersonalSessions((items) =>
-      items.filter((item) => item.id !== activeTab.sessionId),
-    );
-    setProjectSessions((items) =>
-      items.filter((item) => item.id !== activeTab.sessionId),
-    );
-    closeTab(activeTab);
+    void deleteSession(activeTab.sessionId, activeTab);
   };
   const requestDelete = (id: string) => {
     if (pendingDelete === id) {
-      const remove = (
-        window as Window & {
-          codeagentSessions?: { delete?: (value: string) => Promise<unknown> };
-        }
-      ).codeagentSessions?.delete;
-      if (remove) void remove(id);
-      setPersonalSessions((items) => items.filter((item) => item.id !== id));
-      setProjectSessions((items) => items.filter((item) => item.id !== id));
       setPendingDelete(undefined);
       if (deleteTimer.current) window.clearTimeout(deleteTimer.current);
-      if (activeTab.kind === "chat" && activeTab.sessionId === id)
-        closeTab(activeTab);
+      void deleteSession(
+        id,
+        activeTab.kind === "chat" && activeTab.sessionId === id ? activeTab : undefined,
+      );
       return;
     }
     setPendingDelete(id);
@@ -535,6 +561,12 @@ export function Workbench() {
           activeSession?.title,
         )
       : tabName(activeTab);
+  const hasSelectedChatSession =
+    activeTab.kind === "chat" &&
+    selectedProvider !== undefined &&
+    selectedSessionId === activeTab.sessionId &&
+    providerId(activeTab.provider) === selectedProvider &&
+    !isTransientChatSession(activeTab.sessionId);
 
   return (
     <div className={`codeagent-workbench app theme-${theme}`}>
@@ -731,7 +763,7 @@ export function Workbench() {
                           className="conv-item"
                           type="button"
                           aria-current={
-                            activeTab.kind === "chat" &&
+                            hasSelectedChatSession &&
                             activeTab.sessionId === id
                           }
                           key={id}
@@ -746,7 +778,6 @@ export function Workbench() {
                         >
                           <IconChat size={14} className="conv-icon" />
                           <span className="conv-title">
-                            {providerLabel(provider)} ·{" "}
                             {sessionTitle(id, nativeId, title)}
                           </span>
                           <small className="conv-time">
@@ -836,28 +867,25 @@ export function Workbench() {
                                 return;
                               }
                               setSessionActionError(undefined);
-                              const registered = registeredProjects.find(
-                                (project) => project.id === key,
-                              );
-                              if (registered) {
-                                setProjectId(registered.id);
-                                setProjectName(
-                                  registered.name ??
-                                    registered.rootPath?.split(/[\\/]/).pop() ??
-                                    "项目",
-                                );
-                                setProjectRoot(registered.rootPath);
-                              } else {
-                                const linked =
-                                  group.sessions[0]?.projectId ??
-                                  (group.root
-                                    ? registeredProjects.find(
-                                        (project) => project.rootPath === group.root,
-                                      )?.id
-                                    : undefined);
-                                if (linked) setProjectId(linked);
+                              // 解析该分组对应的注册项目并显式传给 newSession：
+                              // setProjectId 是异步 state，同步读会拿到旧值，导致会话挂错项目
+                              const registered =
+                                registeredProjects.find((project) => project.id === key) ??
+                                (group.root
+                                  ? registeredProjects.find((project) => project.rootPath === group.root)
+                                  : undefined) ??
+                                (group.sessions[0]?.projectId
+                                  ? registeredProjects.find((project) => project.id === group.sessions[0]?.projectId)
+                                  : undefined);
+                              if (!registered) {
+                                setSessionActionError(`项目「${group.name}」尚未注册为工作区，无法创建项目会话。`);
+                                return;
                               }
-                              newSession("project");
+                              newSession("project", {
+                                id: registered.id,
+                                name: registered.name ?? registered.rootPath?.split(/[\\/]/).pop() ?? "项目",
+                                rootPath: registered.rootPath,
+                              });
                             }}
                           >
                             <IconPlus size={14} />
@@ -883,7 +911,7 @@ export function Workbench() {
                                 className="proj-conv"
                                 type="button"
                                 aria-current={
-                                  activeTab.kind === "chat" &&
+                                  hasSelectedChatSession &&
                                   activeTab.sessionId === id
                                 }
                                 title={
@@ -903,7 +931,6 @@ export function Workbench() {
                               >
                                 <IconChat size={13} className="conv-icon" />
                                 <span>
-                                  {providerLabel(provider)} ·{" "}
                                   {sessionTitle(id, nativeId, title)}
                                 </span>
                                 <small>{relativeTime(updatedAt)}</small>
@@ -1012,11 +1039,15 @@ export function Workbench() {
                 </>
               )}
             <span className="topbar-name">
-              {activeTab.kind === "chat" && !selectedProvider
-                ? "未选择 Agent"
+              {activeTab.kind === "chat"
+                ? hasSelectedChatSession
+                  ? activeTitle
+                  : selectedProvider
+                    ? "请选择会话"
+                    : "未选择 Agent"
                 : activeTitle}
             </span>
-            {selectedProvider && (
+            {selectedProvider && hasSelectedChatSession && (
               <span className="topbar-meta">
                 {activeTab.kind === "chat"
                   ? `${activeStats.rounds} 轮对话 · 约 ${activeStats.tokens.toLocaleString()} tokens`
@@ -1055,33 +1086,27 @@ export function Workbench() {
             <button
               type="button"
               className="topbar-clear"
-              title="清空当前会话"
-              onClick={() => {
-                if (activeTab.kind === "chat")
-                  window.dispatchEvent(
-                    new CustomEvent("codeagent:clear-session", {
-                      detail: { sessionId: activeTab.sessionId },
-                    }),
-                  );
-              }}
-              disabled={activeTab.kind !== "chat"}
+              aria-label="删除当前会话"
+              title="删除当前会话"
+              onClick={deleteActiveSession}
+              disabled={!hasSelectedChatSession}
             >
               <IconTrash size={15} />
-              <span>清空</span>
+              <span>删除</span>
             </button>
           </div>
         </header>
         <div className="chat-tabs" role="tablist" aria-label="打开的标签">
-          {tabs.filter((tab) => tab.kind === "file" || tab.provider === selectedProvider).length === 0 && (
+          {tabs.filter((tab) => tab.kind === "file" || (hasSelectedChatSession && tab.provider === selectedProvider)).length === 0 && (
             <span className="chat-tabs-empty">
-              {selectedProvider ? "没有打开的会话，可从左侧选择或新建" : "请选择 Agent"}
+              {selectedProvider ? "请选择会话或新建会话" : "请选择 Agent"}
             </span>
           )}
           {tabs
-            .filter((tab) => tab.kind === "file" || tab.provider === selectedProvider)
+            .filter((tab) => tab.kind === "file" || (hasSelectedChatSession && tab.provider === selectedProvider))
             .map((tab) => (
             <button
-              className={`chat-tab${isSameTab(activeTab, tab) ? " is-active" : ""}`}
+              className={`chat-tab${isSameTab(activeTab, tab) && (tab.kind !== "chat" || hasSelectedChatSession) ? " is-active" : ""}`}
               key={
                 tab.kind === "chat"
                   ? tab.sessionId
@@ -1094,8 +1119,11 @@ export function Workbench() {
                   ? `${projectName} / ${tabName(tab)}`
                   : tabName(tab)
               }
-              aria-selected={isSameTab(activeTab, tab)}
-              onClick={() => setActiveTab(tab)}
+              aria-selected={isSameTab(activeTab, tab) && (tab.kind !== "chat" || hasSelectedChatSession)}
+              onClick={() => {
+                setActiveTab(tab);
+                if (tab.kind === "chat") setSelectedSessionId(tab.sessionId);
+              }}
             >
               {tab.kind === "file" && (
                 <IconFile size={13} className="tab-kind-icon" />
@@ -1127,7 +1155,7 @@ export function Workbench() {
             ))}
         </div>
         {activeTab.kind === "chat" ? (
-          selectedProvider ? (
+          selectedProvider && hasSelectedChatSession ? (
             <section role="tabpanel" aria-label="聊天">
               <ChatPanel
               sessionId={activeTab.sessionId}
@@ -1136,6 +1164,8 @@ export function Workbench() {
                 activeTab.scope === "project" ? projectName : undefined
               }
               providerName={providerLabel(activeProvider)}
+              configuredModel={configuredModel}
+              configuredModels={configuredModels}
               providerLocked={activeTab.sessionId !== "new-chat" && !activeTab.sessionId.startsWith("new-chat-")}
               onProviderChange={changeProvider}
               onStatsChange={setActiveStats}
@@ -1217,6 +1247,14 @@ export function Workbench() {
                 });
               }}
               />
+            </section>
+          ) : selectedProvider ? (
+            <section className="agent-selection-empty" role="tabpanel" aria-label="聊天">
+              <div>
+                <IconSparkle size={22} />
+                <h2>请选择会话，或者创建新的会话开始</h2>
+                <p>从左侧选择已有会话，或点击“新建会话”开始。</p>
+              </div>
             </section>
           ) : (
             <section className="agent-selection-empty" role="tabpanel" aria-label="聊天">

@@ -14,6 +14,8 @@ type Props = {
   draft: string;
   messages: ChatMessage[];
   provider: string;
+  configuredModel?: string;
+  configuredModels?: Array<{ id: string; label: string; tag?: string }>;
   sending: boolean;
   onDraftChange: (value: string, element: HTMLTextAreaElement) => void;
   onSend: (text: string, model?: string) => void;
@@ -29,6 +31,8 @@ export function Composer({
   draft,
   messages,
   provider,
+  configuredModel,
+  configuredModels,
   sending,
   onDraftChange,
   onSend,
@@ -43,12 +47,19 @@ export function Composer({
   const [notice, setNotice] = useState("");
   const [showCommandMenu, setShowCommandMenu] = useState(false);
   const [commandIndex, setCommandIndex] = useState(0);
-  const models = getAgentModels(provider);
+  const configuredModelId = configuredModel?.trim();
+  const models = configuredModels?.length
+    ? configuredModels.map((entry) => ({ ...entry, tag: entry.tag ?? "已配置", speed: 2 }))
+    : configuredModelId
+    ? [{ id: configuredModelId, label: configuredModelId, tag: "已配置", speed: 2 }]
+    : getAgentModels(provider);
   const [model, setModel] = useState(models[0]?.id ?? "");
   const [modelOpen, setModelOpen] = useState(false);
   const agentPresentation = getAgentPresentation(provider);
   const modelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { setModel(getAgentModels(provider)[0]?.id ?? ""); }, [provider]);
+  useEffect(() => {
+    setModel(configuredModels?.[0]?.id || configuredModel?.trim() || getAgentModels(provider)[0]?.id || "");
+  }, [provider, configuredModel, configuredModels]);
   const history = useRef<string[]>([]);
   const historyIndex = useRef(-1);
   const commands = [

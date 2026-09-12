@@ -11,6 +11,8 @@ type PromptSendOptions = { repeat?: boolean };
 type Props = {
   sessionId: string;
   providerName?: string;
+  configuredModel?: string;
+  configuredModels?: Array<{ id: string; label: string; tag?: string }>;
   providerLocked?: boolean;
   scope?: "personal" | "project";
   projectName?: string;
@@ -37,6 +39,8 @@ export const DEFAULT_WELCOME_PROMPTS = [
 export function ChatPanel({
   sessionId,
   providerName = "Claude",
+  configuredModel,
+  configuredModels,
   providerLocked = false,
   scope = "personal",
   projectName,
@@ -404,6 +408,8 @@ export function ChatPanel({
         draft={draft}
         messages={messages}
         provider={provider}
+        configuredModel={configuredModel}
+        configuredModels={configuredModels}
         sending={sending}
         queued={queued}
         notice={composerNotice}
