@@ -13,6 +13,25 @@ describe('provider config adapters', () => {
     expect(JSON.stringify(result)).not.toContain('secret');
   });
 
+  it('reads every configured Claude model mapping', () => {
+    const result = parseProviderConfig('claude', JSON.stringify({
+      env: {
+        ANTHROPIC_DEFAULT_HAIKU_MODEL: 'claude-haiku-4-5',
+        ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME: 'glm-5.3',
+        ANTHROPIC_DEFAULT_SONNET_MODEL: 'claude-sonnet-4-6[1M]',
+        ANTHROPIC_DEFAULT_SONNET_MODEL_NAME: 'glm-5.3-flash',
+        ANTHROPIC_DEFAULT_OPUS_MODEL: 'claude-opus-4-8[1M]',
+        ANTHROPIC_DEFAULT_OPUS_MODEL_NAME: 'glm-5.3',
+      },
+    }), 'settings.json');
+
+    expect(result.models).toEqual([
+      { id: 'claude-haiku-4-5', label: 'glm-5.3', tag: 'Haiku' },
+      { id: 'claude-sonnet-4-6[1M]', label: 'glm-5.3-flash', tag: 'Sonnet' },
+      { id: 'claude-opus-4-8[1M]', label: 'glm-5.3', tag: 'Opus' },
+    ]);
+  });
+
   it('reads Codex model and provider endpoint from TOML', () => {
     const result = parseProviderConfig('codex', [
       'model = "gpt-5.6-terra"',

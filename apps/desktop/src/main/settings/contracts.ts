@@ -12,9 +12,16 @@ export interface CredentialState {
   source?: 'native' | 'app' | 'environment';
 }
 
+export interface ConfiguredModel {
+  id: string;
+  label: string;
+  tag?: string;
+}
+
 export interface AgentConfigSnapshot {
   provider: AgentProviderId;
   model?: string;
+  models?: ConfiguredModel[];
   baseUrl?: string;
   credential: CredentialState;
   sourcePath: string;

@@ -39,7 +39,13 @@ export function parseProviderConfig(provider: AgentProviderId, text: string, sou
   if (provider === 'claude') {
     const value = parseJson(text);
     const env = value.env ?? {};
-    return { provider, sourcePath, model: value.model, baseUrl: env.ANTHROPIC_BASE_URL, credential: credential(Boolean(env.ANTHROPIC_API_KEY || env.ANTHROPIC_AUTH_TOKEN)) };
+    const models = ['HAIKU', 'SONNET', 'OPUS'].flatMap((tier) => {
+      const id = env[`ANTHROPIC_DEFAULT_${tier}_MODEL`];
+      return typeof id === 'string' && id.trim()
+        ? [{ id: id.trim(), label: env[`ANTHROPIC_DEFAULT_${tier}_MODEL_NAME`]?.trim() || id.trim(), tag: `${tier[0]}${tier.slice(1).toLowerCase()}` }]
+        : [];
+    });
+    return { provider, sourcePath, model: value.model ?? models[0]?.id, models: models.length ? models : undefined, baseUrl: env.ANTHROPIC_BASE_URL, credential: credential(Boolean(env.ANTHROPIC_API_KEY || env.ANTHROPIC_AUTH_TOKEN)) };
   }
   if (provider === 'cursor') {
     const value = parseJson(text);
