@@ -20,6 +20,19 @@ function textFrom(raw: RawEvent): string {
   return '';
 }
 
+/**
+ * 从一行 CLI 输出中提取原生 session 标识，用于登记该轮运行产生的 transcript 归属。
+ * 字段名来自实测：claude/cursor 顶层 session_id、opencode 顶层 sessionID、
+ * codex 在 thread.started 事件上报 thread_id（对应 rollout 文件名后缀）。
+ */
+export function extractNativeSessionId(line: string): string | undefined {
+  try {
+    const raw = JSON.parse(line) as { session_id?: unknown; sessionID?: unknown; thread_id?: unknown };
+    for (const value of [raw.session_id, raw.sessionID, raw.thread_id]) if (typeof value === 'string' && value) return value;
+  } catch { /* 非 JSON 行忽略 */ }
+  return undefined;
+}
+
 export function parseCliEvent(line: string, provider: ProviderId, sessionId: string, sequence: number, messageId = `${sessionId}:stream`): AgentEvent | undefined {
   if (/no api key|not logged in|authentication required/i.test(line)) return base(provider, sessionId, sequence, 'error', { code: 'auth', message: line.trim() }, messageId);
   let raw: RawEvent;

@@ -17,7 +17,7 @@ export class PiCliTransport implements PiTransport {
   constructor(private readonly command = process.env.CODEAGENT_PI_COMMAND ?? 'pi', private readonly settings?: AgentSettingsService) {}
 
   async createSession(input: CreateSessionInput & { sessionFile: string }) {
-    this.sessionCwds.set(input.sessionFile, await ensureAgentWorkspace('pi', input.projectRoot));
+    this.sessionCwds.set(input.sessionFile, await ensureAgentWorkspace('pi', input.projectRoot, input.sessionId));
     return { nativeId: input.sessionFile };
   }
 
@@ -63,7 +63,8 @@ export class PiCliTransport implements PiTransport {
       child.stdout?.on('data', consume);
       child.stderr?.on('data', (data) => {
         const line = data.toString();
-        if (/no api key|not logged in|authentication required|rate limit|timed out|error/i.test(line)) {
+        // 与 CliProvider 保持同一组错误特征，保证五家 Agent 的失败暴露一致
+        if (/no api key|not logged in|authentication required|rate limit|timed out|error|failed|invalid|unknown option|not found/i.test(line)) {
           const event = parseCliEvent(line, 'pi', nativeId, sequence++, runMessageId);
           if (event?.type === 'error') this.listeners.forEach((listener) => listener(event));
         }

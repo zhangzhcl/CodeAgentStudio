@@ -7,6 +7,7 @@ import { ProviderRuntime } from './provider-runtime.js';
 import type { SessionService } from '../sessions/session-service.js';
 import type { WorkspaceService } from '../workspace/workspace-service.js';
 import { stageAttachments, isImageAttachment, SESSION_DIRECTORY_PATTERN } from '../workspace/attachment-service.js';
+import { resolveCodexRolloutId } from '../sessions/native-session-removal.js';
 import type { AgentProvider, PromptOptions } from './contracts.js';
 
 const providerUnsubscribers = new WeakMap<AgentProvider, () => void>();
@@ -36,6 +37,18 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
   for (const provider of registry.list()) {
     providerUnsubscribers.get(provider)?.();
     const unsubscribe = provider.subscribe((event: AgentEvent) => {
+    // 登记该轮运行产生的原生 session 归属，发现扫描据此跳过重复导入；
+    // codex 上报的是 thread_id，需解析成 rollout 文件名
+    if (event.type === 'run.completed') {
+      void (async () => {
+        try {
+          for (const nativeId of event.payload.nativeIds) {
+            const resolved = event.provider === 'codex' ? await resolveCodexRolloutId(nativeId) : nativeId;
+            sessions?.recordNativeRun(event.sessionId, resolved);
+          }
+        } catch { /* 会话可能在运行收尾时已被删除 */ }
+      })();
+    }
     sessions?.appendEvent(event);
     if (event.type === 'done' || event.type === 'error') {
       runtime.complete(event.sessionId, event.type === 'error' ? 'error' : 'stopped');
@@ -67,7 +80,11 @@ export function registerAgentIpc(registry: ProviderRegistry, sessions?: SessionS
       const staged = await stageAttachments(projectRoot, input.sessionId, input.options.attachments);
       input.options = { ...input.options, attachments: staged.map((item) => ({ sourcePath: item.relativePath, name: item.name, mimeType: item.mimeType, size: item.size })) };
     }
-    if (sessions) { try { sessions.get(input.sessionId); } catch { sessions.create({ id: input.sessionId, provider: input.provider, scope: input.scope, projectId: input.projectId }); } }
+    if (sessions) { try { sessions.get(input.sessionId); } catch {
+      // 兜底创建时带上项目根目录与名称，原生会话关联与侧栏分组依赖这两个字段
+      const project = input.scope === 'project' && input.projectId && workspace ? workspace.listProjects().find((item) => item.id === input.projectId) : undefined;
+      sessions.create({ id: input.sessionId, provider: input.provider, scope: input.scope, projectId: input.projectId, projectRoot: project?.rootPath, projectName: project?.name });
+    } }
     // 重试/重新生成场景下用户消息已经落库，重复追加会在回放时出现同一提问两份记录。
     if (!input.repeat) sessions?.appendUserMessage(input.sessionId, input.text);
     if (!runtime.isActive(input.sessionId)) { const record = sessions?.get(input.sessionId); if (record?.nativeId && provider.capabilities.supportsResume) { await provider.resumeSession(record.nativeId, record.nativeSessionFile, input.sessionId); runtime.activate(input.sessionId, input.provider); } else { const created = await runtime.start(input.sessionId, input.provider, { scope: input.scope, projectId: input.projectId, projectRoot: input.projectRoot }); if (created.nativeId || created.nativeSessionFile) sessions?.updateNative(input.sessionId, { nativeId: created.nativeId, nativeSessionFile: created.nativeSessionFile }); } }

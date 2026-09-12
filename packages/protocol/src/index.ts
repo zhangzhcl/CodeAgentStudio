@@ -33,6 +33,8 @@ export const AgentEventSchema = z.discriminatedUnion('type', [
   BaseEventSchema.extend({ type: z.literal('tool.completed'), payload: z.object({ toolName: z.string().min(1), output: z.unknown() }) }),
   BaseEventSchema.extend({ type: z.literal('error'), payload: z.object({ code: z.string().min(1), message: z.string() }) }),
   BaseEventSchema.extend({ type: z.literal('done'), payload: z.object({}) }),
+  // 一次运行结束时报出该轮产生的原生 session id，主进程据此登记会话拥有的历史 transcript
+  BaseEventSchema.extend({ type: z.literal('run.completed'), payload: z.object({ nativeIds: z.array(z.string().min(1)).min(1) }) }),
 ]);
 export type AgentEvent = z.infer<typeof AgentEventSchema>;
 

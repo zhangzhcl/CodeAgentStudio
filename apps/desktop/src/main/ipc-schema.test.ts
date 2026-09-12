@@ -3,6 +3,7 @@ import { PromptInputSchema, assertPromptOptionsSupported } from './providers/age
 import { CreateSessionSchema } from './sessions/session-ipc.js';
 import { FakeProvider } from './providers/fake-provider.js';
 import { SessionService } from './sessions/session-service.js';
+import { SettingsPatchSchema } from './settings/settings-ipc.js';
 
 describe('IPC runtime schemas', () => {
   it('requires project identity for project sessions and prompts', () => {
@@ -40,5 +41,9 @@ describe('IPC runtime schemas', () => {
     const codexLike = { id: 'codex', capabilities: { ...fake.capabilities, supportsAttachments: true, supportsImages: false } } as GateTarget;
     expect(() => assertPromptOptionsSupported(codexLike, { attachments: [{ sourcePath: 'C:/tmp/shot.png' }] })).toThrow('不支持图片附件');
     expect(assertPromptOptionsSupported(codexLike, { attachments: [{ sourcePath: 'C:/tmp/a.txt' }] })).toBeUndefined();
+  });
+
+  it('treats blank setting fields as clearing an override', () => {
+    expect(SettingsPatchSchema.parse({ provider: 'claude', model: '', baseUrl: '' })).toMatchObject({ provider: 'claude', model: undefined, baseUrl: undefined });
   });
 });

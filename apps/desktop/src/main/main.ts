@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen } from 'electron';
+import { app, BrowserWindow, Menu, screen } from 'electron';
 import { join } from 'node:path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,8 +27,18 @@ function readWindowState(): WindowState | undefined { try { if (!existsSync(wind
 function writeWindowState(window: BrowserWindow) { try { const [width, height] = window.getContentSize(); writeFileSync(windowStatePath(), JSON.stringify({ width, height }), 'utf8'); } catch { /* state persistence is best effort */ } }
 function createWindow() { const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize; const saved = readWindowState(); const width = Math.max(960, Math.min(saved?.width ?? screenW * 0.8, screenW)); const height = Math.max(640, Math.min(saved?.height ?? screenH * 0.8, screenH)); const window = new BrowserWindow({ width: Math.floor(width), height: Math.floor(height), useContentSize: true, minWidth: 960, minHeight: 640, center: true, show: false, backgroundColor: '#08090c', webPreferences: { preload: join(mainDir, 'preload.js'), contextIsolation: true, nodeIntegration: false } }); window.once('ready-to-show', () => window.show()); window.on('close', () => writeWindowState(window)); const devUrl = (typeof MAIN_WINDOW_VITE_DEV_SERVER_URL !== 'undefined' && MAIN_WINDOW_VITE_DEV_SERVER_URL) || process.env.MAIN_WINDOW_VITE_DEV_SERVER_URL || process.env.CODEAGENT_DEV_URL; if (devUrl) { console.info(`[window] loading renderer: ${devUrl}`); void window.loadURL(devUrl); } else { const rendererPath = join(mainDir, '../renderer/index.html'); console.info(`[window] loading renderer: ${rendererPath}`); void window.loadFile(rendererPath); } }
 app.whenReady().then(async () => {
-  // The workbench owns project/session/view actions; no duplicate native menu.
-  if (process.platform !== 'darwin') app.setAboutPanelOptions?.({ applicationName: 'CodeAgent Studio' });
+  // 项目/会话/视图操作全部由 Workbench 承担，不再展示 Electron 默认菜单。
+  // Windows/Linux 直接移除菜单栏；macOS 必须保留最小菜单，否则复制粘贴等系统快捷键会失效。
+  if (process.platform === 'darwin') {
+    app.setAboutPanelOptions({ applicationName: 'CodeAgent Studio' });
+    Menu.setApplicationMenu(Menu.buildFromTemplate([
+      { role: 'appMenu', label: 'CodeAgent Studio' },
+      { role: 'editMenu', label: '编辑' },
+      { role: 'windowMenu', label: '窗口' },
+    ]));
+  } else {
+    Menu.setApplicationMenu(null);
+  }
   const agentSettings = new AgentSettingsService(app.getPath('userData'));
   const registry = new ProviderRegistry(createCliProviders(agentSettings));
   registerProviderIpc(registry);
